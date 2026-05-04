@@ -1,0 +1,191 @@
+.messagerie-container {
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+// Wrapper principal flex
+.chat-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 12px !important;
+  min-height: 0; // important pour que flex fonctionne dans un parent flex
+}
+
+// ---- Liste des conversations (colonne gauche) ----
+.conversations-list {
+  width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.conv-items {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.conv-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #fafafa;
+  transition: background 0.15s;
+
+  &:hover { background: #f8f9fc; }
+  &.active { background: #eaeffd; }
+}
+
+// Avatar avec initiales
+.conv-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #4e73df;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: relative; // pour le badge
+
+  &.sm { width: 36px; height: 36px; font-size: 12px; }
+  &.xs { width: 28px; height: 28px; font-size: 10px; }
+}
+
+// Badge messages non lus
+.unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e74a3b;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.conv-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.conv-role {
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.conv-preview {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; // ... si trop long
+  max-width: 180px;
+  margin-top: 2px;
+}
+
+// ---- Zone de chat (colonne droite) ----
+.chat-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.chat-header { background: white; }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f8f9fc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// Ligne de message (conteneur)
+.message-row {
+  display: flex;
+  align-items: flex-end;
+
+  // Message envoyé → aligné à droite
+  &.sent {
+    justify-content: flex-end;
+    .message-bubble {
+      background: #4e73df;
+      color: white;
+      border-radius: 18px 18px 4px 18px;
+    }
+    .message-time { color: rgba(255,255,255,0.7); }
+  }
+
+  // Message reçu → aligné à gauche
+  &.received {
+    justify-content: flex-start;
+    .message-bubble {
+      background: white;
+      color: #2d3748;
+      border-radius: 18px 18px 18px 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+  }
+}
+
+.message-bubble {
+  max-width: 65%;
+  padding: 10px 14px;
+}
+
+.message-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.message-time {
+  font-size: 10px;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.chat-input {
+  background: white;
+  .form-control {
+    border-radius: 24px;
+    font-size: 13.5px;
+    &:focus { box-shadow: none; border-color: #4e73df; }
+  }
+  .btn { border-radius: 50%; width: 42px; height: 42px; padding: 0; }
+}
+
+// ---- RESPONSIVE ----
+@media (max-width: 768px) {
+  .messagerie-container { height: calc(100vh - 80px); }
+
+  .chat-wrapper { flex-direction: column; }
+
+  .conversations-list {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+  }
+
+  .conv-preview { max-width: 100%; }
+}

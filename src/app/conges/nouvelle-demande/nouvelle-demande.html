@@ -1,0 +1,179 @@
+<!-- En-tête -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800 fw-bold">Nouvelle demande</h1>
+    <p class="text-muted mb-0" style="font-size: 0.88rem;">
+      Remplissez le formulaire ci-dessous
+    </p>
+  </div>
+</div>
+
+<!-- Message succès -->
+<div *ngIf="succes()" class="alert alert-success d-flex align-items-center gap-3 mb-4">
+  <i class="fas fa-check-circle fa-2x"></i>
+  <div>
+    <div class="fw-bold">Demande envoyée avec succès !</div>
+    <div style="font-size: 0.85rem;">
+      Vous allez être redirigé vers vos demandes...
+    </div>
+  </div>
+</div>
+
+<!-- Formulaire -->
+<div class="row justify-content-center" *ngIf="!succes()">
+  <div class="col-lg-8">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 fw-bold text-primary">
+          <i class="fas fa-file-alt me-2"></i>
+          Formulaire de demande
+        </h6>
+      </div>
+      <div class="card-body p-4">
+
+        <!-- Message erreur -->
+        <div *ngIf="erreur()" class="alert alert-danger py-2 mb-3" style="font-size: 0.85rem;">
+          <i class="fas fa-exclamation-circle me-2"></i>{{ erreur() }}
+        </div>
+
+        <form (ngSubmit)="onSubmit()">
+
+          <!-- ÉTAPE 1 : Type de demande -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              Type de demande <span class="text-danger">*</span>
+            </label>
+            <div class="row g-3">
+              <!--
+                Cartes cliquables pour choisir le type
+                [class.selected] = ajoute la classe si ce type est sélectionné
+              -->
+              <div
+                class="col-md-4"
+                *ngFor="let type of types"
+              >
+                <div
+                  class="type-card"
+                  [class.selected]="formData().type === type.value"
+                  (click)="updateField('type', type.value)"
+                >
+                  <i class="fas {{ type.icone }} fa-2x {{ type.couleur }} mb-2"></i>
+                  <div class="fw-semibold" style="font-size: 0.88rem;">
+                    {{ type.label }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 2 : Dates -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">
+                Date de début <span class="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                [min]="dateMin"
+                [ngModel]="formData().dateDebut"
+                (ngModelChange)="updateField('dateDebut', $event)"
+                name="dateDebut"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">
+                Date de fin <span class="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                [min]="formData().dateDebut || dateMin"
+                [ngModel]="formData().dateFin"
+                (ngModelChange)="updateField('dateFin', $event)"
+                name="dateFin"
+              />
+            </div>
+          </div>
+
+          <!-- Résumé jours calculés -->
+          <div
+            class="jours-badge mb-4"
+            *ngIf="nombreJours() > 0"
+          >
+            <i class="fas fa-calendar-check me-2 text-primary"></i>
+            <strong>{{ nombreJours() }}</strong> jour(s) de
+            {{ formData().type === 'permission' ? 'permission' : 'congé' }}
+            <span
+              *ngIf="authService.currentUser() as user"
+              class="text-muted ms-2"
+              style="font-size: 0.82rem;"
+            >
+              (Solde restant après :
+              {{ user.soldeConges - nombreJours() }} jours)
+            </span>
+          </div>
+
+          <!-- ÉTAPE 3 : Motif -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Motif <span class="text-danger">*</span>
+            </label>
+            <textarea
+              class="form-control"
+              rows="4"
+              placeholder="Décrivez brièvement le motif de votre demande..."
+              [ngModel]="formData().motif"
+              (ngModelChange)="updateField('motif', $event)"
+              name="motif"
+              maxlength="500"
+            ></textarea>
+            <div class="text-muted text-end mt-1" style="font-size: 0.78rem;">
+              {{ formData().motif.length }}/500
+            </div>
+          </div>
+
+          <!-- Case urgence -->
+          <div class="mb-4">
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="urgence"
+                [ngModel]="formData().urgence"
+                (ngModelChange)="updateField('urgence', $event)"
+                name="urgence"
+              />
+              <label class="form-check-label fw-semibold" for="urgence">
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                Demande urgente (traitement prioritaire)
+              </label>
+            </div>
+          </div>
+
+          <!-- Boutons -->
+          <div class="d-flex gap-2 justify-content-end">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="reset()"
+              [disabled]="loading()"
+            >
+              <i class="fas fa-redo me-1"></i> Réinitialiser
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary px-4"
+              [disabled]="loading()"
+            >
+              <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!loading()" class="fas fa-paper-plane me-2"></i>
+              {{ loading() ? 'Envoi...' : 'Envoyer la demande' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

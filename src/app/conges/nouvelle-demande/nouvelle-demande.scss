@@ -1,0 +1,38 @@
+
+// Cartes de type de demande
+.type-card {
+  border: 2px solid #e3e6f0;
+  border-radius: 12px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+
+  &:hover {
+    border-color: #214525;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(78,115,223,0.15);
+  }
+
+  // Carte sélectionnée
+  &.selected {
+    border-color: #214525;
+    background: #f0f4ff;
+    box-shadow: 0 4px 12px rgba(78,115,223,0.2);
+  }
+}
+
+// Badge résumé jours
+.jours-badge {
+  background: #f0f4ff;
+  border: 1px solid #c5d0f5;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #214525;
+}

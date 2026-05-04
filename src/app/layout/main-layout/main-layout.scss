@@ -1,0 +1,21 @@
+// Sidebar fixe
+app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+// Navbar fixe en haut
+app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+
+// Contenu décalé pour ne pas se cacher derrière la sidebar
+#content-wrapper {
+  margin-left: 224px; // largeur standard SB Admin 2
+}

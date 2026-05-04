@@ -1,0 +1,44 @@
+<!-- 
+  Structure SB Admin 2 :
+  wrapper
+  ├── sidebar (fixe à gauche)
+  └── content-wrapper (tout le reste)
+      ├── navbar (fixe en haut)
+      └── container-fluid (contenu de la page)
+          └── router-outlet ← Angular injecte ici le bon composant
+-->
+<div id="wrapper">
+
+  <!-- Sidebar -->
+  <app-sidebar> </app-sidebar>
+
+  <!-- Contenu principal -->
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+
+      <!-- Navbar -->
+      <app-navbar></app-navbar>
+
+      <!-- Zone de contenu : change selon la route active -->
+      <div class="container-fluid pb-4">
+        <!--
+          router-outlet = balise magique Angular
+          Angular remplace cette balise par le composant de la route active
+          Ex: /dashboard → DashboardComponent s'affiche ici
+        -->
+        <router-outlet></router-outlet>
+      </div>
+
+    </div>
+
+    <!-- Pied de page -->
+    <footer class="sticky-footer bg-white mt-auto">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto text-muted" style="font-size: 0.78rem;">
+          © 2024 HOMINTEC — Plateforme RH Collaborative
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>

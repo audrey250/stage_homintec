@@ -1,0 +1,170 @@
+<nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow-sm">
+
+  <!-- Bouton hamburger mobile -->
+  <button class="btn btn-link d-md-none rounded-circle me-3" (click)="toggle()">
+    <i class="fa fa-bars"></i>
+  </button>
+
+  <!-- Éléments à droite -->
+  <div class="ms-auto d-flex align-items-center gap-3">
+
+    <!-- Badge congés -->
+    <div class="solde-badge conges d-none d-lg-flex">
+      <i class="fas fa-umbrella-beach"></i>
+      <span>{{ authService.currentUser()?.soldeConges }} j. congés</span>
+    </div>
+
+    <!-- Badge permissions -->
+    <div class="solde-badge permissions d-none d-lg-flex">
+      <i class="fas fa-clock"></i>
+      <span>{{ authService.currentUser()?.soldePermissions }} permissions</span>
+    </div>
+
+    <div class="topbar-divider d-none d-sm-block"></div>
+
+    <!-- Menu utilisateur -->
+    <div class="nav-item dropdown no-arrow" [class.show]="dropdownOpen">
+
+      <a class="nav-link d-flex align-items-center gap-2"
+         href="#"
+         (click)="$event.preventDefault(); toggleDropdown()">
+
+        <!-- Nom + badge rôle -->
+        <div class="text-end d-none d-lg-block">
+          <div class="fw-semibold" style="font-size:0.85rem; line-height:1.2">
+            {{ authService.currentUser()?.prenom }}
+            {{ authService.currentUser()?.nom }}
+          </div>
+          <div>
+            <span class="badge"
+              [ngClass]="{
+                'bg-secondary': authService.currentUser()?.role === 'employe',
+                'bg-info':      authService.currentUser()?.role === 'manager',
+                'bg-success':   authService.currentUser()?.role === 'rh',
+                'bg-danger':    authService.currentUser()?.role === 'admin'
+              }">
+              {{ authService.currentUser()?.role | uppercase }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Avatar -->
+        <div class="user-avatar">
+          {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
+        </div>
+      </a>
+
+      <!-- Dropdown -->
+      <div class="dropdown-menu dropdown-menu-end shadow"
+           [class.show]="dropdownOpen">
+        <a class="dropdown-item" routerLink="/profil"
+           (click)="dropdownOpen = false">
+          <i class="fas fa-user fa-sm fa-fw me-2 text-muted"></i>
+          Mon profil
+        </a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item text-danger" href="#"
+           (click)="$event.preventDefault(); logout()">
+          <i class="fas fa-sign-out-alt fa-sm fa-fw me-2"></i>
+          Déconnexion
+        </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+<!-- ===== SIDEBAR ===== -->
+<ul class="navbar-nav sidebar sidebar-dark accordion"
+    id="accordionSidebar"
+    [class.toggled]="collapsed()">
+
+  <!-- Logo -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center"
+     routerLink="/dashboard">
+    <div class="sidebar-brand-icon">🏢</div>
+    <div class="sidebar-brand-text mx-2">HOMINTEC</div>
+  </a>
+
+  <hr class="sidebar-divider my-0">
+
+  <!-- Dashboard -->
+  <li class="nav-item">
+    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Tableau de bord</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider">
+  <div class="sidebar-heading">Congés & Permissions</div>
+
+  <li class="nav-item">
+    <a class="nav-link" routerLink="/conges/nouvelle-demande" routerLinkActive="active">
+      <i class="fas fa-fw fa-plus-circle"></i>
+      <span>Nouvelle demande</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" routerLink="/conges/mes-demandes" routerLinkActive="active">
+      <i class="fas fa-fw fa-list-alt"></i>
+      <span>Mes demandes</span>
+    </a>
+  </li>
+
+  <li class="nav-item" *ngIf="authService.hasRole('manager','rh','admin')">
+    <a class="nav-link" routerLink="/conges/validation" routerLinkActive="active">
+      <i class="fas fa-fw fa-check-double"></i>
+      <span>Validation</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider">
+  <div class="sidebar-heading">Communication</div>
+
+  <li class="nav-item">
+    <a class="nav-link" routerLink="/messagerie" routerLinkActive="active">
+      <i class="fas fa-fw fa-envelope"></i>
+      <span>Messagerie</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider">
+  <div class="sidebar-heading">Utilisateurs</div>
+
+  <li class="nav-item" *ngIf="authService.hasRole('admin','rh','manager')">
+    <a class="nav-link" routerLink="/utilisateurs" routerLinkActive="active">
+      <i class="fas fa-fw fa-list"></i>
+      <span>Liste des utilisateurs</span>
+    </a>
+  </li>
+
+  <li class="nav-item" *ngIf="authService.hasRole('rh','admin')">
+    <a class="nav-link" routerLink="/utilisateurs/nouveau" routerLinkActive="active">
+      <i class="fas fa-fw fa-user-plus"></i>
+      <span>Nouvel utilisateur</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider">
+  <div class="sidebar-heading">Mon compte</div>
+
+  <li class="nav-item">
+    <a class="nav-link" routerLink="/profil" routerLinkActive="active">
+      <i class="fas fa-fw fa-user"></i>
+      <span>Mon profil</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider d-none d-md-block">
+
+  <!-- Bouton réduire -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0"
+            id="sidebarToggle"
+            (click)="toggle()">
+    </button>
+  </div>
+
+</ul>

@@ -1,0 +1,55 @@
+<h1 class="h3 mb-4 text-gray-800 fw-bold">Mon profil</h1>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card shadow">
+      <div class="card-body p-4 text-center">
+
+        <!-- Avatar grand -->
+        <div class="profil-avatar mx-auto mb-3">
+          {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
+        </div>
+
+        <h4 class="fw-bold mb-1">
+          {{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}
+        </h4>
+
+        <span
+          class="badge mb-3"
+          [ngClass]="{
+            'bg-secondary': authService.currentUser()?.role === 'employe',
+            'bg-info':      authService.currentUser()?.role === 'manager',
+            'bg-success':   authService.currentUser()?.role === 'rh',
+            'bg-danger':    authService.currentUser()?.role === 'admin'
+          }"
+        >
+          {{ authService.currentUser()?.role | uppercase }}
+        </span>
+
+        <hr>
+
+        <div class="row text-start g-3">
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size: 0.78rem;">Email</div>
+            <div class="fw-semibold">{{ authService.currentUser()?.email }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size: 0.78rem;">Département</div>
+            <div class="fw-semibold">{{ authService.currentUser()?.departement }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size: 0.78rem;">Poste</div>
+            <div class="fw-semibold">{{ authService.currentUser()?.poste }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted" style="font-size: 0.78rem;">Solde congés</div>
+            <div class="fw-semibold text-primary">
+              {{ authService.currentUser()?.soldeConges }} jours
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

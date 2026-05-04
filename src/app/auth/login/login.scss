@@ -1,0 +1,80 @@
+// Le dégradé bleu principal vient de SB Admin 2
+// On personnalise juste quelques détails pour HOMINTEC
+
+// Logo animé à l'entrée
+.login-logo {
+  font-size: 3.5rem;
+  // Animation : le logo apparaît en descendant doucement
+  animation: fadeInDown 0.6s ease;
+}
+
+// Animation keyframes
+@keyframes fadeInDown {
+  from {
+    opacity: 0;           // Part invisible
+    transform: translateY(-20px); // Part 20px au-dessus
+  }
+  to {
+    opacity: 1;           // Devient visible
+    transform: translateY(0); // Revient à sa position normale
+  }
+}
+
+// La carte apparaît en montant
+.card {
+  animation: fadeInUp 0.6s ease;
+  // Transition douce sur les ombres au survol
+  transition: box-shadow 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px); // Part 20px en dessous
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Amélioration visuelle des champs de saisie
+.form-control {
+  // Hauteur légèrement plus grande pour le confort
+  height: 44px;
+  font-size: 0.9rem;
+
+  // On retire l'ombre bleue par défaut au focus
+  &:focus {
+    box-shadow: none;
+    border-color: #086335; // Couleur primaire SB Admin 2
+  }
+}
+
+// Même traitement pour les icônes du groupe
+.input-group-text {
+  height: 44px;
+}
+
+// Bouton de connexion
+.btn-primary {
+  height: 46px;
+  font-size: 0.95rem;
+  // Transition pour l'animation au survol
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px); // Monte légèrement au survol
+    box-shadow: 0 4px 12px rgba(3, 85, 21, 0.4);
+  }
+}
+
+// Boutons démo : petits et discrets
+.btn-outline-secondary {
+  border-radius: 20px; // Boutons arrondis (pilule)
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05); // Grossit légèrement au survol
+  }
+}

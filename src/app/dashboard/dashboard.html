@@ -1,0 +1,255 @@
+<!-- En-tête de page -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800 fw-bold">Tableau de bord</h1>
+    <!--
+      Salutation personnalisée selon l'heure
+      On affiche le prénom de l'utilisateur connecté
+    -->
+    <p class="text-muted mb-0" style="font-size: 0.88rem;">
+      Bonjour, {{ user()?.prenom }} 👋
+      Bienvenue sur votre espace collaborateur.
+    </p>
+  </div>
+
+  <!-- Bouton nouvelle demande -->
+  <a
+    routerLink="/conges/nouvelle-demande"
+    class="btn btn-primary btn-sm shadow-sm mt-2 mt-sm-0"
+  >
+    <i class="fas fa-plus fa-sm me-1"></i>
+    Nouvelle demande
+  </a>
+  <br>
+   <!--nouvel utilisateur-->
+ <a
+    routerLink="/utilisateurs/nouveau"
+    class="btn btn-success btn-sm shadow-sm mt-2 mt-sm-0"
+  >
+    <i class="fas fa-user-plus fa-sm me-1"></i>
+    Nouvel utilisateur
+  </a>
+</div>
+
+
+<!-- ===== CARTES DE STATISTIQUES ===== -->
+<div class="row g-3 mb-4">
+
+  <!-- Carte 1 : Demandes en attente (manager/rh/admin seulement) -->
+  <div
+    class="col-xl-3 col-md-6"
+    *ngIf="authService.hasRole('manager', 'rh', 'admin')"
+  >
+    <div class="card border-left-warning shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col me-2">
+            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+              Demandes en attente
+            </div>
+            <div class="h5 mb-0 fw-bold text-gray-800">
+              {{ stats().demandesEnAttente }}
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-clock fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte 2 : Congés approuvés ce mois -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-left-success shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col me-2">
+            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+              Congés approuvés
+            </div>
+            <div class="h5 mb-0 fw-bold text-gray-800">
+              {{ stats().congesApprouves }}
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte 3 : Mon solde de congés -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-left-primary shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col me-2">
+            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+              Mon solde congés
+            </div>
+            <div class="h5 mb-0 fw-bold text-gray-800">
+              {{ stats().soldeConges }} jours
+            </div>
+            <!-- Barre de progression visuelle -->
+            <div class="progress mt-2" style="height: 6px;">
+              <!--
+                [style.width] = binding de style dynamique
+                On calcule le % : solde / 25 jours max × 100
+              -->
+              <div
+                class="progress-bar bg-primary"
+                [style.width]="(stats().soldeConges / 25 * 100) + '%'"
+              ></div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-umbrella-beach fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carte 4 : Mon solde permissions -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-left-info shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col me-2">
+            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+              Mes permissions
+            </div>
+            <div class="h5 mb-0 fw-bold text-gray-800">
+              {{ stats().soldePermissions }} jours
+            </div>
+            <div class="progress mt-2" style="height: 6px;">
+              <div
+                class="progress-bar bg-info"
+                [style.width]="(stats().soldePermissions / 10 * 100) + '%'"
+              ></div>
+            </div>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- ===== FIN CARTES ===== -->
+
+
+<!-- ===== TABLEAU DEMANDES RÉCENTES ===== -->
+<div class="card shadow mb-4">
+  <div class="card-header py-3 d-flex align-items-center justify-content-between">
+    <h6 class="m-0 fw-bold text-primary">
+      <i class="fas fa-list-alt me-2"></i>
+      Demandes récentes
+    </h6>
+    <a routerLink="/conges/mes-demandes" class="btn btn-sm btn-outline-primary">
+      Voir tout
+    </a>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="font-size: 0.82rem;">Employé</th>
+            <th style="font-size: 0.82rem;">Type</th>
+            <th style="font-size: 0.82rem;">Période</th>
+            <th style="font-size: 0.82rem;">Jours</th>
+            <th style="font-size: 0.82rem;">Statut</th>
+            <!--
+              Colonne Action visible seulement pour les validateurs
+            -->
+            <th
+              *ngIf="authService.hasRole('manager', 'rh', 'admin')"
+              style="font-size: 0.82rem;"
+            >
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!--
+            *ngFor = répète ce <tr> pour chaque demande
+            let i = index → numéro de la ligne (0, 1, 2...)
+          -->
+          <tr *ngFor="let demande of demandesRecentes(); let i = index">
+
+            <!-- Employé avec avatar initiales -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-sm">
+                  {{ demande.employe.charAt(0) }}
+                </div>
+                <span style="font-size: 0.88rem;">{{ demande.employe }}</span>
+              </div>
+            </td>
+
+            <!-- Type avec icône -->
+            <td style="font-size: 0.85rem;">
+              <i
+                class="fas fa-fw me-1"
+                [ngClass]="{
+                  'fa-umbrella-beach text-primary': demande.type === 'Congé annuel',
+                  'fa-clock text-warning':          demande.type === 'Permission',
+                  'fa-heartbeat text-danger':       demande.type === 'Congé maladie'
+                }"
+              ></i>
+              {{ demande.type }}
+            </td>
+
+            <!-- Période -->
+            <td style="font-size: 0.83rem; color: #555;">
+              {{ demande.dateDebut }} → {{ demande.dateFin }}
+            </td>
+
+            <!-- Nombre de jours -->
+            <td>
+              <span class="fw-semibold" style="font-size: 0.88rem;">
+                {{ demande.jours }}j
+              </span>
+            </td>
+
+            <!-- Badge statut -->
+            <td>
+              <span class="badge {{ getBadgeClass(demande.statut) }}">
+                {{ getStatutLabel(demande.statut) }}
+              </span>
+            </td>
+
+            <!-- Boutons action (manager/rh/admin) -->
+            <td *ngIf="authService.hasRole('manager', 'rh', 'admin')">
+              <div
+                class="d-flex gap-1"
+                *ngIf="demande.statut === 'en_attente'"
+              >
+                <button class="btn btn-success btn-sm py-0 px-2">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-danger btn-sm py-0 px-2">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <span
+                *ngIf="demande.statut !== 'en_attente'"
+                class="text-muted"
+                style="font-size: 0.78rem;"
+              >
+                Traité
+              </span>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

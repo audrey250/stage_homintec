@@ -1,0 +1,604 @@
+<!-- ============================================================
+     FICHIER : nouvel-utilisateur.html
+     RÔLE    : Template du formulaire en 3 étapes
+     ============================================================ -->
+
+<div class="page-wrapper">
+
+  <!-- ===== EN-TÊTE ===== -->
+  <div class="page-header d-flex align-items-center gap-3 mb-4">
+    <!-- Bouton retour vers la liste -->
+    <a routerLink="/utilisateurs" class="btn-retour">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="fas fa-user-plus text-primary me-2"></i>
+        Nouvel utilisateur
+      </h4>
+      <!-- Fil d'ariane pour savoir où on est -->
+      <nav class="breadcrumb-nav">
+        <span>Utilisateurs</span>
+        <i class="fas fa-chevron-right"></i>
+        <span class="active">Ajouter</span>
+      </nav>
+    </div>
+    <!--lien vers la liste des utilisateurs-->
+    <a routerLink="/utilisateur" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-list"></i> Voir la liste
+    </a>
+  </div>
+
+  <!-- ===== ÉCRAN DE SUCCÈS (affiché après soumission réussie) ===== -->
+  <!--
+    *ngIf = affiché seulement quand succes() retourne true
+    succes() = on appelle le signal comme une fonction pour lire sa valeur
+  -->
+  <div *ngIf="succes()" class="succes-card text-center">
+    <div class="succes-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h3 class="fw-bold mt-3 mb-2">Utilisateur créé avec succès !</h3>
+    <p class="text-muted mb-0">
+      <strong>{{ form.prenom }} {{ form.nom }}</strong>
+      a été ajouté en tant que <strong>{{ libelleRole }}</strong>.
+    </p>
+    <p class="text-muted mt-1" style="font-size:.85rem">
+      Redirection vers la liste dans quelques secondes...
+    </p>
+    <div class="spinner-border text-primary mt-3" style="width:1.5rem;height:1.5rem"></div>
+  </div>
+
+  <!-- ===== FORMULAIRE PRINCIPAL (masqué après succès) ===== -->
+  <div *ngIf="!succes()" class="form-grid">
+
+    <!-- ---- COLONNE GAUCHE : stepper + aperçu ---- -->
+    <div class="col-side">
+
+      <!-- Stepper vertical : indique l'étape en cours -->
+      <div class="stepper card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h6 class="text-muted text-uppercase fw-bold mb-4"
+              style="font-size:.72rem;letter-spacing:1.5px">
+            Progression
+          </h6>
+
+          <!--
+            *ngFor = on répète ce bloc pour chaque étape du tableau
+            [class.done] = ajoute la classe "done" si l'étape est passée
+            [class.active] = ajoute "active" si c'est l'étape en cours
+          -->
+          <div
+            *ngFor="let step of [
+              {n:1, label:'Identité',   icon:'fa-user',       desc:'Infos personnelles'},
+              {n:2, label:'Poste',      icon:'fa-briefcase',  desc:'Rôle & département'},
+              {n:3, label:'Sécurité',   icon:'fa-lock',       desc:'Mot de passe'}
+            ]"
+            class="step-item"
+            [class.done]="etapeActive() > step.n"
+            [class.active]="etapeActive() === step.n"
+          >
+            <!-- Numéro ou coche si étape terminée -->
+            <div class="step-num">
+              <i *ngIf="etapeActive() > step.n" class="fas fa-check"></i>
+              <span *ngIf="etapeActive() <= step.n">{{ step.n }}</span>
+            </div>
+            <div class="step-info">
+              <div class="step-label">{{ step.label }}</div>
+              <div class="step-desc">{{ step.desc }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aperçu de la carte utilisateur (se remplit en temps réel) -->
+      <div class="preview-card card border-0 shadow-sm mt-3">
+        <div class="card-body p-4 text-center">
+          <h6 class="text-muted text-uppercase fw-bold mb-3"
+              style="font-size:.72rem;letter-spacing:1.5px">
+            Aperçu
+          </h6>
+
+          <!-- Avatar dynamique : couleur selon le rôle, initiales selon le nom -->
+          <div class="preview-avatar mx-auto mb-3"
+               [style.background]="couleurRole">
+            {{ initiales }}
+          </div>
+
+          <!-- Nom complet (se met à jour en temps réel grâce au binding) -->
+          <div class="preview-name">
+            {{ form.prenom || 'Prénom' }} {{ form.nom || 'Nom' }}
+          </div>
+          <div class="preview-poste text-muted">
+            {{ form.poste || 'Poste non défini' }}
+          </div>
+
+          <!-- Badge du rôle -->
+          <span class="preview-role-badge mt-2"
+                [style.background]="couleurRole + '20'"
+                [style.color]="couleurRole"
+                [style.borderColor]="couleurRole + '40'">
+            {{ libelleRole || 'Rôle' }}
+          </span>
+
+          <!-- Département -->
+          <div class="preview-dept text-muted mt-2" style="font-size:.8rem">
+            <i class="fas fa-building me-1"></i>
+            {{ form.departement || 'Département' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- COLONNE DROITE : formulaire ---- -->
+    <div class="col-main">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+
+          <!-- Erreur globale -->
+          <div *ngIf="erreurGlobal()"
+               class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ erreurGlobal() }}
+          </div>
+
+          <!-- ==========================================
+               ÉTAPE 1 — IDENTITÉ
+               ========================================== -->
+          <div *ngIf="etapeActive() === 1" class="etape-content">
+            <div class="etape-header mb-4">
+              <div class="etape-icon-wrap bg-primary-soft">
+                <i class="fas fa-user text-primary"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold mb-1">Informations personnelles</h5>
+                <p class="text-muted mb-0" style="font-size:.85rem">
+                  Identité et coordonnées du collaborateur
+                </p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+
+              <!-- Prénom -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">Prénom</label>
+                <!--
+                  [(ngModel)] = liaison bidirectionnelle
+                    → l'utilisateur tape → form.prenom se met à jour
+                    → si on change form.prenom en TS → le champ se met à jour
+                  [class.is-invalid] = ajoute la classe Bootstrap is-invalid
+                    si erreurs['prenom'] existe (affiche le cadre rouge)
+                -->
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="form.prenom"
+                  name="prenom"
+                  placeholder="Ex : Ama"
+                  [class.is-invalid]="erreurs['prenom']"
+                />
+                <!-- Message d'erreur sous le champ -->
+                <div *ngIf="erreurs['prenom']" class="invalid-feedback">
+                  {{ erreurs['prenom'] }}
+                </div>
+              </div>
+
+              <!-- Nom -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">Nom</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="form.nom"
+                  name="nom"
+                  placeholder="Ex : Koudjo"
+                  [class.is-invalid]="erreurs['nom']"
+                />
+                <div *ngIf="erreurs['nom']" class="invalid-feedback">
+                  {{ erreurs['nom'] }}
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="col-12">
+                <label class="form-label required">Adresse email professionnelle</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-envelope text-muted"></i>
+                  </span>
+                  <input
+                    type="email"
+                    class="form-control"
+                    [(ngModel)]="form.email"
+                    name="email"
+                    placeholder="prenom.nom@homintec.com"
+                    [class.is-invalid]="erreurs['email']"
+                  />
+                  <div *ngIf="erreurs['email']" class="invalid-feedback">
+                    {{ erreurs['email'] }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Téléphone (optionnel) -->
+              <div class="col-12">
+                <label class="form-label">
+                  Téléphone
+                  <span class="text-muted" style="font-size:.78rem">(optionnel)</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-phone text-muted"></i>
+                  </span>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    [(ngModel)]="form.telephone"
+                    name="telephone"
+                    placeholder="+229 97 00 00 00"
+                    [class.is-invalid]="erreurs['telephone']"
+                  />
+                  <div *ngIf="erreurs['telephone']" class="invalid-feedback">
+                    {{ erreurs['telephone'] }}
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- fin row étape 1 -->
+          </div>
+
+          <!-- ==========================================
+               ÉTAPE 2 — POSTE & RÔLE
+               ========================================== -->
+          <div *ngIf="etapeActive() === 2" class="etape-content">
+            <div class="etape-header mb-4">
+              <div class="etape-icon-wrap bg-success-soft">
+                <i class="fas fa-briefcase text-success"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold mb-1">Poste & Rôle</h5>
+                <p class="text-muted mb-0" style="font-size:.85rem">
+                  Fonction, département et soldes de congé
+                </p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+
+              <!-- Sélection du rôle (cartes cliquables) -->
+              <div class="col-12">
+                <label class="form-label required">Rôle dans le système</label>
+                <div class="role-grid">
+                  <!--
+                    *ngFor = répète ce bloc pour chaque rôle dans le tableau roles[]
+                    (click) = au clic, on met à jour form.role avec la valeur du rôle
+                    [class.selected] = ajoute "selected" si ce rôle est le rôle actif
+                  -->
+                  <div
+                    *ngFor="let r of roles"
+                    class="role-card"
+                    [class.selected]="form.role === r.value"
+                    (click)="form.role = r.value "
+                  >
+                    <i class="fas" [class]="r.icon"></i>
+                    <span>{{ r.label }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Département -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">Département</label>
+                <select
+                  class="form-select"
+                  [(ngModel)]="form.departement"
+                  name="departement"
+                  [class.is-invalid]="erreurs['departement']"
+                >
+                  <option value="">Choisir un département...</option>
+                  <!--
+                    *ngFor sur les options du select
+                    [value]="dept" = la valeur soumise
+                  -->
+                  <option *ngFor="let dept of departements" [value]="dept">
+                    {{ dept }}
+                  </option>
+                </select>
+                <div *ngIf="erreurs['departement']" class="invalid-feedback">
+                  {{ erreurs['departement'] }}
+                </div>
+              </div>
+
+              <!-- Poste occupé -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">Poste occupé</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="form.poste"
+                  name="poste"
+                  placeholder="Ex : Ingénieur développement"
+                  [class.is-invalid]="erreurs['poste']"
+                />
+                <div *ngIf="erreurs['poste']" class="invalid-feedback">
+                  {{ erreurs['poste'] }}
+                </div>
+              </div>
+
+              <!-- Soldes -->
+              <div class="col-12">
+                <div class="soldes-banner">
+                  <i class="fas fa-info-circle text-primary me-2"></i>
+                  Soldes de congé attribués à l'embauche
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">
+                  Solde congés annuels (jours)
+                <a href="javascript:void(0)" class="text-decoration-none ms-1">
+                  <i class="fas fa-info-circle"></i>
+                </a>
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="form.soldeConges"
+                  name="soldeConges"
+                  min="0" max="50"
+                  [class.is-invalid]="erreurs['soldeConges']"
+                />
+                <div *ngIf="erreurs['soldeConges']" class="invalid-feedback">
+                  {{ erreurs['soldeConges'] }}
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label required">
+                  Solde permissions (jours)
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="form.soldePermissions"
+                  name="soldePermissions"
+                  min="0" max="20"
+                  [class.is-invalid]="erreurs['soldePermissions']"
+                />
+                <div *ngIf="erreurs['soldePermissions']" class="invalid-feedback">
+                  {{ erreurs['soldePermissions'] }}
+                </div>
+              </div>
+
+            </div><!-- fin row étape 2 -->
+          </div>
+
+          <!-- ==========================================
+               ÉTAPE 3 — SÉCURITÉ
+               ========================================== -->
+          <div *ngIf="etapeActive() === 3" class="etape-content">
+            <div class="etape-header mb-4">
+              <div class="etape-icon-wrap bg-warning-soft">
+                <i class="fas fa-lock text-warning"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold mb-1">Mot de passe provisoire</h5>
+                <p class="text-muted mb-0" style="font-size:.85rem">
+                  L'utilisateur devra le changer à sa première connexion
+                </p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+
+              <!-- Mot de passe -->
+              <div class="col-12">
+                <label class="form-label required">Mot de passe</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-lock text-muted"></i>
+                  </span>
+                  <!--
+                    [type]="showPassword() ? 'text' : 'password'"
+                    = si showPassword est true → le texte est visible
+                    = si showPassword est false → le texte est masqué (•••)
+                  -->
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    class="form-control border-start-0 border-end-0"
+                    [(ngModel)]="form.password"
+                    name="password"
+                    placeholder="Minimum 8 caractères"
+                    [class.is-invalid]="erreurs['password']"
+                  />
+                  <button
+                    type="button"
+                    class="input-group-text bg-light border-start-0"
+                    (click)="showPassword.set(!showPassword())"
+                  >
+                    <i class="fas"
+                       [class.fa-eye]="!showPassword()"
+                       [class.fa-eye-slash]="showPassword()">
+                    </i>
+                  </button>
+                  <div *ngIf="erreurs['password']" class="invalid-feedback">
+                    {{ erreurs['password'] }}
+                  </div>
+                </div>
+
+                <!-- Barre de force du mot de passe -->
+                <div class="password-strength mt-2" *ngIf="form.password">
+                  <div class="strength-bar">
+                    <!--
+                      [style.width] = la largeur varie selon la force (0% à 100%)
+                      forcePassword retourne 0 à 4, donc on multiplie par 25%
+                    -->
+                    <div
+                      class="strength-fill"
+                      [style.width]="(forcePassword * 25) + '%'"
+                      [class]="'bg-' + forceCouleur"
+                    ></div>
+                  </div>
+                  <span class="strength-label" [class]="'text-' + forceCouleur">
+                    {{ forceLabel }}
+                  </span>
+                </div>
+
+                <!-- Règles du mot de passe -->
+                <div class="password-rules mt-2">
+                  <div class="rule" [class.ok]="form.password.length >= 8">
+                    <i class="fas fa-circle-check"></i> 8 caractères minimum
+                  </div>
+                  <div class="rule" [class.ok]="/[A-Z]/.test(form.password)">
+                    <i class="fas fa-circle-check"></i> Une lettre majuscule
+                  </div>
+                  <div class="rule" [class.ok]="/[0-9]/.test(form.password)">
+                    <i class="fas fa-circle-check"></i> Un chiffre
+                  </div>
+                  <div class="rule"
+                       [class.ok]="/[!@#$%^&*(),.?&quot;:{}|<>]/.test(form.password)">
+                    <i class="fas fa-circle-check"></i> Un caractère spécial (!@#...)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Confirmation du mot de passe -->
+              <div class="col-12">
+                <label class="form-label required">Confirmer le mot de passe</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-lock-open text-muted"></i>
+                  </span>
+                  <input
+                    [type]="showConfirm() ? 'text' : 'password'"
+                    class="form-control border-start-0 border-end-0"
+                    [(ngModel)]="form.confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Répétez le mot de passe"
+                    [class.is-invalid]="erreurs['confirmPassword']"
+                  />
+                  <button
+                    type="button"
+                    class="input-group-text bg-light border-start-0"
+                    (click)="showConfirm.set(!showConfirm())"
+                  >
+                    <i class="fas"
+                       [class.fa-eye]="!showConfirm()"
+                       [class.fa-eye-slash]="showConfirm()">
+                    </i>
+                  </button>
+                  <div *ngIf="erreurs['confirmPassword']" class="invalid-feedback">
+                    {{ erreurs['confirmPassword'] }}
+                  </div>
+                </div>
+
+                <!-- Indicateur de correspondance en temps réel -->
+                <div
+                  *ngIf="form.confirmPassword"
+                  class="match-indicator mt-1"
+                  [class.match-ok]="form.password === form.confirmPassword"
+                  [class.match-no]="form.password !== form.confirmPassword"
+                >
+                  <i class="fas"
+                     [class.fa-check]="form.password === form.confirmPassword"
+                     [class.fa-times]="form.password !== form.confirmPassword">
+                  </i>
+                  {{
+                    form.password === form.confirmPassword
+                      ? 'Les mots de passe correspondent'
+                      : 'Les mots de passe ne correspondent pas'
+                  }}
+                </div>
+              </div>
+
+              <!-- Résumé final avant soumission -->
+              <div class="col-12">
+                <div class="recap-box">
+                  <h6 class="fw-bold mb-3">
+                    <i class="fas fa-clipboard-list me-2 text-primary"></i>
+                    Récapitulatif
+                  </h6>
+                  <div class="recap-grid">
+                    <div class="recap-item">
+                      <span class="recap-label">Nom</span>
+                      <span class="recap-val">{{ form.prenom }} {{ form.nom }}</span>
+                    </div>
+                    <div class="recap-item">
+                      <span class="recap-label">Email</span>
+                      <span class="recap-val">{{ form.email }}</span>
+                    </div>
+                    <div class="recap-item">
+                      <span class="recap-label">Rôle</span>
+                      <span class="recap-val">{{ libelleRole }}</span>
+                    </div>
+                    <div class="recap-item">
+                      <span class="recap-label">Département</span>
+                      <span class="recap-val">{{ form.departement }}</span>
+                    </div>
+                    <div class="recap-item">
+                      <span class="recap-label">Poste</span>
+                      <span class="recap-val">{{ form.poste }}</span>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- fin row étape 3 -->
+          </div>
+
+          <!-- ==========================================
+               BOUTONS DE NAVIGATION
+               ========================================== -->
+          <div class="nav-buttons mt-4">
+
+            <!-- Bouton précédent (caché à l'étape 1) -->
+            <button
+              *ngIf="etapeActive() > 1"
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="etapePrecedente()"
+              [disabled]="loading()"
+            >
+              <i class="fas fa-arrow-left me-2"></i>Précédent
+            </button>
+
+            <!-- Spacer pour pousser les boutons aux extrémités -->
+            <div class="flex-fill"></div>
+
+            <!-- Bouton suivant (étapes 1 et 2) -->
+            <button
+              *ngIf="etapeActive() < 3"
+              type="button"
+              class="btn btn-primary"
+              (click)="etapeSuivante()"
+            >
+              Suivant<i class="fas fa-arrow-right ms-2"></i>
+            </button>
+
+            <!-- Bouton soumettre (étape 3 seulement) -->
+            <button
+              *ngIf="etapeActive() === 3"
+              type="button"
+              class="btn btn-success"
+              (click)="soumettre()"
+              [disabled]="loading()"
+            >
+              <!-- Spinner pendant le chargement -->
+              <span *ngIf="loading()"
+                    class="spinner-border spinner-border-sm me-2">
+              </span>
+              <i *ngIf="!loading()" class="fas fa-save me-2"></i>
+              {{ loading() ? 'Enregistrement...' : 'Créer l\'utilisateur' }}
+            </button>
+
+          </div><!-- fin nav-buttons -->
+
+        </div><!-- fin card-body -->
+      </div><!-- fin card -->
+    </div><!-- fin col-main -->
+
+  </div><!-- fin form-grid -->
+</div><!-- fin page-wrapper -->
