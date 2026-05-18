@@ -1,115 +1,123 @@
-import { Component, signal, computed } from '@angular/core';
+// ============================================================
+// src/app/conges/validation/validation.ts
+// VERSION SPRING BOOT
+// ============================================================
+
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-
-export interface DemandeValidation {
-  id: number;
-  employe: string;
-  departement: string;
-  type: string;
-  dateDebut: string;
-  dateFin: string;
-  jours: number;
-  motif: string;
-  urgence: boolean;
-  statut: 'en_attente' | 'approuve' | 'rejete';
-  commentaire: string; // Commentaire du validateur
-}
+import {
+  CongeService,
+  Demande,
+  DecisionDemande
+} from '../../services/conge.service';
 
 @Component({
   selector: 'app-validation',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './validation.html',
-  styleUrl: './validation.scss'
+  styleUrl: './validation.css'
 })
-export class ValidationComponent {
+export class ValidationComponent implements OnInit {
 
-  // Demande actuellement sélectionnée pour modale
-  demandeSelectionnee = signal<DemandeValidation | null>(null);
-  modeAction = signal<'approuver' | 'rejeter' | null>(null);
-  commentaireAction = signal('');
-  traitement = signal(false);
+  // Demande ouverte dans la modale
+  demandeSelectionnee = signal<Demande | null>(null);
+  modeAction          = signal<'approuver' | 'rejeter' | null>(null);
+  commentaireAction   = signal('');
 
-  demandes = signal<DemandeValidation[]>([
-    {
-      id: 1, employe: 'Ama Koudjo', departement: 'Technique',
-      type: 'Congé annuel',
-      dateDebut: '2024-02-01', dateFin: '2024-02-10', jours: 8,
-      motif: 'Vacances en famille pour les fêtes.',
-      urgence: false, statut: 'en_attente', commentaire: ''
-    },
-    {
-      id: 2, employe: 'Yao Mensah', departement: 'Commercial',
-      type: 'Permission',
-      dateDebut: '2024-01-30', dateFin: '2024-01-30', jours: 1,
-      motif: 'Rendez-vous administratif urgent.',
-      urgence: true, statut: 'en_attente', commentaire: ''
-    },
-    {
-      id: 3, employe: 'Akosua Fiagbé', departement: 'Finance',
-      type: 'Congé maladie',
-      dateDebut: '2024-01-25', dateFin: '2024-01-27', jours: 3,
-      motif: 'Grippe avec fièvre.',
-      urgence: false, statut: 'en_attente', commentaire: ''
-    },
-  ]);
+  // États HTTP
+  traitement   = signal(false);
+  erreurAction = signal('');
 
-  // Seulement les demandes en attente
+  // Computed depuis le cache du service (se met à jour automatiquement)
   demandesEnAttente = computed(() =>
-    this.demandes().filter(d => d.statut === 'en_attente')
+    this.congeService.demandes().filter(d => d.statut === 'en_attente')
   );
 
-  // Demandes déjà traitées
   demandesTraitees = computed(() =>
-    this.demandes().filter(d => d.statut !== 'en_attente')
+    this.congeService.demandes().filter(d => d.statut !== 'en_attente')
   );
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService:  AuthService,
+    public congeService: CongeService
+  ) {}
 
-  // Ouvre la modale d'action
-  ouvrirAction(demande: DemandeValidation, action: 'approuver' | 'rejeter'): void {
+  // ---- Au chargement : récupère toutes les demandes depuis Spring Boot ----
+  ngOnInit(): void {
+    this.congeService.chargerTout().subscribe({
+      error: (err: HttpErrorResponse) => {
+        console.error('Erreur chargement demandes', err);
+      }
+    });
+  }
+
+  // ---- Ouvrir la modale ----
+  ouvrirAction(
+    demande: Demande,
+    action: 'approuver' | 'rejeter'
+  ): void {
     this.demandeSelectionnee.set(demande);
     this.modeAction.set(action);
     this.commentaireAction.set('');
+    this.erreurAction.set('');
   }
 
   fermerModal(): void {
     this.demandeSelectionnee.set(null);
     this.modeAction.set(null);
+    this.erreurAction.set('');
   }
 
-  // Confirme l'action (approuver ou rejeter)
+  // ---- Confirmer l'action via HTTP ----
   confirmerAction(): void {
     const demande = this.demandeSelectionnee();
     const action  = this.modeAction();
     if (!demande || !action) return;
 
+    // Commentaire obligatoire pour un rejet
     if (action === 'rejeter' && !this.commentaireAction().trim()) {
-      alert('Un commentaire est obligatoire pour rejeter.');
+      this.erreurAction.set(
+        'Un commentaire est obligatoire pour rejeter une demande.'
+      );
       return;
     }
 
     this.traitement.set(true);
+    this.erreurAction.set('');
 
-    setTimeout(() => {
-      // On met à jour le statut dans le signal
-      this.demandes.update(list =>
-        list.map(d => d.id === demande.id
-          ? {
-              ...d,
-              statut: action === 'approuver' ? 'approuve' : 'rejete',
-              commentaire: this.commentaireAction()
-            }
-          : d
-        )
-      );
-      this.traitement.set(false);
-      this.fermerModal();
-    }, 700);
+    const decision: DecisionDemande = {
+      statut:      action === 'approuver' ? 'approuve' : 'rejete',
+      commentaire: this.commentaireAction().trim()
+    };
+
+    // PUT /api/demandes/:id/decision
+    this.congeService.decider(demande.id, decision).subscribe({
+      next: () => {
+        this.traitement.set(false);
+        this.fermerModal();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.traitement.set(false);
+        if (err.status === 403) {
+          this.erreurAction.set(
+            'Vous n\'avez pas les droits pour cette action.'
+          );
+        } else if (err.status === 404) {
+          this.erreurAction.set('Demande introuvable.');
+        } else {
+          this.erreurAction.set(
+            `Erreur serveur (${err.status}). Veuillez réessayer.`
+          );
+        }
+      }
+    });
   }
 
+  // ---- Helpers visuels ----
   getBadgeClass(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'badge-warning',
@@ -117,5 +125,14 @@ export class ValidationComponent {
       rejete:     'badge-danger'
     };
     return map[statut] ?? 'badge-secondary';
+  }
+
+  getStatutLabel(statut: string): string {
+    const map: Record<string, string> = {
+      en_attente: 'En attente',
+      approuve:   'Approuvé',
+      rejete:     'Rejeté'
+    };
+    return map[statut] ?? statut;
   }
 }

@@ -75,7 +75,7 @@ body {
     line-height: 1.5;
     color: #858796;
     text-align: left;
-    background-color: #036413
+    background-color: beige
 }
 
 [tabindex="-1"]:focus:not(:focus-visible) {
@@ -11101,7 +11101,7 @@ a:focus {
 
 .bg-gradient-primary {
     background-color: #214525;
-    background-image: linear-gradient(180deg, #214525 10%, #224abe 100%);
+    background-image: linear-gradient(180deg, beige 10%, beige 100%);
     background-size: cover
 }
 

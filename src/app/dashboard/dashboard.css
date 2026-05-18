@@ -1,4 +1,4 @@
-// Avatar dans le tableau
+ /*Avatar dans le tableau*/
 .avatar-sm {
   width: 32px;
   height: 32px;
@@ -13,7 +13,7 @@
   flex-shrink: 0;
 }
 
-// Cartes : animation au survol
+ /*Cartes : animation au survol*/
 .card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
@@ -23,7 +23,7 @@
   }
 }
 
-// Ligne du tableau : curseur pointer
+/*Ligne du tableau : curseur pointer*/
 tbody tr {
   cursor: default;
   transition: background 0.15s ease;

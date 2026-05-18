@@ -47,7 +47,7 @@
   // On retire l'ombre bleue par défaut au focus
   &:focus {
     box-shadow: none;
-    border-color: #086335; // Couleur primaire SB Admin 2
+    border-color:beige; // Couleur primaire SB Admin 2
   }
 }
 

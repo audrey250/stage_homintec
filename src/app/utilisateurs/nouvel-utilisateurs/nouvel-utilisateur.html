@@ -1,0 +1,286 @@
+<!-- ============================================================
+     FICHIER : nouvel-utilisateur.html
+     RÔLE    : Formulaire en 2 étapes (CORRIGÉ)
+     ============================================================ -->
+
+<div class="page-wrapper">
+
+  <!-- ===== EN-TÊTE ===== -->
+  <div class="page-header d-flex align-items-center gap-3 mb-4">
+
+    <a routerLink="/utilisateurs" class="btn-retour">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="fas fa-user-plus text-primary me-2"></i>
+        Nouvel utilisateur
+      </h4>
+
+      <nav class="breadcrumb-nav">
+        <span>Utilisateurs</span>
+        <i class="fas fa-chevron-right"></i>
+        <span class="active">Ajouter</span>
+      </nav>
+    </div>
+
+    <a routerLink="/utilisateurs" class="btn btn-outline-primary btn-sm">
+      <i class="fas fa-list"></i> Voir la liste
+    </a>
+
+  </div>
+
+  <!-- ===== SUCCÈS ===== -->
+  <div *ngIf="succes()" class="succes-card text-center">
+
+    <div class="succes-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+
+    <h3 class="fw-bold mt-3 mb-2">
+      Utilisateur créé avec succès !
+    </h3>
+
+    <p class="text-muted mb-0">
+      <strong>{{ form.prenom }} {{ form.nom }}</strong>
+      a été ajouté en tant que
+      <strong>{{ libellePoste(form.poste) }}</strong>.
+    </p>
+
+    <p class="text-muted mt-1" style="font-size:.85rem">
+      Redirection en cours...
+    </p>
+
+    <div class="spinner-border text-primary mt-3"
+         style="width:1.5rem;height:1.5rem"></div>
+
+  </div>
+
+  <!-- ===== FORMULAIRE ===== -->
+  <div *ngIf="!succes()" class="form-grid">
+
+    <!-- ================= COLONNE GAUCHE ================= -->
+    <div class="col-side">
+
+      <!-- STEPPER -->
+      <div class="stepper card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+          <h6 class="text-muted text-uppercase fw-bold mb-4"
+              style="font-size:.72rem;letter-spacing:1.5px">
+            Progression
+          </h6>
+
+          <div
+            *ngFor="let step of [
+              {n:1, label:'Identité', icon:'fa-user', desc:'Infos personnelles'},
+              {n:2, label:'Poste', icon:'fa-briefcase', desc:'Rôle & département'}
+            ]"
+            class="step-item"
+            [class.done]="etapeActive() > step.n"
+            [class.active]="etapeActive() === step.n">
+
+            <div class="step-num">
+              <i *ngIf="etapeActive() > step.n" class="fas fa-check"></i>
+              <span *ngIf="etapeActive() <= step.n">{{ step.n }}</span>
+            </div>
+
+            <div class="step-info">
+              <div class="step-label">{{ step.label }}</div>
+              <div class="step-desc">{{ step.desc }}</div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div class="preview-card card border-0 shadow-sm mt-3">
+        <div class="card-body p-4 text-center">
+
+          <h6 class="text-muted text-uppercase fw-bold mb-3"
+              style="font-size:.72rem;letter-spacing:1.5px">
+            Aperçu
+          </h6>
+
+          <div class="preview-avatar mx-auto mb-3"
+               [style.background]="couleurPoste">
+            {{ initiales }}
+          </div>
+
+          <div class="preview-name">
+            {{ form.prenom || 'Prénom' }} {{ form.nom || 'Nom' }}
+          </div>
+
+          <div class="preview-poste text-muted">
+            {{ form.poste || 'Poste non défini' }}
+          </div>
+
+          <span class="preview-role-badge mt-2"
+                [style.background]="couleurPoste+ '20'"
+                [style.color]="couleurPoste"
+                [style.borderColor]="couleurPoste+ '40'">
+
+            {{ libellePoste(form.poste) || 'Rôle' }}
+          </span>
+
+          <div class="preview-dept text-muted mt-2" style="font-size:.8rem">
+            <i class="fas fa-building me-1"></i>
+            {{ form.departementId || 'Département' }}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= COLONNE DROITE ================= -->
+    <div class="col-main">
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+
+          <!-- ERREUR -->
+          <div *ngIf="erreurGlobal()"
+               class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+
+            <i class="fas fa-exclamation-circle"></i>
+            {{ erreurGlobal() }}
+
+          </div>
+
+          <!-- ===== ÉTAPE 1 ===== -->
+          <div *ngIf="etapeActive() === 1">
+
+            <h5 class="fw-bold mb-3">Informations personnelles</h5>
+
+            <div class="row g-3">
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label">Prénom</label>
+                <input class="form-control"
+                       [(ngModel)]="form.prenom"
+                       name="prenom">
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label">Nom</label>
+                <input class="form-control"
+                       [(ngModel)]="form.nom"
+                       name="nom">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Email</label>
+                <input class="form-control"
+                       [(ngModel)]="form.email"
+                       name="email">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== ÉTAPE 2 ===== -->
+          <div *ngIf="etapeActive() === 2">
+
+            <h5 class="fw-bold mb-3">Poste & Rôle</h5>
+
+            <div class="row g-3">
+
+              <div class="col-12">
+                <label class="form-label">Rôle</label>
+
+                <div class="role-grid">
+
+                  <div *ngFor="let r of roles"
+                       class="role-card"
+                       [class.selected]="form.poste === r.value"
+                       (click)="form.poste = r.value">
+
+                    <i class="fas" [class]="r.icon"></i>
+                    <span>{{ r.label }}</span>
+
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label">Département</label>
+
+                <select class="form-select"
+                        [(ngModel)]="form.departementId"
+                        name="departement">
+
+                  <option value="">Choisir...</option>
+
+                  <option *ngFor="let dept of departements"
+                          [value]="dept">
+                    {{ dept }}
+                  </option>
+
+                </select>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <label class="form-label">Poste</label>
+
+                <input class="form-control"
+                       [(ngModel)]="form.poste"
+                       name="poste">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ===== BOUTONS ===== -->
+          <div class="nav-buttons mt-4">
+
+            <button *ngIf="etapeActive() > 1"
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="etapePrecedente()">
+
+              <i class="fas fa-arrow-left me-2"></i>
+              Précédent
+
+            </button>
+
+            <div class="flex-fill"></div>
+
+            <!-- Étape 1 -->
+            <button *ngIf="etapeActive() === 1"
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="etapeSuivante()">
+
+              Suivant
+              <i class="fas fa-arrow-right ms-2"></i>
+
+            </button>
+
+            <!-- Étape 2 -->
+            <button *ngIf="etapeActive() === 2"
+                    type="button"
+                    class="btn btn-success"
+                    (click)="soumettre()"
+                    [disabled]="loading()">
+
+              <span *ngIf="loading()"
+                    class="spinner-border spinner-border-sm me-2"></span>
+
+              {{ loading() ? 'Enregistrement...' : 'Créer l\'utilisateur' }}
+
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

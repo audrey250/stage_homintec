@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.scss'
+  styleUrl: './navbar.css'
 })
 export class NavbarComponent {
 
@@ -41,4 +41,11 @@ export class NavbarComponent {
   logout(): void {
     this.authService.logout();
   }
+
+  notifsOpen = false;
+
+toggleNotifs(): void {
+  this.notifsOpen = !this.notifsOpen;
+  this.dropdownOpen = false; // ferme l'autre dropdown
+}
 }

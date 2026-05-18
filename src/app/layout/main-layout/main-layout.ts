@@ -13,6 +13,6 @@ import { NavbarComponent } from '../navbar/navbar';
     NavbarComponent
   ],
   templateUrl: './main-layout.html',
-  styleUrls: ['./main-layout.scss']
+  styleUrls: ['./main-layout.css']
 })
 export class MainLayoutComponent {}

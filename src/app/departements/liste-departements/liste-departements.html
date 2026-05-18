@@ -1,0 +1,247 @@
+<!-- ============================================================
+     liste-departements.html
+     ============================================================ -->
+
+<div class="page-wrapper">
+
+  <!-- ===== EN-TÊTE ===== -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="fas fa-building text-primary me-2"></i>
+        Départements
+      </h4>
+      <p class="text-muted mb-0" style="font-size:0.85rem">
+        {{ stats().total }} département{{ stats().total > 1 ? 's' : '' }} —
+        {{ stats().totalEmployes }} employé{{ stats().totalEmployes > 1 ? 's' : '' }}
+      </p>
+    </div>
+    <button class="btn btn-primary" (click)="ouvrirCreation()">
+      <i class="fas fa-plus me-2"></i>Nouveau département
+    </button>
+  </div>
+
+  <!-- ===== ERREUR CHARGEMENT ===== -->
+  <div *ngIf="departementService.erreur()"
+       class="alert alert-danger py-2 mb-3"
+       style="font-size:0.85rem">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ departementService.erreur() }}
+  </div>
+
+  <!-- ===== BARRE DE RECHERCHE ===== -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body p-3">
+      <div class="input-group" style="max-width:400px">
+        <span class="input-group-text bg-light border-end-0">
+          <i class="fas fa-search text-muted" style="font-size:0.8rem"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control border-start-0"
+          placeholder="Rechercher un département..."
+          [ngModel]="recherche()"
+          (ngModelChange)="recherche.set($event)"
+        />
+        <button *ngIf="recherche()"
+                class="input-group-text bg-light border-start-0"
+                type="button"
+                (click)="recherche.set('')">
+          <i class="fas fa-times text-muted" style="font-size:0.75rem"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SPINNER ===== -->
+  <div *ngIf="departementService.loading()" class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+    <p class="text-muted mt-2 mb-0" style="font-size:0.85rem">
+      Chargement des départements...
+    </p>
+  </div>
+
+  <!-- ===== LISTE EN CARTES ===== -->
+  <div *ngIf="!departementService.loading()">
+
+    <!-- Aucun résultat -->
+    <div *ngIf="departementsFiltres().length === 0"
+         class="text-center py-5 text-muted">
+      <i class="fas fa-building fa-2x mb-3"></i>
+      <p class="mb-0">Aucun département trouvé.</p>
+    </div>
+
+    <!-- Grille de cartes -->
+    <div class="row g-3">
+      <div class="col-xl-4 col-md-6"
+           *ngFor="let dept of departementsFiltres()">
+
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body p-4">
+
+            <!-- En-tête de la carte -->
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <div class="dept-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <!-- Boutons modifier / supprimer -->
+              <div class="d-flex gap-1">
+                <button class="btn-action btn-edit"
+                        title="Modifier"
+                        (click)="ouvrirEdition(dept)">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="btn-action btn-delete"
+                        title="Supprimer"
+                        (click)="demanderSuppression(dept.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Nom du département -->
+            <h6 class="fw-bold mb-1">{{ dept.nom }}</h6>
+            <p class="text-muted mb-3" style="font-size:0.82rem">
+              {{ dept.description }}
+            </p>
+
+            <!-- Statistiques -->
+            <div class="d-flex align-items-center gap-3 mt-auto">
+              <div class="stat-mini">
+                <i class="fas fa-users text-primary me-1"></i>
+                <span class="fw-semibold">{{ dept.nbEmployes }}</span>
+                <span class="text-muted" style="font-size:0.75rem"> employé(s)</span>
+              </div>
+              <div class="stat-mini text-muted" style="font-size:0.75rem">
+                <i class="fas fa-calendar me-1"></i>
+                {{ dept.dateCreation }}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===== MODAL FORMULAIRE ===== -->
+<div *ngIf="modalOuvert()" class="modal-overlay" (click)="fermerModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- En-tête modal -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">
+        <i class="fas fa-building text-primary me-2"></i>
+        {{ titreModal }}
+      </h5>
+      <button class="btn-close-modal" (click)="fermerModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Erreur globale -->
+    <div *ngIf="formErreur()"
+         class="alert alert-danger py-2 mb-3"
+         style="font-size:0.85rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ formErreur() }}
+    </div>
+
+    <!-- Champ Nom -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold required" style="font-size:0.88rem">
+        Nom du département
+      </label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="form.nom"
+        placeholder="Ex : Technique, Finances..."
+        [class.is-invalid]="erreurs['nom']"
+      />
+      <div *ngIf="erreurs['nom']" class="invalid-feedback">
+        {{ erreurs['nom'] }}
+      </div>
+    </div>
+
+    <!-- Champ Description -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold required" style="font-size:0.88rem">
+        Description
+      </label>
+      <textarea
+        class="form-control"
+        [(ngModel)]="form.description"
+        rows="3"
+        placeholder="Décrivez le rôle de ce département..."
+        [class.is-invalid]="erreurs['description']"
+      ></textarea>
+      <div *ngIf="erreurs['description']" class="invalid-feedback">
+        {{ erreurs['description'] }}
+      </div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary"
+              (click)="fermerModal()"
+              [disabled]="formLoading()">
+        Annuler
+      </button>
+      <button class="btn btn-primary"
+              (click)="soumettre()"
+              [disabled]="formLoading()">
+        <span *ngIf="formLoading()"
+              class="spinner-border spinner-border-sm me-2">
+        </span>
+        <i *ngIf="!formLoading()" class="fas fa-save me-2"></i>
+        {{ formLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Bouton Nouveau département (en-tête) -->
+<a routerLink="/departements/nouveau" class="btn btn-primary">
+  <i class="fas fa-plus me-2"></i>Nouveau département
+</a>
+
+<!-- ===== MODAL SUPPRESSION ===== -->
+<div *ngIf="confirmSupprId() !== null"
+     class="modal-overlay"
+     (click)="annulerSuppression()">
+  <div class="modal-card text-center" (click)="$event.stopPropagation()">
+
+    <div class="modal-danger-icon mb-3">
+      <i class="fas fa-triangle-exclamation"></i>
+    </div>
+
+    <h5 class="fw-bold mb-2">Confirmer la suppression</h5>
+    <p class="text-muted mb-2" style="font-size:0.9rem">
+      Supprimer le département <strong>{{ nomASupprimer }}</strong> ?
+    </p>
+
+    <!-- Erreur suppression (ex: département non vide) -->
+    <div *ngIf="erreurSuppr()"
+         class="alert alert-danger py-2 mb-3"
+         style="font-size:0.82rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ erreurSuppr() }}
+    </div>
+
+    <div class="d-flex gap-2 justify-content-center">
+      <button class="btn btn-outline-secondary"
+              (click)="annulerSuppression()">
+        Annuler
+      </button>
+      <button class="btn btn-danger"
+              (click)="confirmerSuppression()">
+        <i class="fas fa-trash me-2"></i>Supprimer
+      </button>
+    </div>
+
+  </div>
+</div>

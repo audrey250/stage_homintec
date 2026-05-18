@@ -17,13 +17,13 @@
         <span
           class="badge mb-3"
           [ngClass]="{
-            'bg-secondary': authService.currentUser()?.role === 'employe',
-            'bg-info':      authService.currentUser()?.role === 'manager',
-            'bg-success':   authService.currentUser()?.role === 'rh',
-            'bg-danger':    authService.currentUser()?.role === 'admin'
+            'bg-secondary': authService.currentUser()?.Poste === 'employe',
+            'bg-info':      authService.currentUser()?.Poste === 'manager',
+            'bg-success':   authService.currentUser()?.Poste === 'rh',
+            'bg-danger':    authService.currentUser()?.Poste === 'admin'
           }"
         >
-          {{ authService.currentUser()?.role | uppercase }}
+          {{ authService.currentUser()?.Poste | uppercase }}
         </span>
 
         <hr>
@@ -35,18 +35,18 @@
           </div>
           <div class="col-sm-6">
             <div class="text-muted" style="font-size: 0.78rem;">Département</div>
-            <div class="fw-semibold">{{ authService.currentUser()?.departement }}</div>
+            <div class="fw-semibold">{{ authService.currentUser()?.departementId }}</div>
           </div>
           <div class="col-sm-6">
             <div class="text-muted" style="font-size: 0.78rem;">Poste</div>
-            <div class="fw-semibold">{{ authService.currentUser()?.poste }}</div>
+            <div class="fw-semibold">{{ authService.currentUser()?.Poste }}</div>
           </div>
           <div class="col-sm-6">
-            <div class="text-muted" style="font-size: 0.78rem;">Solde congés</div>
+            <!--<div class="text-muted" style="font-size: 0.78rem;">Solde congés</div>
             <div class="fw-semibold text-primary">
               {{ authService.currentUser()?.soldeConges }} jours
             </div>
-          </div>
+          </div>-->
         </div>
 
       </div>

@@ -1,59 +1,48 @@
 <div class="bg-gradient-primary min-vh-100 d-flex align-items-center justify-content-center p-3">
-
   <div class="col-xl-4 col-lg-5 col-md-7">
 
-    <!-- Logo et titre -->
+    <!-- Logo + Titre -->
     <div class="text-center mb-4">
-
-      <!--
-        ✅ CORRIGÉ : le logo doit être dans src/assets/
-        Étapes :
-          1. Copie homintec_logo.png dans src/assets/
-          2. Le chemin devient simplement "assets/homintec_logo.png"
-        On n'utilise JAMAIS un chemin Windows local (c:\Users\...)
-      -->
       <img
         src="assets/homintec_logo.png"
         alt="Logo HOMINTEC"
         class="mb-3"
-        style="height: 70px; object-fit: contain;"
+        style="height:70px; object-fit:contain;"
         onerror="this.style.display='none'"
       />
-      <!-- onerror = si le logo n'est pas encore là, on le cache sans erreur -->
-
-      <h1 class="text-white fw-bold" style="font-size: 1.8rem; letter-spacing: 2px;">
+      <h1 class="text-white fw-bold" style="font-size:1.8rem; letter-spacing:2px;">
         HOMINTEC
       </h1>
-      <p class="text-white-50 mb-0" style="font-size: 0.8rem; letter-spacing: 3px;">
+      <p class="text-white-50 mb-0" style="font-size:0.8rem; letter-spacing:3px;">
         PLATEFORME RH
       </p>
     </div>
 
-    <!-- Carte blanche avec le formulaire -->
+    <!-- Carte formulaire -->
     <div class="card shadow-lg border-0 rounded-lg">
       <div class="card-body p-4 p-md-5">
 
         <h4 class="text-center text-dark fw-bold mb-1">Connexion</h4>
-        <p class="text-center text-muted mb-4" style="font-size: 0.85rem;">
+        <p class="text-center text-muted mb-4" style="font-size:0.85rem;">
           Accédez à votre espace collaborateur
         </p>
 
         <!-- Message d'erreur -->
         <div
           *ngIf="errorMessage()"
-          class="alert alert-danger d-flex align-items-center gap-2 py-2"
-          style="font-size: 0.85rem;"
+          class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3"
+          style="font-size:0.85rem;"
         >
-          <i class="fas fa-exclamation-circle"></i>
+          <i class="fas fa-exclamation-circle flex-shrink-0"></i>
           {{ errorMessage() }}
         </div>
 
         <!-- Formulaire -->
         <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
 
-          <!-- Champ Email -->
+          <!-- Email -->
           <div class="mb-3">
-            <label class="form-label fw-semibold" style="font-size: 0.88rem;">
+            <label class="form-label fw-semibold" style="font-size:0.88rem;">
               Adresse email
             </label>
             <div class="input-group">
@@ -65,16 +54,17 @@
                 class="form-control border-start-0"
                 [(ngModel)]="email"
                 name="email"
-                placeholder="votre@email.com"
+                placeholder="votre@homintec.com"
                 required
+                autocomplete="email"
                 [disabled]="loading()"
               />
             </div>
           </div>
 
-          <!-- Champ Mot de passe -->
-          <div class="mb-4">
-            <label class="form-label fw-semibold" style="font-size: 0.88rem;">
+          <!-- Mot de passe -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:0.88rem;">
               Mot de passe
             </label>
             <div class="input-group">
@@ -82,27 +72,38 @@
                 <i class="fas fa-lock text-muted"></i>
               </span>
               <input
-                [type]="showPassword() ? 'text' : 'password'"
+                [type]="showmotDePasse() ? 'text' : 'password'"
                 class="form-control border-start-0 border-end-0"
-                [(ngModel)]="password"
-                name="password"
+                [(ngModel)]="motDePasse"
+                name="motDePasse"
                 placeholder="••••••••"
                 required
+                autocomplete="current-password"
                 [disabled]="loading()"
               />
               <button
                 type="button"
                 class="input-group-text bg-light border-start-0"
-                (click)="showPassword.set(!showPassword())"
-                [title]="showPassword() ? 'Masquer' : 'Afficher'"
+                (click)="showmotDePasse.set(!showmotDePasse())"
+                [title]="showmotDePasse() ? 'Masquer' : 'Afficher'"
               >
-                <i
-                  class="fas"
-                  [class.fa-eye]="!showPassword()"
-                  [class.fa-eye-slash]="showPassword()"
-                ></i>
+                <i class="fas"
+                   [class.fa-eye]="!showmotDePasse()"
+                   [class.fa-eye-slash]="showmotDePasse()">
+                </i>
               </button>
             </div>
+          </div>
+
+          <!-- Mot de passe oublié -->
+          <div class="text-end mb-4">
+          <a  
+              routerLink="/mot-de-passe-oublie"
+              class="text-muted"
+              style="font-size:0.82rem; text-decoration:none;"
+            >
+              <i class="fas fa-key me-1"></i>Mot de passe oublié ?
+            </a>
           </div>
 
           <!-- Bouton connexion -->
@@ -111,50 +112,22 @@
             class="btn btn-primary w-100 py-2 fw-semibold"
             [disabled]="loading()"
           >
-            <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+            <span
+              *ngIf="loading()"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
             <i *ngIf="!loading()" class="fas fa-sign-in-alt me-2"></i>
             {{ loading() ? 'Connexion en cours...' : 'Se connecter' }}
           </button>
 
         </form>
 
-        <!-- Séparateur -->
-        <hr class="my-4">
-
-        <!--
-          ✅ AJOUTÉ : Boutons démo pour tester sans taper l'email
-          Chaque bouton appelle remplirDemo() avec l'email correspondant
-          Le mot de passe homintec2024 est rempli automatiquement
-        -->
-        <div class="text-center">
-          <p class="text-muted mb-2" style="font-size: 0.78rem;">
-            🔑 Comptes de démonstration
-            <br>
-            <span class="fw-semibold">Mot de passe : homintec2024</span>
-          </p>
-          <div class="d-flex flex-wrap gap-2 justify-content-center">
-            <!--
-              *ngFor = répète ce bouton pour chaque compte dans demoAccounts[]
-              (click) = appelle remplirDemo() avec l'email du compte cliqué
-            -->
-            <button
-              *ngFor="let compte of demoAccounts"
-              type="button"
-              class="btn btn-outline-secondary btn-sm rounded-pill"
-              style="font-size: 0.78rem;"
-              (click)="remplirDemo(compte.email)"
-            >
-              {{ compte.label }}
-            </button>
-          </div>
-        </div>
-
       </div>
     </div>
 
     <!-- Pied de page -->
     <div class="text-center mt-3">
-      <p class="text-white-50" style="font-size: 0.75rem;">
+      <p class="text-white-50" style="font-size:0.75rem;">
         © 2024 HOMINTEC — Plateforme RH Collaborative
       </p>
     </div>

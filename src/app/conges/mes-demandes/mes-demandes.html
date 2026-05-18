@@ -1,32 +1,54 @@
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <div>
     <h1 class="h3 mb-0 text-gray-800 fw-bold">Mes demandes</h1>
-    <p class="text-muted mb-0" style="font-size: 0.88rem;">
+    <p class="text-muted mb-0" style="font-size:0.88rem;">
       Historique de toutes vos demandes
     </p>
   </div>
-  <a routerLink="/conges/nouvelle-demande" class="btn btn-primary btn-sm shadow-sm">
+  <a routerLink="/conges/nouvelle-demande"
+     class="btn btn-primary btn-sm shadow-sm">
     <i class="fas fa-plus me-1"></i> Nouvelle demande
   </a>
 </div>
 
-<!-- Onglets filtres -->
-<div class="card shadow mb-4">
+<!-- Spinner chargement initial -->
+<div *ngIf="congeService.loading()" class="text-center py-5">
+  <div class="spinner-border text-primary mb-2"></div>
+  <p class="text-muted mb-0" style="font-size:.85rem">
+    Chargement de vos demandes...
+  </p>
+</div>
+
+<!-- ✅ Erreur annulation -->
+<div *ngIf="erreurAnnulation()"
+     class="alert alert-danger alert-dismissible mb-3"
+     style="font-size:.85rem;">
+  <i class="fas fa-exclamation-circle me-2"></i>
+  {{ erreurAnnulation() }}
+</div>
+
+<!-- Contenu principal -->
+<div class="card shadow mb-4" *ngIf="!congeService.loading()">
+
+  <!-- Onglets filtres -->
   <div class="card-header p-0">
     <ul class="nav nav-tabs border-0">
-      <li class="nav-item" *ngFor="let onglet of [
-        { val: 'tous',       label: 'Toutes',     count: compte().tous },
-        { val: 'en_attente', label: 'En attente', count: compte().en_attente },
-        { val: 'approuve',   label: 'Approuvées', count: compte().approuve },
-        { val: 'rejete',     label: 'Rejetées',   count: compte().rejete }
-      ]">
+      <li
+        class="nav-item"
+        *ngFor="let onglet of [
+          { val: 'tous',       label: 'Toutes',     count: compte().tous       },
+          { val: 'en_attente', label: 'En attente', count: compte().en_attente },
+          { val: 'approuve',   label: 'Approuvées', count: compte().approuve   },
+          { val: 'rejete',     label: 'Rejetées',   count: compte().rejete     }
+        ]"
+      >
         <button
           class="nav-link"
           [class.active]="filtreStatut() === onglet.val"
           (click)="filtreStatut.set(onglet.val)"
         >
           {{ onglet.label }}
-          <span class="badge bg-secondary ms-1" style="font-size: 0.72rem;">
+          <span class="badge bg-secondary ms-1" style="font-size:0.72rem;">
             {{ onglet.count }}
           </span>
         </button>
@@ -50,19 +72,21 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th style="font-size: 0.82rem;">Type</th>
-            <th style="font-size: 0.82rem;">Période</th>
-            <th style="font-size: 0.82rem;">Jours</th>
-            <th style="font-size: 0.82rem;">Motif</th>
-            <th style="font-size: 0.82rem;">Statut</th>
-            <th style="font-size: 0.82rem;">Commentaire RH</th>
-            <th style="font-size: 0.82rem;">Action</th>
+            <th style="font-size:0.82rem;">Type</th>
+            <th style="font-size:0.82rem;">Période</th>
+            <th style="font-size:0.82rem;">Jours</th>
+            <th style="font-size:0.82rem;">Motif</th>
+            <th style="font-size:0.82rem;">Statut</th>
+            <!-- ✅ CORRIGÉ : commentaireRH → Commentaire validateur -->
+            <th style="font-size:0.82rem;">Commentaire</th>
+            <th style="font-size:0.82rem;">Action</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let d of demandesFiltrees()">
 
-            <td style="font-size: 0.85rem;">
+            <!-- Type avec icône -->
+            <td style="font-size:0.85rem;">
               <i
                 class="fas fa-fw me-1"
                 [ngClass]="{
@@ -74,43 +98,63 @@
               {{ d.type }}
             </td>
 
-            <td style="font-size: 0.83rem;">
+            <!-- Dates -->
+            <td style="font-size:0.83rem;">
               {{ d.dateDebut }} → {{ d.dateFin }}
             </td>
 
+            <!-- Jours -->
             <td>
               <span class="fw-semibold">{{ d.jours }}j</span>
             </td>
 
-            <td style="font-size: 0.83rem; max-width: 160px;">
+            <!-- Motif tronqué -->
+            <td style="font-size:0.83rem; max-width:160px;">
               <span class="text-truncate d-block" [title]="d.motif">
                 {{ d.motif }}
               </span>
             </td>
 
+            <!-- Statut -->
             <td>
               <span class="badge {{ getBadgeClass(d.statut) }}">
                 {{ getStatutLabel(d.statut) }}
               </span>
             </td>
 
-            <td style="font-size: 0.82rem; color: #666; max-width: 140px;">
-              {{ d.commentaireRH ?? '—' }}
+            <!-- ✅ CORRIGÉ : d.commentaireRH → d.commentaireValidateur -->
+            <td style="font-size:0.82rem; color:#666; max-width:140px;">
+              {{ d.commentaireValidateur ?? '—' }}
             </td>
 
+            <!-- Action annuler -->
             <td>
+              <!--
+                ✅ AJOUTÉ : spinner pendant l'annulation
+                annulationEnCours() contient l'ID en cours d'annulation
+              -->
               <button
                 *ngIf="d.statut === 'en_attente'"
                 class="btn btn-outline-danger btn-sm py-0 px-2"
                 (click)="annuler(d.id)"
+                [disabled]="annulationEnCours() === d.id"
                 title="Annuler cette demande"
               >
-                <i class="fas fa-trash"></i>
+                <!-- Spinner si cette demande est en cours d'annulation -->
+                <span
+                  *ngIf="annulationEnCours() === d.id"
+                  class="spinner-border spinner-border-sm"
+                ></span>
+                <i
+                  *ngIf="annulationEnCours() !== d.id"
+                  class="fas fa-trash"
+                ></i>
               </button>
+
               <span
                 *ngIf="d.statut !== 'en_attente'"
                 class="text-muted"
-                style="font-size: 0.78rem;"
+                style="font-size:0.78rem;"
               >—</span>
             </td>
 

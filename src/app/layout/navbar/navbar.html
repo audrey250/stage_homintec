@@ -8,17 +8,17 @@
   <!-- Éléments à droite -->
   <div class="ms-auto d-flex align-items-center gap-3">
 
-    <!-- Badge congés -->
+    <!-- Badge congés 
     <div class="solde-badge conges d-none d-lg-flex">
       <i class="fas fa-umbrella-beach"></i>
       <span>{{ authService.currentUser()?.soldeConges }} j. congés</span>
     </div>
 
-    <!-- Badge permissions -->
+    Badge permissions 
     <div class="solde-badge permissions d-none d-lg-flex">
       <i class="fas fa-clock"></i>
       <span>{{ authService.currentUser()?.soldePermissions }} permissions</span>
-    </div>
+    </div>-->
 
     <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -38,12 +38,12 @@
           <div>
             <span class="badge"
               [ngClass]="{
-                'bg-secondary': authService.currentUser()?.role === 'employe',
-                'bg-info':      authService.currentUser()?.role === 'manager',
-                'bg-success':   authService.currentUser()?.role === 'rh',
-                'bg-danger':    authService.currentUser()?.role === 'admin'
+                'bg-secondary': authService.currentUser()?.Poste === 'employe',
+                'bg-info':      authService.currentUser()?.Poste === 'manager',
+                'bg-success':   authService.currentUser()?.Poste === 'rh',
+                'bg-danger':    authService.currentUser()?.Poste === 'admin'
               }">
-              {{ authService.currentUser()?.role | uppercase }}
+              {{ authService.currentUser()?.Poste | uppercase }}
             </span>
           </div>
         </div>
@@ -166,5 +166,59 @@
             (click)="toggle()">
     </button>
   </div>
+  <!-- Cloche notifications -->
+<div class="nav-item dropdown" [class.show]="notifsOpen">
+  <a class="nav-link position-relative px-2"
+     href="#"
+     (click)="$event.preventDefault(); toggleNotifs()">
+    <i class="fas fa-bell fa-fw" style="color:#12471D;font-size:1.1rem"></i>
+    <!-- Badge rouge avec le nombre de non lues -->
+    <span *ngIf="authService.notifsNonLues() > 0"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          style="font-size:0.6rem;padding:3px 5px">
+      {{ authService.notifsNonLues() }}
+    </span>
+  </a>
+
+  <!-- Liste des notifications -->
+  <div class="dropdown-menu dropdown-menu-end shadow"
+       style="width:320px;max-height:360px;overflow-y:auto"
+       [class.show]="notifsOpen">
+
+    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+      <span class="fw-bold" style="font-size:0.88rem">Notifications</span>
+      <button class="btn btn-link btn-sm text-muted p-0"
+              style="font-size:0.75rem"
+              (click)="authService.toutMarquerLu()">
+        Tout marquer lu
+      </button>
+    </div>
+
+    <div *ngFor="let n of authService.notifications()"
+         class="dropdown-item d-flex gap-2 py-2"
+         [class.fw-semibold]="!n.lu"
+         style="white-space:normal;font-size:0.83rem;cursor:pointer"
+         (click)="authService.marquerLu(n.id)">
+      <i class="fas mt-1 fa-fw"
+         [class.fa-check-circle]="n.type === 'success'"
+         [class.fa-info-circle]="n.type === 'info'"
+         [class.fa-exclamation-triangle]="n.type === 'warning'"
+         [class.text-success]="n.type === 'success'"
+         [class.text-info]="n.type === 'info'"
+         [class.text-warning]="n.type === 'warning'">
+      </i>
+      <div>
+        <div>{{ n.message }}</div>
+        <div class="text-muted" style="font-size:0.75rem">{{ n.date }}</div>
+      </div>
+    </div>
+
+    <div *ngIf="authService.notifications().length === 0"
+         class="text-center text-muted py-3" style="font-size:0.85rem">
+      Aucune notification
+    </div>
+
+  </div>
+</div>
 
 </ul>

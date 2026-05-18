@@ -100,16 +100,45 @@
       <span>Messagerie</span>
     </a>
   </li>
+
+  
+  <hr class="sidebar-divider">
+<div class="sidebar-heading">Organisation</div>
+
+<li class="nav-item"
+    *ngIf="authService.hasRole('admin', 'rh')">
+  <a class="nav-link"
+     routerLink="/departements/nouveau"
+     routerLinkActive="active">
+    <i class="fas fa-fw fa-building"></i>
+    <span>nouveau departements</span>
+  </a>
+</li>
+
+<li class="nav-item"
+    *ngIf="authService.hasRole('admin', 'rh')">
+  <a class="nav-link"
+     routerLink="/departements/liste-departements"
+     routerLinkActive="active">
+    <i class="fas fa-fw fa-building"></i>
+    <span> liste des departement</span>
+  </a>
+</li>
+
+
   <hr class="sidebar-divider">
   <div class="sidebar-heading">Gestion des utilisateurs</div>
   <!-- Gestion des utilisateurs : visible SEULEMENT pour admin -->
+ 
   <li
-    class="nav-item"
+   class="nav-item"
     *ngIf="authService.hasRole('admin')"
   >
+   
+   
     <a 
       class="nav-link"
-      routerLink="/utilisateur"
+      routerLink="/utilisateurs"
       routerLinkActive="active"
     >
       <i class="fas fa-fw fa-users"></i>
@@ -134,7 +163,7 @@
     *ngIf="authService.hasRole('rh', 'admin', 'manager')">
     <a 
       class="nav-link"
-      routerLink="/utilisateur"
+      routerLink="/utilisateurs/liste-utilisateurs"
       routerLinkActive="active"
     >
       <i class="fas fa-fw fa-list"></i>

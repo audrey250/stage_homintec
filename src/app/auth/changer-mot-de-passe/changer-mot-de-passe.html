@@ -1,0 +1,99 @@
+<div class="bg-gradient-primary min-vh-100 d-flex align-items-center justify-content-center p-3">
+  <div class="col-xl-4 col-lg-5 col-md-7">
+
+    <div class="text-center mb-4">
+      <div style="font-size:2.5rem">🔐</div>
+      <h1 class="text-white fw-bold mt-2" style="font-size:1.5rem">
+        Première connexion
+      </h1>
+      <p class="text-white-50" style="font-size:0.82rem">
+        Vous devez définir un nouveau mot de passe avant de continuer.
+      </p>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-lg">
+      <div class="card-body p-4 p-md-5">
+
+        <h5 class="fw-bold mb-1 text-center">Nouveau mot de passe</h5>
+
+        <p class="text-muted text-center mb-4" style="font-size:0.82rem">
+          Bonjour <strong>{{ user?.prenom }}</strong>,
+          choisissez un mot de passe sécurisé.
+        </p>
+
+        <!-- PASSWORD -->
+        <div class="mb-3">
+
+          <label class="form-label fw-semibold">Nouveau mot de passe</label>
+
+          <div class="input-group">
+            <input
+              [type]="showmotDePasse() ? 'text' : 'motDePasse'"
+              class="form-control"
+              [(ngModel)]="nouveaumotDePasse"
+              placeholder="Minimum 8 caractères"
+              [class.is-invalid]="erreurs['motDePasse']"
+            />
+
+            <button type="button" class="btn btn-light"
+                    (click)="showmotDePasse.set(!showmotDePasse())">
+              👁
+            </button>
+          </div>
+
+          <div *ngIf="erreurs['motDePasse']" class="text-danger small mt-1">
+            {{ erreurs['motDePasse'] }}
+          </div>
+
+          <!-- FORCE PASSWORD -->
+          <div class="mt-2 d-flex align-items-center gap-2" *ngIf="nouveaumotDePasse">
+
+            <div class="progress flex-fill" style="height:6px;">
+              <div class="progress-bar bg-success"
+                   [style.width.%]="forcemotDePasse * 25">
+              </div>
+            </div>
+
+            <small>{{ forceLabel }}</small>
+          </div>
+
+        </div>
+
+        <!-- CONFIRM PASSWORD -->
+        <div class="mb-3">
+
+          <label class="form-label fw-semibold">Confirmation</label>
+
+          <div class="input-group">
+            <input
+              [type]="showConfirm() ? 'text' : 'motDePasse'"
+              class="form-control"
+              [(ngModel)]="confirmmotDePasse"
+              [class.is-invalid]="erreurs['confirm']"
+            />
+
+            <button type="button" class="btn btn-light"
+                    (click)="showConfirm.set(!showConfirm())">
+              👁
+            </button>
+          </div>
+
+          <div *ngIf="erreurs['confirm']" class="text-danger small mt-1">
+            {{ erreurs['confirm'] }}
+          </div>
+
+        </div>
+
+        <button class="btn btn-primary w-100"
+                (click)="soumettre()"
+                [disabled]="loading()">
+
+          {{ loading() ? 'Chargement...' : 'Valider' }}
+
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,163 @@
+<!-- ============================================================
+     departement-form.html
+     RÔLE : Formulaire création / édition département
+     ============================================================ -->
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7 col-xl-6">
+
+    <!-- ===== EN-TÊTE ===== -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <!-- Bouton retour -->
+      <a routerLink="/departements" class="btn-retour">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h4 class="fw-bold mb-0">
+          <i class="fas fa-building text-primary me-2"></i>
+          {{ titreFormulaire }}
+        </h4>
+        <!-- Fil d'Ariane -->
+        <div class="breadcrumb-nav">
+          <a routerLink="/departements" class="text-muted text-decoration-none"
+             style="font-size:.8rem">
+            Départements
+          </a>
+          <i class="fas fa-chevron-right mx-1" style="font-size:.65rem;color:#aaa"></i>
+          <span style="font-size:.8rem;color:#12471D;font-weight:600">
+            {{ modeEditionId() === null ? 'Nouveau' : 'Modifier' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ÉCRAN SUCCÈS ===== -->
+    <div *ngIf="succes()" class="succes-card text-center">
+      <div class="succes-icon mx-auto mb-3">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h5 class="fw-bold mb-2">
+        {{ modeEditionId() === null ? 'Département créé !' : 'Modifications enregistrées !' }}
+      </h5>
+      <p class="text-muted mb-0" style="font-size:.85rem">
+        Redirection vers la liste...
+      </p>
+      <div class="spinner-border text-primary mt-3"
+           style="width:1.25rem;height:1.25rem"></div>
+    </div>
+
+    <!-- ===== FORMULAIRE ===== -->
+    <div *ngIf="!succes()">
+
+      <!-- Spinner chargement (mode édition) -->
+      <div *ngIf="loading() && modeEditionId() !== null"
+           class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="text-muted mt-2 mb-0" style="font-size:.85rem">
+          Chargement du département...
+        </p>
+      </div>
+
+      <!-- Erreur globale -->
+      <div *ngIf="erreur()"
+           class="alert alert-danger d-flex align-items-center gap-2 mb-3"
+           style="font-size:.85rem">
+        <i class="fas fa-exclamation-circle flex-shrink-0"></i>
+        {{ erreur() }}
+      </div>
+
+      <!-- Card formulaire -->
+      <div class="card border-0 shadow-sm"
+           *ngIf="!(loading() && modeEditionId() !== null)">
+        <div class="card-body p-4 p-md-5">
+
+          <!-- Icône décorative -->
+          <div class="dept-icon-lg mx-auto mb-4">
+            <i class="fas fa-building"></i>
+          </div>
+
+          <!-- Champ Nom -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold required"
+                   style="font-size:.88rem">
+              Nom du département
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-building text-muted"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control border-start-0"
+                [(ngModel)]="form.nom"
+                name="nom"
+                placeholder="Ex : Technique, Finances, RH..."
+                [class.is-invalid]="erreurs['nom']"
+                [disabled]="loading()"
+              />
+              <div *ngIf="erreurs['nom']" class="invalid-feedback">
+                {{ erreurs['nom'] }}
+              </div>
+            </div>
+            <!-- Compteur de caractères -->
+            <div class="text-muted mt-1 text-end"
+                 style="font-size:.75rem">
+              {{ form.nom.length }} / 50 caractères
+            </div>
+          </div>
+
+          <!-- Champ Description -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold required"
+                   style="font-size:.88rem">
+              Description
+            </label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="form.description"
+              name="description"
+              rows="4"
+              placeholder="Décrivez le rôle et les responsabilités de ce département..."
+              [class.is-invalid]="erreurs['description']"
+              [disabled]="loading()"
+            ></textarea>
+            <div *ngIf="erreurs['description']" class="invalid-feedback">
+              {{ erreurs['description'] }}
+            </div>
+            <div class="text-muted mt-1 text-end"
+                 style="font-size:.75rem">
+              {{ form.description.length }} caractères
+              (minimum 10)
+            </div>
+          </div>
+
+          <!-- Boutons -->
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-primary flex-fill"
+              (click)="soumettre()"
+              [disabled]="loading()"
+            >
+              <span *ngIf="loading()"
+                    class="spinner-border spinner-border-sm me-2">
+              </span>
+              <i *ngIf="!loading()" class="fas fa-save me-2"></i>
+              {{ labelBouton }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="annuler()"
+              [disabled]="loading()"
+            >
+              Annuler
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

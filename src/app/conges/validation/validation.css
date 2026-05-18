@@ -1,4 +1,4 @@
-// Carte demande en attente
+ Carte demande en attente
 .demande-card {
   border: 1px solid #e3e6f0;
   border-radius: 10px;
@@ -11,14 +11,14 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   }
 
-  // Bordure rouge à gauche pour les urgentes
+ Bordure rouge à gauche pour les urgentes 
   &.urgente {
     border-left: 4px solid #e74a3b;
     background: #fff8f8;
   }
 }
 
-// Avatar
+ Avatar
 .avatar-md {
   width: 40px;
   height: 40px;
@@ -33,10 +33,10 @@
   flex-shrink: 0;
 }
 
-// Overlay modale
+ Overlay modale
 .modal-overlay {
   position: fixed;
-  inset: 0; // top/right/bottom/left = 0 en une ligne
+  inset: 0;  
   background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@
   to   { opacity: 1; }
 }
 
-// Carte de la modale
+ Carte de la modale
 .modal-card {
   background: white;
   border-radius: 14px;

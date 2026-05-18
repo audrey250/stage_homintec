@@ -1,83 +1,96 @@
-import { Component, signal, computed } from '@angular/core';
+// ============================================================
+// src/app/conges/mes-demandes/mes-demandes.ts
+// VERSION SPRING BOOT
+// ============================================================
+
+import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-
-export interface DemandeComplete {
-  id: number;
-  type: string;
-  dateDebut: string;
-  dateFin: string;
-  jours: number;
-  motif: string;
-  statut: 'en_attente' | 'approuve' | 'rejete';
-  dateCreation: string;
-  commentaireRH?: string;
-}
+import { CongeService, Demande } from '../../services/conge.service';
 
 @Component({
   selector: 'app-mes-demandes',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mes-demandes.html',
-  styleUrl: './mes-demandes.scss'
+  styleUrl: './mes-demandes.css'
 })
-export class MesDemandesComponent {
+export class MesDemandesComponent implements OnInit {
 
-  // Filtre actif
   filtreStatut = signal<string>('tous');
 
-  // Toutes les demandes
-  toutesLesDemandes = signal<DemandeComplete[]>([
-    {
-      id: 1, type: 'Congé annuel',
-      dateDebut: '2024-02-01', dateFin: '2024-02-10', jours: 8,
-      motif: 'Vacances en famille',
-      statut: 'en_attente', dateCreation: '2024-01-20'
-    },
-    {
-      id: 2, type: 'Permission',
-      dateDebut: '2024-01-28', dateFin: '2024-01-28', jours: 1,
-      motif: 'Rendez-vous médical',
-      statut: 'approuve', dateCreation: '2024-01-15',
-      commentaireRH: 'Approuvé par le manager.'
-    },
-    {
-      id: 3, type: 'Congé annuel',
-      dateDebut: '2023-12-24', dateFin: '2023-12-31', jours: 6,
-      motif: 'Fêtes de fin d\'année',
-      statut: 'approuve', dateCreation: '2023-12-01',
-      commentaireRH: 'Bon repos !'
-    },
-    {
-      id: 4, type: 'Congé maladie',
-      dateDebut: '2023-11-10', dateFin: '2023-11-12', jours: 3,
-      motif: 'Grippe',
-      statut: 'rejete', dateCreation: '2023-11-10',
-      commentaireRH: 'Justificatif médical requis.'
-    },
-  ]);
+  // États HTTP
+  erreurAnnulation = signal('');
+  annulationEnCours = signal<number | null>(null); // ID de la demande en cours
 
-  // Demandes filtrées selon le filtre actif
-  // computed recalcule automatiquement quand filtreStatut ou toutesLesDemandes change
+  // Computed filtrées depuis le cache du service
   demandesFiltrees = computed(() => {
     const filtre = this.filtreStatut();
-    const toutes = this.toutesLesDemandes();
+    const toutes = this.congeService.demandes();
     if (filtre === 'tous') return toutes;
     return toutes.filter(d => d.statut === filtre);
   });
 
   // Compteurs pour les onglets
-  compte = computed(() => ({
-    tous:       this.toutesLesDemandes().length,
-    en_attente: this.toutesLesDemandes().filter(d => d.statut === 'en_attente').length,
-    approuve:   this.toutesLesDemandes().filter(d => d.statut === 'approuve').length,
-    rejete:     this.toutesLesDemandes().filter(d => d.statut === 'rejete').length,
-  }));
+  compte = computed(() => {
+    const toutes = this.congeService.demandes();
+    return {
+      tous:       toutes.length,
+      en_attente: toutes.filter(d => d.statut === 'en_attente').length,
+      approuve:   toutes.filter(d => d.statut === 'approuve').length,
+      rejete:     toutes.filter(d => d.statut === 'rejete').length,
+    };
+  });
 
-  constructor(public authService: AuthService) {}
+  constructor(
+    public authService:  AuthService,
+    public congeService: CongeService
+  ) {}
 
+  // ---- Au chargement : récupère les demandes de l'employé connecté ----
+  ngOnInit(): void {
+    this.congeService.chargerMesDemandes().subscribe({
+      error: (err: HttpErrorResponse) => {
+        console.error('Erreur chargement mes demandes', err);
+      }
+    });
+  }
+
+  // ---- Annuler une demande en attente via HTTP ----
+  annuler(id: number): void {
+    if (!confirm('Confirmer l\'annulation de cette demande ?')) return;
+
+    this.annulationEnCours.set(id);
+    this.erreurAnnulation.set('');
+
+    // DELETE /api/demandes/:id
+    this.congeService.annuler(id).subscribe({
+      next: () => {
+        this.annulationEnCours.set(null);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.annulationEnCours.set(null);
+        if (err.status === 403) {
+          this.erreurAnnulation.set(
+            'Vous ne pouvez pas annuler cette demande.'
+          );
+        } else if (err.status === 404) {
+          this.erreurAnnulation.set('Demande introuvable.');
+        } else {
+          this.erreurAnnulation.set(
+            `Erreur (${err.status}). Veuillez réessayer.`
+          );
+        }
+        // Effacer le message après 4 secondes
+        setTimeout(() => this.erreurAnnulation.set(''), 4000);
+      }
+    });
+  }
+
+  // ---- Helpers visuels ----
   getBadgeClass(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'badge-warning',
@@ -94,12 +107,5 @@ export class MesDemandesComponent {
       rejete:     'Rejeté'
     };
     return map[statut] ?? statut;
-  }
-
-  // Annuler une demande en attente
-  annuler(id: number): void {
-    this.toutesLesDemandes.update(list =>
-      list.filter(d => d.id !== id)
-    );
   }
 }

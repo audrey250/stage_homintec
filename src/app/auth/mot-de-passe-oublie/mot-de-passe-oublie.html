@@ -1,0 +1,75 @@
+<div class="bg-gradient-primary min-vh-100 d-flex align-items-center justify-content-center p-3">
+  <div class="col-xl-4 col-lg-5 col-md-7">
+
+    <div class="text-center mb-4">
+      <div style="font-size:2.5rem">🔑</div>
+      <h1 class="text-white fw-bold mt-2" style="font-size:1.5rem">
+        Mot de passe oublié
+      </h1>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-lg">
+      <div class="card-body p-4 p-md-5">
+
+        <!-- Formulaire -->
+        <div *ngIf="!envoye()">
+          <h5 class="fw-bold text-center mb-1">Réinitialisation</h5>
+          <p class="text-muted text-center mb-4" style="font-size:0.85rem">
+            Entrez votre email professionnel. Vous recevrez un lien de réinitialisation.
+          </p>
+
+          <div *ngIf="erreur()" class="alert alert-danger py-2" style="font-size:0.85rem">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ erreur() }}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold" style="font-size:0.88rem">
+              Adresse email professionnelle
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-envelope text-muted"></i>
+              </span>
+              <input type="email"
+                     class="form-control border-start-0"
+                     [(ngModel)]="email"
+                     placeholder="votre@homintec.com"
+                     (keyup.enter)="envoyer()" />
+            </div>
+          </div>
+
+          <button type="button"
+                  class="btn btn-primary w-100 py-2 fw-semibold mb-3"
+                  (click)="envoyer()"
+                  [disabled]="loading()">
+            <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!loading()" class="fas fa-paper-plane me-2"></i>
+            {{ loading() ? 'Envoi en cours...' : 'Envoyer le lien' }}
+          </button>
+
+          <div class="text-center">
+            <a routerLink="/login" class="text-muted" style="font-size:0.82rem;text-decoration:none">
+              <i class="fas fa-arrow-left me-1"></i>Retour à la connexion
+            </a>
+          </div>
+        </div>
+
+        <!-- Confirmation envoi -->
+        <div *ngIf="envoye()" class="text-center py-3">
+          <div style="font-size:3rem">📧</div>
+          <h5 class="fw-bold mt-3 mb-2">Email envoyé !</h5>
+          <p class="text-muted mb-4" style="font-size:0.88rem">
+            Un lien de réinitialisation a été envoyé à
+            <strong>{{ email }}</strong>.
+            Vérifiez votre boîte mail.
+          </p>
+          <a routerLink="/login" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sign-in-alt me-2"></i>Retour à la connexion
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

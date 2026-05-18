@@ -1,5 +1,5 @@
 
-// Cartes de type de demande
+/* Cartes de type de demande*/
 .type-card {
   border: 2px solid #e3e6f0;
   border-radius: 12px;
@@ -15,7 +15,7 @@
     box-shadow: 0 4px 12px rgba(78,115,223,0.15);
   }
 
-  // Carte sélectionnée
+  /*Carte sélectionnée */
   &.selected {
     border-color: #214525;
     background: #f0f4ff;
@@ -23,7 +23,7 @@
   }
 }
 
-// Badge résumé jours
+/* Badge résumé jours */
 .jours-badge {
   background: #f0f4ff;
   border: 1px solid #c5d0f5;

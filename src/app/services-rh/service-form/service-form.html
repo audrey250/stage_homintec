@@ -1,0 +1,207 @@
+<p>service-form works!</p>
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8 col-xl-7">
+
+    <!-- EN-TÊTE -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a routerLink="/services-rh" class="btn-retour">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div>
+        <h4 class="fw-bold mb-0">
+          <i class="fas fa-sitemap text-primary me-2"></i>
+          {{ titreFormulaire }}
+        </h4>
+        <div class="breadcrumb-nav">
+          <a routerLink="/services-rh" class="text-muted text-decoration-none"
+             style="font-size:.8rem">
+            Services
+          </a>
+          <i class="fas fa-chevron-right mx-1"
+             style="font-size:.65rem;color:#aaa"></i>
+          <span style="font-size:.8rem;color:#12471D;font-weight:600">
+            {{ modeEditionId() === null ? 'Nouveau' : 'Modifier' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCÈS -->
+    <div *ngIf="succes()" class="succes-card text-center">
+      <div class="succes-icon mx-auto mb-3">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h5 class="fw-bold mb-2">
+        {{ modeEditionId() === null ? 'Service créé !' : 'Modifications enregistrées !' }}
+      </h5>
+      <p class="text-muted mb-0" style="font-size:.85rem">
+        Redirection vers la liste...
+      </p>
+      <div class="spinner-border text-primary mt-3"
+           style="width:1.25rem;height:1.25rem"></div>
+    </div>
+
+    <!-- FORMULAIRE -->
+    <div *ngIf="!succes()">
+
+      <!-- Spinner chargement édition -->
+      <div *ngIf="loading() && modeEditionId() !== null"
+           class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="text-muted mt-2 mb-0" style="font-size:.85rem">
+          Chargement du service...
+        </p>
+      </div>
+
+      <!-- Erreur globale -->
+      <div *ngIf="erreur()"
+           class="alert alert-danger d-flex align-items-center gap-2 mb-3"
+           style="font-size:.85rem">
+        <i class="fas fa-exclamation-circle flex-shrink-0"></i>
+        {{ erreur() }}
+      </div>
+
+      <div class="card border-0 shadow-sm"
+           *ngIf="!(loading() && modeEditionId() !== null)">
+        <div class="card-body p-4 p-md-5">
+
+          <!-- Icône décorative -->
+          <div class="service-icon-lg mx-auto mb-4">
+            <i class="fas fa-sitemap"></i>
+          </div>
+
+          <div class="row g-3">
+
+            <!-- Nom du service -->
+            <div class="col-12">
+              <label class="form-label fw-semibold required"
+                     style="font-size:.88rem">
+                Nom du service
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-sitemap text-muted"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control border-start-0"
+                  [(ngModel)]="form.nom"
+                  name="nom"
+                  placeholder="Ex : Développement, Comptabilité..."
+                  [class.is-invalid]="erreurs['nom']"
+                  [disabled]="loading()"
+                />
+                <div *ngIf="erreurs['nom']" class="invalid-feedback">
+                  {{ erreurs['nom'] }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label fw-semibold required"
+                     style="font-size:.88rem">
+                Description
+              </label>
+              <textarea
+                class="form-control"
+                [(ngModel)]="form.description"
+                name="description"
+                rows="3"
+                placeholder="Décrivez le rôle de ce service..."
+                [class.is-invalid]="erreurs['description']"
+                [disabled]="loading()"
+              ></textarea>
+              <div *ngIf="erreurs['description']" class="invalid-feedback">
+                {{ erreurs['description'] }}
+              </div>
+            </div>
+
+            <!-- Département (select) -->
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold required"
+                     style="font-size:.88rem">
+                Département
+              </label>
+
+              <!-- Spinner si la liste charge -->
+              <div *ngIf="departementService.loading()"
+                   class="text-muted" style="font-size:.85rem">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                Chargement...
+              </div>
+
+              <select
+                *ngIf="!departementService.loading()"
+                class="form-select"
+                [(ngModel)]="form.departementId"
+                name="departementId"
+                [class.is-invalid]="erreurs['departementId']"
+                [disabled]="loading()"
+              >
+                <option [value]="0">Choisir un département...</option>
+                <option *ngFor="let d of departements" [value]="d.id">
+                  {{ d.nom }}
+                </option>
+              </select>
+              <div *ngIf="erreurs['departementId']" class="invalid-feedback">
+                {{ erreurs['departementId'] }}
+              </div>
+            </div>
+
+            <!-- Responsable (select) -->
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold required"
+                     style="font-size:.88rem">
+                Responsable
+              </label>
+              <select
+                class="form-select"
+                [(ngModel)]="form.responsableId"
+                name="responsableId"
+                [class.is-invalid]="erreurs['responsableId']"
+                [disabled]="loading()"
+              >
+                <option [value]="0">Choisir un responsable...</option>
+                <option *ngFor="let u of responsablesPossibles" [value]="u.id">
+                  {{ u.prenom }} {{ u.nom }}
+                  <span> — {{ u.role | uppercase }}</span>
+                </option>
+              </select>
+              <div *ngIf="erreurs['responsableId']" class="invalid-feedback">
+                {{ erreurs['responsableId'] }}
+              </div>
+            </div>
+
+          </div><!-- fin row -->
+
+          <!-- Boutons -->
+          <div class="d-flex gap-2 mt-4">
+            <button
+              type="button"
+              class="btn btn-primary flex-fill"
+              (click)="soumettre()"
+              [disabled]="loading()"
+            >
+              <span *ngIf="loading()"
+                    class="spinner-border spinner-border-sm me-2">
+              </span>
+              <i *ngIf="!loading()" class="fas fa-save me-2"></i>
+              {{ labelBouton }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="annuler()"
+              [disabled]="loading()"
+            >
+              Annuler
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

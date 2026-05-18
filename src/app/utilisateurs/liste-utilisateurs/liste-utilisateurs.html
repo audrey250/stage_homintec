@@ -1,0 +1,211 @@
+<div>
+  <!-- En-tête -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="fas fa-users text-primary me-2"></i>
+        Gestion des utilisateurs
+      </h4>
+
+      <p class="text-muted mb-0" style="font-size:.85rem">
+        {{ utilisateurService.utilisateurs().length }} collaborateurs enregistrés
+      </p>
+    </div>
+
+    <button class="btn btn-primary" (click)="ouvrirModal()">
+      <i class="fas fa-user-plus me-2"></i>Ajouter un utilisateur
+    </button>
+  </div>
+
+  <!-- Message succès -->
+  <div *ngIf="messageSucces()" class="alert alert-success alert-dismissible">
+    {{ messageSucces() }}
+  </div>
+
+  <!-- Barre de recherche -->
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-body py-2">
+      <div class="input-group" style="max-width:350px">
+        <span class="input-group-text bg-light">
+          <i class="fas fa-search text-muted"></i>
+        </span>
+
+        <input
+          type="text"
+          class="form-control"
+          [ngModel]="recherche()"
+          (ngModelChange)="recherche.set($event)"
+          placeholder="Rechercher par nom, email, département..."
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE DESKTOP -->
+  <div class="card shadow-sm border-0 d-none d-md-block">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Département</th>
+            <th>Poste</th>
+            <th>Rôle</th>
+            <th>Congés</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let u of utilisateursFiltres()">
+
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-sm" [class]="'bg-' + couleurRole(u.role.nom)">
+                  {{ initiales(u) }}
+                </div>
+                <div class="fw-semibold">
+                  {{ u.prenom }} {{ u.nom }}
+                </div>
+              </div>
+            </td>
+
+            <td>{{ u.email }}</td>
+            <td>{{ u.departementId }}</td>
+            <td>{{ u.Poste }}</td>
+
+            <td>
+              <span class="badge" [class]="'bg-' + couleurRole(u.role.nom)">
+                {{ u.role.nom }}
+              </span>
+            </td>
+
+
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1">
+                <i class="fas fa-edit"></i>
+              </button>
+
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="utilisateurService.supprimer(u.id)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="utilisateursFiltres().length === 0">
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="fas fa-search fa-2x d-block mb-2"></i>
+              Aucun résultat pour "{{ recherche() }}"
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CARDS MOBILE -->
+  <div class="d-md-none">
+
+    <div *ngFor="let u of utilisateursFiltres()" class="card shadow-sm border-0 mb-2">
+      <div class="card-body d-flex align-items-center gap-3">
+
+        <div class="avatar-sm" [class]="'bg-' + couleurRole(u.role.nom)">
+          {{ initiales(u) }}
+        </div>
+
+        <div class="flex-fill">
+          <div class="fw-semibold">{{ u.prenom }} {{ u.nom }}</div>
+          <div class="text-muted" style="font-size:.78rem">
+            {{ u.Poste }} · {{ u.departementId }}
+          </div>
+
+          <span class="badge mt-1" [class]="'bg-' + couleurRole(u.role.nom)">
+            {{ u.role.nom }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div *ngIf="modalOuvert()" class="modal-overlay" (click)="fermerModal()">
+
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header border-0 pb-0">
+      <h5 class="fw-bold">
+        <i class="fas fa-user-plus me-2"></i>
+        Ajouter un utilisateur
+      </h5>
+
+      <button class="btn-close" (click)="fermerModal()"></button>
+    </div>
+
+    <div class="modal-body">
+
+      <div *ngIf="messageErreur()" class="alert alert-danger py-2">
+        {{ messageErreur() }}
+      </div>
+
+      <form (ngSubmit)="soumettre()">
+
+        <div class="row g-3">
+
+          <div class="col-6">
+            <input class="form-control" [(ngModel)]="form.prenom" name="prenom" placeholder="Prénom">
+          </div>
+
+          <div class="col-6">
+            <input class="form-control" [(ngModel)]="form.nom" name="nom" placeholder="Nom">
+          </div>
+
+          <div class="col-12">
+            <input class="form-control" [(ngModel)]="form.email" name="email" placeholder="Email">
+          </div>
+
+          <div class="col-6">
+            <select class="form-select" [(ngModel)]="form.poste" name="role.nom">
+              <option value="employe">Employé</option>
+              <option value="manager">Manager</option>
+              <option value="rh">RH</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="col-6">
+            <input class="form-control" [(ngModel)]="form.departementId" name="departement">
+          </div>
+
+          <div class="col-12">
+            <input class="form-control" [(ngModel)]="form.poste" name="poste">
+          </div>
+
+         
+
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary flex-fill" type="submit">
+            Enregistrer
+          </button>
+
+          <button class="btn btn-outline-secondary" type="button" (click)="fermerModal()">
+            Annuler
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>

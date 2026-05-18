@@ -1,59 +1,84 @@
+// ============================================================
+// src/app/services/utilisateur.service.ts
+// ============================================================
+
 import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 import { User } from './auth.service';
 
-export type NouvelUtilisateur = Omit<User, 'id'> & { password: string };
+const API_URL = 'http://localhost:8080/api';
+
+// Omit<User, 'id' | 'premiereCo'> = tous les champs sauf id et premiereCo
+// Spring Boot génère l'id et met premiereCo à true automatiquement
+export type NouvelUtilisateur = {
+  prenom: string;
+  nom: string;
+  email: string;
+  poste: string;
+  departementId: number;
+  //telephone:number;
+
+};
 
 @Injectable({ providedIn: 'root' })
 export class UtilisateurService {
 
-  // ---- Données temporaires (à remplacer par HTTP Spring Boot) ----
-  private _utilisateurs = signal<User[]>([
-    {
-      id: 1, nom: 'Koudjo', prenom: 'Ama',
-      email: 'ama.koudjo@homintec.com',
-      role: 'employe', departement: 'Technique',
-      poste: 'Ingénieure', soldeConges: 18, soldePermissions: 3
-    },
-    {
-      id: 2, nom: 'Agossou', prenom: 'Kofi',
-      email: 'kofi.agossou@homintec.com',
-      role: 'manager', departement: 'Technique',
-      poste: 'Chef de projet', soldeConges: 20, soldePermissions: 5
-    },
-    {
-      id: 3, nom: 'Dossou', prenom: 'Adjoa',
-      email: 'adjoa.dossou@homintec.com',
-      role: 'rh', departement: 'RH',
-      poste: 'Responsable RH', soldeConges: 20, soldePermissions: 5
-    },
-    {
-      id: 4, nom: 'Gbénou', prenom: 'Komi',
-      email: 'komi.gbenou@homintec.com',
-      role: 'admin', departement: 'Direction',
-      poste: 'Directeur Général', soldeConges: 25, soldePermissions: 10
-    },
-    {
-      id: 5, nom: 'Gbénou', prenom: 'Audrey',
-      email: 'audrey.gbenou@homintec.com',
-      role: 'employe', departement: 'Direction',
-      poste: 'Secrétaire de Direction', soldeConges: 18, soldePermissions: 3
-    },
-  ]);
+  private _utilisateurs = signal<User[]>([]);
+  utilisateurs          = this._utilisateurs.asReadonly();
 
-  utilisateurs = this._utilisateurs.asReadonly();
+  private _loading = signal(false);
+  loading          = this._loading.asReadonly();
 
-  ajouter(data: NouvelUtilisateur): void {
-    const maxId = Math.max(...this._utilisateurs().map(u => u.id));
-    const { password, ...userData } = data;
-    const nouvel: User = { id: maxId + 1, ...userData };
-    this._utilisateurs.update(liste => [...liste, nouvel]);
+  private _erreur = signal('');
+  erreur          = this._erreur.asReadonly();
+
+  constructor(private http: HttpClient) {}
+
+  // ---- GET /api/utilisateurs ----
+  chargerTout(): void {
+    this._loading.set(true);
+    this._erreur.set('');
+
+    this.http.get<User[]>(`${API_URL}/utilisateurs`).pipe(
+      tap((data) => {
+        this._utilisateurs.set(data);
+        this._loading.set(false);
+      }),
+      catchError((err) => {
+        this._loading.set(false);
+        this._erreur.set('Impossible de charger les utilisateurs.');
+        return throwError(() => err);
+      })
+    ).subscribe();
   }
 
-  supprimer(id: number): void {
-    this._utilisateurs.update(liste => liste.filter(u => u.id !== id));
+  // ---- POST /api/utilisateurs ----
+  ajouter(data: NouvelUtilisateur): Observable<User> {
+    return this.http.post<User>(`${API_URL}/utilisateurs`, data).pipe(
+      tap((nouveau) => {
+        // Spring Boot renvoie l'utilisateur créé avec son vrai id
+        this._utilisateurs.update(liste => [...liste, nouveau]);
+      }),
+      catchError((err) => throwError(() => err))
+    );
   }
 
+  // ---- DELETE /api/utilisateurs/:id ----
+  supprimer(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/utilisateurs/${id}`).pipe(
+      tap(() => {
+        this._utilisateurs.update(liste =>
+          liste.filter((u: User) => u.id !== id)
+        );
+      }),
+      catchError((err) => throwError(() => err))
+    );
+  }
+
+  // ---- Vérification email locale (sur les données déjà chargées) ----
+  // Pas besoin d'un appel HTTP séparé si la liste est déjà chargée
   emailExiste(email: string): boolean {
-    return this._utilisateurs().some(u => u.email === email);
+    return this._utilisateurs().some((u: User) => u.email === email);
   }
 }

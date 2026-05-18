@@ -1,149 +1,169 @@
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <div>
     <h1 class="h3 mb-0 text-gray-800 fw-bold">Validation des demandes</h1>
-    <p class="text-muted mb-0" style="font-size: 0.88rem;">
+    <p class="text-muted mb-0" style="font-size:0.88rem;">
       {{ demandesEnAttente().length }} demande(s) en attente de traitement
     </p>
   </div>
 </div>
 
-<!-- ===== DEMANDES EN ATTENTE ===== -->
-<div class="card shadow mb-4">
-  <div class="card-header py-3 d-flex align-items-center justify-content-between">
-    <h6 class="m-0 fw-bold text-warning">
-      <i class="fas fa-clock me-2"></i>En attente
-    </h6>
-    <span class="badge badge-warning">{{ demandesEnAttente().length }}</span>
-  </div>
+<!-- Spinner chargement initial -->
+<div *ngIf="congeService.loading()" class="text-center py-5">
+  <div class="spinner-border text-primary mb-2"></div>
+  <p class="text-muted mb-0" style="font-size:.85rem">
+    Chargement des demandes...
+  </p>
+</div>
 
-  <div class="card-body p-0">
+<!-- Erreur chargement -->
+<div *ngIf="congeService.erreur()" class="alert alert-danger">
+  <i class="fas fa-exclamation-circle me-2"></i>
+  {{ congeService.erreur() }}
+</div>
 
-    <!-- État vide -->
-    <div
-      *ngIf="demandesEnAttente().length === 0"
-      class="text-center py-5 text-muted"
-    >
-      <i class="fas fa-check-circle fa-3x text-success mb-3 d-block"></i>
-      Toutes les demandes ont été traitées !
+<!-- Contenu principal (affiché quand pas en chargement) -->
+<ng-container *ngIf="!congeService.loading()">
+
+  <!-- ===== DEMANDES EN ATTENTE ===== -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+      <h6 class="m-0 fw-bold text-warning">
+        <i class="fas fa-clock me-2"></i>En attente
+      </h6>
+      <span class="badge badge-warning">{{ demandesEnAttente().length }}</span>
     </div>
 
-    <!-- Cartes de demandes -->
-    <div class="p-3">
-      <div
-        class="demande-card"
-        [class.urgente]="d.urgence"
-        *ngFor="let d of demandesEnAttente()"
-      >
-        <div class="row align-items-center g-2">
+    <div class="card-body p-0">
 
-          <!-- Infos employé -->
-          <div class="col-md-3">
-            <div class="d-flex align-items-center gap-2">
-              <div class="avatar-md">
-                {{ d.employe.charAt(0) }}
-              </div>
-              <div>
-                <div class="fw-semibold" style="font-size: 0.88rem;">
-                  {{ d.employe }}
+      <!-- Aucune demande en attente -->
+      <div *ngIf="demandesEnAttente().length === 0"
+           class="text-center py-5 text-muted">
+        <i class="fas fa-check-circle fa-3x text-success mb-3 d-block"></i>
+        Toutes les demandes ont été traitées !
+      </div>
+
+      <!-- Liste des demandes en attente -->
+      <div class="p-3">
+        <div
+          class="demande-card"
+          [class.urgente]="d.urgence"
+          *ngFor="let d of demandesEnAttente()"
+        >
+          <div class="row align-items-center g-2">
+
+            <!-- Infos employé -->
+            <div class="col-md-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-md">{{ d.employe.charAt(0) }}</div>
+                <div>
+                  <div class="fw-semibold" style="font-size:0.88rem;">
+                    {{ d.employe }}
+                  </div>
+                  <div class="text-muted" style="font-size:0.78rem;">
+                    {{ d.departement }}
+                  </div>
                 </div>
-                <div class="text-muted" style="font-size: 0.78rem;">
-                  {{ d.departement }}
-                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Type + dates -->
-          <div class="col-md-3">
-            <div class="fw-semibold" style="font-size: 0.85rem;">
-              <i
-                class="fas fa-fw me-1"
-                [ngClass]="{
-                  'fa-umbrella-beach text-primary': d.type === 'Congé annuel',
-                  'fa-clock text-warning':          d.type === 'Permission',
-                  'fa-heartbeat text-danger':       d.type === 'Congé maladie'
-                }"
-              ></i>
-              {{ d.type }}
+            <!-- Type + dates -->
+            <div class="col-md-3">
+              <div class="fw-semibold" style="font-size:0.85rem;">
+                <i
+                  class="fas fa-fw me-1"
+                  [ngClass]="{
+                    'fa-umbrella-beach text-primary': d.type === 'Congé annuel',
+                    'fa-clock text-warning':          d.type === 'Permission',
+                    'fa-heartbeat text-danger':       d.type === 'Congé maladie'
+                  }"
+                ></i>
+                {{ d.type }}
+              </div>
+              <div class="text-muted" style="font-size:0.78rem;">
+                {{ d.dateDebut }} → {{ d.dateFin }}
+                <span class="fw-semibold text-dark ms-1">({{ d.jours }}j)</span>
+              </div>
             </div>
-            <div class="text-muted" style="font-size: 0.78rem;">
-              {{ d.dateDebut }} → {{ d.dateFin }}
-              <span class="fw-semibold text-dark ms-1">({{ d.jours }}j)</span>
-            </div>
-          </div>
 
-          <!-- Motif -->
-          <div class="col-md-3">
-            <div class="text-muted" style="font-size: 0.82rem; font-style: italic;">
-              "{{ d.motif }}"
+            <!-- Motif -->
+            <div class="col-md-3">
+              <div class="text-muted"
+                   style="font-size:0.82rem; font-style:italic;">
+                "{{ d.motif }}"
+              </div>
+              <span *ngIf="d.urgence"
+                    class="badge bg-danger mt-1"
+                    style="font-size:0.72rem;">
+                <i class="fas fa-bolt me-1"></i>URGENT
+              </span>
             </div>
-            <span *ngIf="d.urgence" class="badge bg-danger mt-1" style="font-size: 0.72rem;">
-              <i class="fas fa-bolt me-1"></i>URGENT
-            </span>
-          </div>
 
-          <!-- Boutons action -->
-          <div class="col-md-3 text-end">
-            <div class="d-flex gap-2 justify-content-end">
-              <button
-                class="btn btn-success btn-sm"
-                (click)="ouvrirAction(d, 'approuver')"
-              >
-                <i class="fas fa-check me-1"></i>Approuver
-              </button>
-              <button
-                class="btn btn-danger btn-sm"
-                (click)="ouvrirAction(d, 'rejeter')"
-              >
-                <i class="fas fa-times me-1"></i>Rejeter
-              </button>
+            <!-- Boutons action -->
+            <div class="col-md-3 text-end">
+              <div class="d-flex gap-2 justify-content-end">
+                <button
+                  class="btn btn-success btn-sm"
+                  (click)="ouvrirAction(d, 'approuver')"
+                >
+                  <i class="fas fa-check me-1"></i>Approuver
+                </button>
+                <button
+                  class="btn btn-danger btn-sm"
+                  (click)="ouvrirAction(d, 'rejeter')"
+                >
+                  <i class="fas fa-times me-1"></i>Rejeter
+                </button>
+              </div>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ===== DEMANDES TRAITÉES ===== -->
-<div class="card shadow mb-4" *ngIf="demandesTraitees().length > 0">
-  <div class="card-header py-3">
-    <h6 class="m-0 fw-bold text-success">
-      <i class="fas fa-history me-2"></i>Historique des traitements
-    </h6>
-  </div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th style="font-size: 0.82rem;">Employé</th>
-            <th style="font-size: 0.82rem;">Type</th>
-            <th style="font-size: 0.82rem;">Période</th>
-            <th style="font-size: 0.82rem;">Statut</th>
-            <th style="font-size: 0.82rem;">Commentaire</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let d of demandesTraitees()">
-            <td style="font-size: 0.85rem;">{{ d.employe }}</td>
-            <td style="font-size: 0.85rem;">{{ d.type }}</td>
-            <td style="font-size: 0.83rem;">{{ d.dateDebut }} → {{ d.dateFin }}</td>
-            <td>
-              <span class="badge {{ getBadgeClass(d.statut) }}">
-                {{ d.statut === 'approuve' ? 'Approuvé' : 'Rejeté' }}
-              </span>
-            </td>
-            <td style="font-size: 0.82rem; color: #666;">
-              {{ d.commentaire || '—' }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- ===== HISTORIQUE DES TRAITEMENTS ===== -->
+  <div class="card shadow mb-4" *ngIf="demandesTraitees().length > 0">
+    <div class="card-header py-3">
+      <h6 class="m-0 fw-bold text-success">
+        <i class="fas fa-history me-2"></i>Historique des traitements
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="font-size:0.82rem;">Employé</th>
+              <th style="font-size:0.82rem;">Type</th>
+              <th style="font-size:0.82rem;">Période</th>
+              <th style="font-size:0.82rem;">Statut</th>
+              <!-- ✅ CORRIGÉ : commentaireValidateur -->
+              <th style="font-size:0.82rem;">Commentaire</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of demandesTraitees()">
+              <td style="font-size:0.85rem;">{{ d.employe }}</td>
+              <td style="font-size:0.85rem;">{{ d.type }}</td>
+              <td style="font-size:0.83rem;">{{ d.dateDebut }} → {{ d.dateFin }}</td>
+              <td>
+                <span class="badge {{ getBadgeClass(d.statut) }}">
+                  {{ getStatutLabel(d.statut) }}
+                </span>
+              </td>
+              <!-- ✅ CORRIGÉ : d.commentaire → d.commentaireValidateur -->
+              <td style="font-size:0.82rem; color:#666;">
+                {{ d.commentaireValidateur || '—' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
+
+</ng-container>
 
 <!-- ===== MODALE CONFIRMATION ===== -->
 <div
@@ -151,13 +171,10 @@
   *ngIf="demandeSelectionnee()"
   (click)="fermerModal()"
 >
-  <!--
-    $event.stopPropagation() empêche le clic sur la carte
-    de fermer la modale (bulle d'événement)
-  -->
   <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <div class="modal-card-header"
+    <div
+      class="modal-card-header"
       [class.header-success]="modeAction() === 'approuver'"
       [class.header-danger]="modeAction() === 'rejeter'"
     >
@@ -172,28 +189,45 @@
     </div>
 
     <div class="modal-card-body">
-      <p style="font-size: 0.9rem;">
+
+      <!-- Résumé de la demande -->
+      <p style="font-size:0.9rem;">
         Demande de <strong>{{ demandeSelectionnee()?.employe }}</strong>
         — {{ demandeSelectionnee()?.type }}
         ({{ demandeSelectionnee()?.jours }} jour(s))
       </p>
 
+      <!-- Erreur HTTP -->
+      <div *ngIf="erreurAction()"
+           class="alert alert-danger py-2 mb-3"
+           style="font-size:0.85rem;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        {{ erreurAction() }}
+      </div>
+
+      <!-- Commentaire -->
       <div class="mb-3">
-        <label class="form-label fw-semibold" style="font-size: 0.88rem;">
+        <label class="form-label fw-semibold" style="font-size:0.88rem;">
           Commentaire
           <span *ngIf="modeAction() === 'rejeter'" class="text-danger">*</span>
         </label>
+        <!--
+          ✅ CORRIGÉ : signal ne supporte pas [(ngModel)] directement
+          On utilise [ngModel] pour lire + (ngModelChange) pour écrire
+        -->
         <textarea
           class="form-control"
           rows="3"
           [placeholder]="modeAction() === 'approuver'
             ? 'Commentaire optionnel...'
             : 'Motif du rejet (obligatoire)...'"
-          [(ngModel)]="commentaireAction"
+          [ngModel]="commentaireAction()"
+          (ngModelChange)="commentaireAction.set($event)"
           name="commentaire"
         ></textarea>
       </div>
 
+      <!-- Boutons -->
       <div class="d-flex gap-2 justify-content-end">
         <button
           class="btn btn-outline-secondary"
@@ -209,10 +243,13 @@
           (click)="confirmerAction()"
           [disabled]="traitement()"
         >
-          <span *ngIf="traitement()" class="spinner-border spinner-border-sm me-2"></span>
+          <span *ngIf="traitement()"
+                class="spinner-border spinner-border-sm me-2">
+          </span>
           Confirmer
         </button>
       </div>
+
     </div>
   </div>
 </div>

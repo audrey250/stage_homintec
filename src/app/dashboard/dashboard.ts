@@ -1,17 +1,30 @@
-import { Component, OnInit, signal } from '@angular/core';
+// ============================================================
+// src/app/dashboard/dashboard.ts
+// ============================================================
+
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthService, User } from '../services/auth.service';
 
-// Interface pour une demande de congé
+const API_URL = 'http://localhost:8080/api';
+
 export interface Demande {
-  id: number;
-  employe: string;
-  type: 'Congé annuel' | 'Permission' | 'Congé maladie';
+  id:        number;
+  employe:   string;
+  type:      'Congé annuel' | 'Permission' | 'Congé maladie';
   dateDebut: string;
-  dateFin: string;
-  jours: number;
-  statut: 'en_attente' | 'approuve' | 'rejete';
+  dateFin:   string;
+  jours:     number;
+  statut:    'en_attente' | 'approuve' | 'rejete';
+}
+
+export interface DashboardStats {
+  demandesEnAttente: number;
+  congesApprouves:   number;
+  soldeConges:       number;
+  soldePermissions:  number;
 }
 
 @Component({
@@ -19,79 +32,151 @@ export interface Demande {
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss'
+  styleUrl: './dashboard.css'
 })
 export class DashboardComponent implements OnInit {
 
-  // L'utilisateur connecté
+  // ---- Utilisateur connecté ----
   user = signal<User | null>(null);
 
-  // Statistiques affichées dans les cartes
-  stats = signal({
-    demandesEnAttente: 4,
-    congesApprouves:   12,
-    soldeConges:       18,
-    soldePermissions:  3
+  // ---- Stats ----
+  stats = signal<DashboardStats>({
+    demandesEnAttente: 0,
+    congesApprouves:   0,
+    soldeConges:       0,
+    soldePermissions:  0
   });
 
-  // Fausses demandes récentes pour la démo
-  demandesRecentes = signal<Demande[]>([
-    {
-      id: 1,
-      employe: 'Ama Koudjo',
-      type: 'Congé annuel',
-      dateDebut: '2024-02-01',
-      dateFin: '2024-02-10',
-      jours: 8,
-      statut: 'en_attente'
-    },
-    {
-      id: 2,
-      employe: 'Kofi Agossou',
-      type: 'Permission',
-      dateDebut: '2024-01-28',
-      dateFin: '2024-01-28',
-      jours: 1,
-      statut: 'approuve'
-    },
-    {
-      id: 3,
-      employe: 'Adjoa Dossou',
-      type: 'Congé maladie',
-      dateDebut: '2024-01-20',
-      dateFin: '2024-01-25',
-      jours: 5,
-      statut: 'approuve'
-    },
-    {
-      id: 4,
-      employe: 'Komi Gbénou',
-      type: 'Congé annuel',
-      dateDebut: '2024-01-15',
-      dateFin: '2024-01-17',
-      jours: 3,
-      statut: 'rejete'
-    },
-  ]);
+  // ---- Demandes récentes ----
+  demandesRecentes = signal<Demande[]>([]);
 
-  constructor(public authService: AuthService) {}
+  // ---- États de chargement ----
+  loadingStats    = signal(false);
+  loadingDemandes = signal(false);
+  erreurStats     = signal('');
+  erreurDemandes  = signal('');
+
+  constructor(
+    public authService: AuthService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
-    // On récupère l'utilisateur connecté au chargement
+    // 1. Récupère l'utilisateur connecté
     this.user.set(this.authService.currentUser());
 
-    // On met à jour le solde selon l'utilisateur réel
-    const u = this.user();
-    if (u) {
-      this.stats.update(s => ({
-        ...s, // On garde les autres valeurs
-        soldeConges: u.soldeConges,
-        soldePermissions: u.soldePermissions
-      }));
-    }
+    // 2. Charge les stats depuis Spring Boot
+    this.chargerStats();
+
+    // 3. Charge les demandes récentes
+    this.chargerDemandes();
   }
 
-  // Retourne la classe CSS selon le statut
+  // ============================================================
+  // GET /api/dashboard/stats
+  // Spring Boot renvoie : { demandesEnAttente, congesApprouves,
+  //                         soldeConges, soldePermissions }
+  // ============================================================
+  chargerStats(): void {
+    this.loadingStats.set(true);
+    this.erreurStats.set('');
+
+    this.http.get<DashboardStats>(`${API_URL}/dashboard/stats`)
+      .subscribe({
+        next: (data) => {
+          this.stats.set(data);
+          this.loadingStats.set(false);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.loadingStats.set(false);
+
+         /* // Fallback : si l'API échoue, on utilise les données
+          // de l'utilisateur connecté pour au moins afficher les soldes
+          const u = this.user();
+          if (u) {
+            this.stats.update(s => ({
+              ...s,
+              soldeConges:      u.soldeConges,
+              soldePermissions: u.soldePermissions
+            }));
+          }*/
+
+          if (err.status !== 0) {
+            this.erreurStats.set('Impossible de charger les statistiques.');
+          }
+        }
+      });
+  }
+
+  // ============================================================
+  // GET /api/dashboard/demandes-recentes
+  // Spring Boot renvoie : Demande[] (les 5 dernières)
+  // ============================================================
+  chargerDemandes(): void {
+    this.loadingDemandes.set(true);
+    this.erreurDemandes.set('');
+
+    this.http.get<Demande[]>(`${API_URL}/dashboard/demandes-recentes`)
+      .subscribe({
+        next: (data) => {
+          this.demandesRecentes.set(data);
+          this.loadingDemandes.set(false);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.loadingDemandes.set(false);
+          if (err.status !== 0) {
+            this.erreurDemandes.set('Impossible de charger les demandes.');
+          }
+        }
+      });
+  }
+
+  // ============================================================
+  // APPROUVER une demande
+  // PUT /api/conges/:id/approuver
+  // ============================================================
+  approuver(id: number): void {
+    this.http.put(`${API_URL}/conges/${id}/approuver`, {})
+      .subscribe({
+        next: () => {
+          // Met à jour localement sans recharger toute la liste
+          this.demandesRecentes.update(liste =>
+            liste.map(d =>
+              d.id === id ? { ...d, statut: 'approuve' } : d
+            )
+          );
+          // Recharge les stats pour mettre à jour le compteur
+          this.chargerStats();
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Erreur approbation :', err);
+        }
+      });
+  }
+
+  // ============================================================
+  // REJETER une demande
+  // PUT /api/conges/:id/rejeter
+  // ============================================================
+  rejeter(id: number): void {
+    this.http.put(`${API_URL}/conges/${id}/rejeter`, {})
+      .subscribe({
+        next: () => {
+          this.demandesRecentes.update(liste =>
+            liste.map(d =>
+              d.id === id ? { ...d, statut: 'rejete' } : d
+            )
+          );
+          this.chargerStats();
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Erreur rejet :', err);
+        }
+      });
+  }
+
+  // ---- Helpers ----
+
   getBadgeClass(statut: string): string {
     const classes: Record<string, string> = {
       'en_attente': 'badge-warning',
@@ -101,7 +186,6 @@ export class DashboardComponent implements OnInit {
     return classes[statut] ?? 'badge-secondary';
   }
 
-  // Retourne le texte lisible du statut
   getStatutLabel(statut: string): string {
     const labels: Record<string, string> = {
       'en_attente': 'En attente',

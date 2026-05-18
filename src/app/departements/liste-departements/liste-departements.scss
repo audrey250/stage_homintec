@@ -1,0 +1,113 @@
+// ============================================================
+// liste-departements.scss
+// ============================================================
+
+$primary:   #12471D;
+$danger:    #e74c3b;
+$border:    #e3e6f0;
+$radius:    10px;
+
+// ---- Icône département ----
+.dept-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba($primary, 0.1);
+  color: $primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+// ---- Stat mini dans la carte ----
+.stat-mini {
+  display: flex;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+// ---- Boutons d'action ----
+.btn-action {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &.btn-edit {
+    background: rgba($primary, 0.08);
+    color: $primary;
+    &:hover { background: $primary; color: white; }
+  }
+
+  &.btn-delete {
+    background: rgba($danger, 0.08);
+    color: $danger;
+    &:hover { background: $danger; color: white; }
+  }
+}
+
+// ---- Overlays modal ----
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  animation: slideUp 0.2s ease;
+}
+
+.modal-danger-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba($danger, 0.1);
+  color: $danger;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.btn-close-modal {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f8f9fc;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover { background: #e9ecef; }
+}
+
+// ---- Label obligatoire ----
+.form-label.required::after {
+  content: ' *';
+  color: $danger;
+}
+
+@keyframes fadeIn  { from { opacity: 0; }                    to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

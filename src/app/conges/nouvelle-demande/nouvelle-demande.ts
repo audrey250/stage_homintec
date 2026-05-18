@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './nouvelle-demande.html',
-  styleUrl: './nouvelle-demande.scss'
+  styleUrl: './nouvelle-demande.css'
 })
 export class NouvelleDemandeComponent {
 
@@ -79,12 +79,12 @@ export class NouvelleDemandeComponent {
       this.erreur.set('Veuillez renseigner un motif.'); return;
     }
 
-    // Vérifier solde suffisant
+    /*// Vérifier solde suffisant
     const user = this.authService.currentUser();
     if (user && f.type === 'conge_annuel' && this.nombreJours() > user.soldeConges) {
       this.erreur.set(`Solde insuffisant. Vous avez ${user.soldeConges} jours disponibles.`);
       return;
-    }
+    }*/
 
     this.loading.set(true);
 

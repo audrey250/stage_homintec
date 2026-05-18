@@ -6,7 +6,8 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-profil',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './profil.html'
+  templateUrl: './profil.html',
+  styleUrl: './profil.css'
 })
 export class ProfilComponent {
   constructor(public authService: AuthService) {}
