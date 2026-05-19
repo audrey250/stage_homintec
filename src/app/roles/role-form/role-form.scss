@@ -1,14 +1,9 @@
-// ============================================================
-// departement-form.scss
-// ============================================================
+$primary: #12471d;
+$primary-dark: #0d3014;
+$danger: #e74c3b;
+$border: #e3e6f0;
+$success: #1cc88a;
 
-$primary:        #12471D;
-$primary-dark:   #0d3014;
-$danger:         #e74c3b;
-$border:         #e3e6f0;
-$success:        #1cc88a;
-
-// Bouton retour circulaire
 .btn-retour {
   width: 38px;
   height: 38px;
@@ -30,8 +25,12 @@ $success:        #1cc88a;
   }
 }
 
-// Icône décorative en haut du formulaire
-.dept-icon-lg {
+.form-label.required::after {
+  content: ' *';
+  color: $danger;
+}
+
+.role-icon-lg {
   width: 64px;
   height: 64px;
   border-radius: 16px;
@@ -43,13 +42,6 @@ $success:        #1cc88a;
   font-size: 1.5rem;
 }
 
-// Label obligatoire
-.form-label.required::after {
-  content: ' *';
-  color: $danger;
-}
-
-// Champs
 .form-control, .form-select {
   border-radius: 8px;
   border: 1.5px solid $border;
@@ -57,11 +49,17 @@ $success:        #1cc88a;
 
   &:focus {
     border-color: $primary;
-    box-shadow: 0 0 0 3px rgba($primary, .1);
+    box-shadow: 0 0 0 3px rgba($primary,.1);
   }
 }
 
-// ---- Boutons formulaire ----
+.succes-card {
+  background: white;
+  border-radius: 16px;
+  padding: 50px 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+
 .d-flex.gap-2 {
   gap: 12px !important;
 
@@ -93,14 +91,6 @@ $success:        #1cc88a;
   }
 }
 
-// Carte succès
-.succes-card {
-  background: white;
-  border-radius: 16px;
-  padding: 50px 30px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.06);
-}
-
 .succes-icon {
   width: 70px;
   height: 70px;
@@ -115,7 +105,7 @@ $success:        #1cc88a;
 }
 
 @keyframes bounceIn {
-  0%  { transform: scale(0); opacity: 0; }
+  0% { transform: scale(0); opacity: 0; }
   60% { transform: scale(1.15); }
-  100%{ transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }

@@ -15,14 +15,29 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-// On importe les interfaces depuis le fichier models
-// (séparation claire entre la forme des données et la logique)
-import { ServiceRH, ServiceRHForm } from './service-rh.service';
+// ============================================================
+// INTERFACES POUR LES SERVICES RH
+// ============================================================
+
+export interface ServiceRH {
+  id: string | number;
+  nom: string;
+  description: string;
+  departementId: string | number;
+  nbEmployes?: number;
+}
+
+export interface ServiceRHForm {
+  nom: string;
+  description: string;
+  departementId: string | number;
+}
 
 // URL de base de l'API Spring Boot
 // À changer uniquement ici si le serveur change d'adresse
-const API_URL = 'http://localhost:8080/api';
+const API_URL = environment.apiUrl;
 
 @Injectable({ providedIn: 'root' })
 // providedIn: 'root' = ce service est disponible partout dans l'app
@@ -60,7 +75,7 @@ export class ServiceRHService {
   // CHARGER TOUS LES SERVICES
   // GET /api/services
   // Appelé dans ngOnInit() de ListeServicesComponent
-  // et ServiceFormComponent (pour le <select> responsable)
+  // et ServiceFormComponent
   // ============================================================
   chargerTout(): void {
     // On active le spinner et on remet l'erreur à zéro
@@ -97,7 +112,7 @@ export class ServiceRHService {
   // ServiceFormComponent doit réagir à la réponse pour
   // pré-remplir le formulaire en mode édition
   // ============================================================
-  getById(id: number): Observable<ServiceRH> {
+  getById(id: string | number): Observable<ServiceRH> {
     return this.http.get<ServiceRH>(`${API_URL}/services/${id}`)
       .pipe(
         catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -129,14 +144,14 @@ export class ServiceRHService {
   // Envoie le formulaire complet (Spring Boot remplace tout)
   // Spring Boot renvoie le service modifié
   // ============================================================
-  modifier(id: number, data: ServiceRHForm): Observable<ServiceRH> {
+  modifier(id: string | number, data: ServiceRHForm): Observable<ServiceRH> {
     return this.http.put<ServiceRH>(`${API_URL}/services/${id}`, data)
       .pipe(
         tap((modifie: ServiceRH) => {
           // On remplace SEULEMENT ce service dans le cache local
           // les autres restent inchangés
           this._services.update(liste =>
-            liste.map((s: ServiceRH) => s.id === id ? modifie : s)
+            liste.map((s: ServiceRH) => String(s.id) === String(id) ? modifie : s)
           );
         }),
         catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -149,13 +164,13 @@ export class ServiceRHService {
   // Spring Boot renvoie 204 No Content si succès
   // ou 409 Conflict si le service contient des employés
   // ============================================================
-  supprimer(id: number): Observable<void> {
+  supprimer(id: string | number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/services/${id}`)
       .pipe(
         tap(() => {
           // On retire ce service du cache local
           this._services.update(liste =>
-            liste.filter((s: ServiceRH) => s.id !== id)
+            liste.filter((s: ServiceRH) => String(s.id) !== String(id))
           );
         }),
         catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -170,12 +185,12 @@ export class ServiceRHService {
 
   // idExclu = en mode édition, on exclut le service en cours
   // pour ne pas signaler une erreur sur son propre nom
-  nomExiste(nom: string, idExclu?: number): boolean {
+  nomExiste(nom: string, idExclu?: string | number): boolean {
     return this._services().some((s: ServiceRH) =>
       // toLowerCase() = comparaison insensible à la casse
       s.nom.toLowerCase() === nom.toLowerCase() &&
       // Si idExclu est défini, on ignore ce service dans la vérification
-      s.id !== idExclu
+      String(s.id) !== String(idExclu)
     );
   }
 
@@ -185,17 +200,9 @@ export class ServiceRHService {
 
   // Filtre les services par département
   // Utilisé dans ListeServicesComponent pour le filtre par département
-  getParDepartement(departementId: number): ServiceRH[] {
+  getParDepartement(departementId: string | number): ServiceRH[] {
     return this._services().filter(
-      (s: ServiceRH) => s.departementId === departementId
-    );
-  }
-
-  // Retourne les services dont un utilisateur est responsable
-  // Utilisé dans ProfilComponent pour afficher "ses" services
-  getParResponsable(responsableId: number): ServiceRH[] {
-    return this._services().filter(
-      (s: ServiceRH) => s.responsableId === responsableId
+      (s: ServiceRH) => String(s.departementId) === String(departementId)
     );
   }
 
@@ -203,7 +210,7 @@ export class ServiceRHService {
   // Utilisé dans les statistiques du dashboard
   get totalEmployes(): number {
     return this._services().reduce(
-      (total, s) => total + s.nbEmployes, 0
+      (total, s) => total + (s.nbEmployes ?? 0), 0
     );
   }
 }

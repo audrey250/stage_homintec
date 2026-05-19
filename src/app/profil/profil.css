@@ -1,12 +1,151 @@
-.profil-avatar {
-  width: 80px;
-  height: 80px;
+.profile-page {
+  max-width: 1100px;
+}
+
+.profile-hero {
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbf8 100%);
+}
+
+.profile-avatar {
+  width: 86px;
+  height: 86px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4e73df, #224abe);
-  color: white;
+  background: linear-gradient(135deg, #12471d 0%, #1cc88a 100%);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
+  box-shadow: 0 8px 24px rgba(18, 71, 29, 0.25);
+  flex-shrink: 0;
+}
+
+.profile-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.profile-email {
+  color: #667085;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.role-chip--admin {
+  background: rgba(220, 53, 69, 0.12);
+  color: #b42318;
+}
+
+.role-chip--rh {
+  background: rgba(18, 183, 106, 0.12);
+  color: #067647;
+}
+
+.role-chip--manager {
+  background: rgba(33, 150, 243, 0.12);
+  color: #0b5394;
+}
+
+.role-chip--employe,
+.role-chip--default {
+  background: rgba(102, 112, 133, 0.14);
+  color: #344054;
+}
+
+.profile-actions .btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #12471d;
+  display: flex;
+  align-items: center;
+}
+
+.info-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px dashed #e4e7ec;
+}
+
+.info-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.info-label {
+  color: #667085;
+  font-size: 0.85rem;
+}
+
+.info-value {
+  color: #1d2939;
+  font-weight: 600;
+  text-align: right;
+}
+
+.info-value--break {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 991.98px) {
+  .profile-name {
+    font-size: 1.35rem;
+  }
+
+  .profile-actions {
+    width: 100%;
+  }
+
+  .profile-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .profile-hero .card-body,
+  .card .card-body {
+    padding: 1rem !important;
+  }
+
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 1.6rem;
+  }
+
+  .info-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .info-value {
+    text-align: left;
+  }
 }

@@ -4,16 +4,16 @@
   flex-direction: column;
 }
 
-// Wrapper principal flex
+/* Wrapper principal flex */
 .chat-wrapper {
   display: flex;
   flex: 1;
   overflow: hidden;
   border-radius: 12px !important;
-  min-height: 0; // important pour que flex fonctionne dans un parent flex
+  min-height: 0; /* important pour que flex fonctionne dans un parent flex */
 }
 
-// ---- Liste des conversations (colonne gauche) ----
+/* ---- Liste des conversations (colonne gauche) ---- */
 .conversations-list {
   width: 300px;
   flex-shrink: 0;
@@ -36,12 +36,12 @@
   cursor: pointer;
   border-bottom: 1px solid #fafafa;
   transition: background 0.15s;
-
-  &:hover { background: #f8f9fc; }
-  &.active { background: #eaeffd; }
 }
 
-// Avatar avec initiales
+.conv-item:hover { background: #f8f9fc; }
+.conv-item.active { background: #eaeffd; }
+
+/* Avatar avec initiales */
 .conv-avatar {
   width: 42px;
   height: 42px;
@@ -54,13 +54,13 @@
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
-  position: relative; // pour le badge
-
-  &.sm { width: 36px; height: 36px; font-size: 12px; }
-  &.xs { width: 28px; height: 28px; font-size: 10px; }
+  position: relative; /* pour le badge */
 }
 
-// Badge messages non lus
+.conv-avatar.sm { width: 36px; height: 36px; font-size: 12px; }
+.conv-avatar.xs { width: 28px; height: 28px; font-size: 10px; }
+
+/* Badge messages non lus */
 .unread-badge {
   position: absolute;
   top: -4px;
@@ -92,12 +92,12 @@
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; // ... si trop long
+  text-overflow: ellipsis; /* ... si trop long */
   max-width: 180px;
   margin-top: 2px;
 }
 
-// ---- Zone de chat (colonne droite) ----
+/* ---- Zone de chat (colonne droite) ---- */
 .chat-zone {
   flex: 1;
   display: flex;
@@ -118,32 +118,34 @@
   gap: 10px;
 }
 
-// Ligne de message (conteneur)
+/* Ligne de message (conteneur) */
 .message-row {
   display: flex;
   align-items: flex-end;
+}
 
-  // Message envoyé → aligné à droite
-  &.sent {
-    justify-content: flex-end;
-    .message-bubble {
-      background: #4e73df;
-      color: white;
-      border-radius: 18px 18px 4px 18px;
-    }
-    .message-time { color: rgba(255,255,255,0.7); }
-  }
+/* Message envoyé → aligné à droite */
+.message-row.sent {
+  justify-content: flex-end;
+}
+.message-row.sent .message-bubble {
+  background: #4e73df;
+  color: white;
+  border-radius: 18px 18px 4px 18px;
+}
+.message-row.sent .message-time { 
+  color: rgba(255,255,255,0.7); 
+}
 
-  // Message reçu → aligné à gauche
-  &.received {
-    justify-content: flex-start;
-    .message-bubble {
-      background: white;
-      color: #2d3748;
-      border-radius: 18px 18px 18px 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-  }
+/* Message reçu → aligné à gauche */
+.message-row.received {
+  justify-content: flex-start;
+}
+.message-row.received .message-bubble {
+  background: white;
+  color: #2d3748;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .message-bubble {
@@ -165,15 +167,23 @@
 
 .chat-input {
   background: white;
-  .form-control {
-    border-radius: 24px;
-    font-size: 13.5px;
-    &:focus { box-shadow: none; border-color: #4e73df; }
-  }
-  .btn { border-radius: 50%; width: 42px; height: 42px; padding: 0; }
+}
+.chat-input .form-control {
+  border-radius: 24px;
+  font-size: 13.5px;
+}
+.chat-input .form-control:focus { 
+  box-shadow: none; 
+  border-color: #4e73df; 
+}
+.chat-input .btn { 
+  border-radius: 50%; 
+  width: 42px; 
+  height: 42px; 
+  padding: 0; 
 }
 
-// ---- RESPONSIVE ----
+/* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
   .messagerie-container { height: calc(100vh - 80px); }
 

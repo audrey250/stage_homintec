@@ -1,12 +1,14 @@
-<div class="bg-gradient-primary min-vh-100 d-flex align-items-center justify-content-center p-3">
+<div class="first-login-page min-vh-100 d-flex align-items-center justify-content-center p-3">
   <div class="col-xl-4 col-lg-5 col-md-7">
 
-    <div class="text-center mb-4">
-      <div style="font-size:2.5rem">🔐</div>
-      <h1 class="text-white fw-bold mt-2" style="font-size:1.5rem">
+    <div class="text-center mb-4 page-header">
+      <div class="header-icon mx-auto mb-2">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h1 class="fw-bold mt-2" style="font-size:1.5rem">
         Première connexion
       </h1>
-      <p class="text-white-50" style="font-size:0.82rem">
+      <p class="text-muted" style="font-size:0.82rem">
         Vous devez définir un nouveau mot de passe avant de continuer.
       </p>
     </div>
@@ -18,8 +20,13 @@
 
         <p class="text-muted text-center mb-4" style="font-size:0.82rem">
           Bonjour <strong>{{ user?.prenom }}</strong>,
-          choisissez un mot de passe sécurisé.
+          choisissez un mot de passe securise.
         </p>
+
+        <div *ngIf="erreurGlobal()" class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          {{ erreurGlobal() }}
+        </div>
 
         <!-- PASSWORD -->
         <div class="mb-3">
@@ -28,21 +35,21 @@
 
           <div class="input-group">
             <input
-              [type]="showmotDePasse() ? 'text' : 'motDePasse'"
+              [type]="showmotDePasse() ? 'text' : 'password'"
               class="form-control"
               [(ngModel)]="nouveaumotDePasse"
-              placeholder="Minimum 8 caractères"
-              [class.is-invalid]="erreurs['motDePasse']"
+              placeholder="Minimum 8 caracteres"
+              [class.is-invalid]="erreurs['password']"
             />
 
-            <button type="button" class="btn btn-light"
+            <button type="button" class="btn btn-light btn-eye"
                     (click)="showmotDePasse.set(!showmotDePasse())">
-              👁
+              <i class="fas" [class.fa-eye]="!showmotDePasse()" [class.fa-eye-slash]="showmotDePasse()"></i>
             </button>
           </div>
 
-          <div *ngIf="erreurs['motDePasse']" class="text-danger small mt-1">
-            {{ erreurs['motDePasse'] }}
+          <div *ngIf="erreurs['password']" class="text-danger small mt-1">
+            {{ erreurs['password'] }}
           </div>
 
           <!-- FORCE PASSWORD -->
@@ -66,15 +73,15 @@
 
           <div class="input-group">
             <input
-              [type]="showConfirm() ? 'text' : 'motDePasse'"
+              [type]="showConfirm() ? 'text' : 'password'"
               class="form-control"
               [(ngModel)]="confirmmotDePasse"
               [class.is-invalid]="erreurs['confirm']"
             />
 
-            <button type="button" class="btn btn-light"
+            <button type="button" class="btn btn-light btn-eye"
                     (click)="showConfirm.set(!showConfirm())">
-              👁
+              <i class="fas" [class.fa-eye]="!showConfirm()" [class.fa-eye-slash]="showConfirm()"></i>
             </button>
           </div>
 

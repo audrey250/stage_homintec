@@ -1,19 +1,12 @@
-// ============================================================
-// liste-departements.scss
-// ============================================================
+$danger: #e74c3b;
+$border: #d0d5dd;
+$text: #101828;
+$muted: #667085;
+$radius: 10px;
 
-$primary:        #12471D;
-$primary-dark:   #0d3014;
-$danger:         #e74c3b;
-$border:         #d0d5dd;
-$text:           #101828;
-$muted:          #667085;
-$radius:         10px;
-
-// ---- Table avec bordures ----
 table {
   border-collapse: collapse;
-  
+
   thead th {
     font-size: 0.82rem;
     text-transform: uppercase;
@@ -46,7 +39,6 @@ table {
   background: #ffffff;
 }
 
-// ---- Boutons d'action ----
 .btn-action {
   width: 36px;
   height: 36px;
@@ -58,27 +50,38 @@ table {
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
-  margin-right: 8px;
-  margin-bottom: 4px;
 
   &.btn-edit {
     background: #eef2f6;
     color: $muted;
-    &:hover { background: #dbe3eb; color: $text; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(16, 24, 40, 0.12); }
+
+    &:hover {
+      background: #dbe3eb;
+      color: $text;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(16, 24, 40, 0.12);
+    }
   }
 
   &.btn-delete {
     background: rgba($danger, 0.1);
     color: $danger;
-    &:hover { background: $danger; color: white; transform: translateY(-2px); box-shadow: 0 4px 8px rgba($danger, 0.2); }
-  }
 
-  &:last-child {
-    margin-right: 0;
+    &:hover {
+      background: $danger;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba($danger, 0.2);
+    }
   }
 }
 
-// ---- Overlays modal ----
+.role-action-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -100,19 +103,6 @@ table {
   animation: slideUp 0.2s ease;
 }
 
-.modal-danger-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba($danger, 0.1);
-  color: $danger;
-  font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
 .btn-close-modal {
   width: 32px;
   height: 32px;
@@ -124,16 +114,17 @@ table {
   display: flex;
   align-items: center;
   justify-content: center;
-  &:hover { background: #e9ecef; }
+
+  &:hover {
+    background: #e9ecef;
+  }
 }
 
-// ---- Label obligatoire ----
 .form-label.required::after {
   content: ' *';
   color: $danger;
 }
 
-// ---- Modal boutons ----
 .modal-card {
   .d-flex.gap-2 {
     gap: 12px !important;
@@ -144,28 +135,25 @@ table {
     font-size: 0.95rem;
     font-weight: 500;
     min-width: 120px;
-    
+
     &:hover:not(:disabled) {
       transform: translateY(-1px);
     }
   }
-
-  .btn-primary {
-    background: $primary;
-    border-color: $primary;
-    
-    &:hover:not(:disabled) {
-      background: $primary-dark;
-      border-color: $primary-dark;
-    }
-  }
-
-  .btn-outline-secondary {
-    &:hover:not(:disabled) {
-      background: #f8f9fc;
-    }
-  }
 }
 
-@keyframes fadeIn  { from { opacity: 0; }                    to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

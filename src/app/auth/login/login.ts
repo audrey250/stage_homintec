@@ -37,10 +37,8 @@ export class LoginComponent {
 
   onSubmit(): void {
 
-    // 🔒 Empêche double clic
     if (this.loading()) return;
 
-    // 🔍 Validation simple
     if (!this.email.trim()) {
       this.errorMessage.set('Veuillez entrer votre adresse email.');
       return;
@@ -61,7 +59,6 @@ export class LoginComponent {
 
         const user = this.authService.currentUser();
 
-        //  Redirection intelligente
         if (user?.premiereCo) {
           this.router.navigate(['/changer-mot-de-passe']);
         } else {
@@ -74,24 +71,20 @@ export class LoginComponent {
 
         console.error('Erreur login :', err);
 
-        // 🔌 Backend OFF
         if (err.status === 0) {
           this.errorMessage.set(
             'Serveur inaccessible. Vérifiez que le backend est démarré.'
           );
 
-        // Mauvais identifiants
         } else if (err.status === 401) {
           this.errorMessage.set('Email ou mot de passe incorrect.');
 
-        // Compte désactivé (vient du backend)
         } else if (err.status === 403) {
           this.errorMessage.set(
             err.error?.message ||
-            'Votre compte est désactivé. Contactez l\'administrateur.'
+            'Accès refusé. Vérifiez la configuration API ou vos droits.'
           );
 
-        //  Autres erreurs
         } else {
           this.errorMessage.set(
             err.error?.message ||
@@ -102,7 +95,6 @@ export class LoginComponent {
     });
   }
 
-  //  Toggle mot de passe
   togglemotDePasse(): void {
     this.showmotDePasse.set(!this.showmotDePasse());
   }

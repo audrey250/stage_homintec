@@ -7,10 +7,21 @@
       └── container-fluid (contenu de la page)
           └── router-outlet ← Angular injecte ici le bon composant
 -->
-<div id="wrapper">
+<div
+  id="wrapper"
+  [class.sidebar-open]="sidebarService.mobileOpen()"
+  [class.sidebar-collapsed]="sidebarService.desktopCollapsed()"
+>
 
   <!-- Sidebar -->
-  <app-sidebar> </app-sidebar>
+  <app-sidebar [class.is-open]="sidebarService.mobileOpen()"></app-sidebar>
+
+  <!-- Overlay mobile -->
+  <div
+    class="sidebar-overlay"
+    *ngIf="sidebarService.mobileOpen()"
+    (click)="closeMobileSidebar()"
+  ></div>
 
   <!-- Contenu principal -->
   <div id="content-wrapper" class="d-flex flex-column">

@@ -6,19 +6,18 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = environment.apiUrl;
 
 // Interface d'un département
 // Correspond exactement à ce que Spring Boot renvoie
 export interface Departement {
-  id:          number;
+  id:          string;
   nom:         string;
   description: string;
-  // Nombre d'employés dans ce département (calculé côté Spring Boot)
-  nbEmployes:  number;
-  // Date de création (format ISO : "2024-01-15")
-  dateCreation: string;
+  nbServices?: number;
+  dateCreation?: string;
 }
 
 // Ce qu'on envoie pour créer/modifier un département
@@ -76,7 +75,7 @@ export class DepartementService {
   // Récupère un seul département (pour le formulaire d'édition)
   // Retourne un Observable car le composant doit réagir
   // ──────────────────────────────────────────────────
-  getById(id: number): Observable<Departement> {
+  getById(id: string): Observable<Departement> {
     return this.http.get<Departement>(`${API_URL}/departements/${id}`)
       .pipe(
         catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -93,7 +92,7 @@ export class DepartementService {
       .pipe(
         tap((nouveau) => {
           // On ajoute le nouveau département au signal sans recharger toute la liste
-          this._departements.update(liste => [...liste, nouveau]);
+          this._departements.update(liste => [...liste, { ...nouveau, nbServices: 0 }]);
         }),
         catchError((err: HttpErrorResponse) => throwError(() => err))
       );
@@ -103,13 +102,15 @@ export class DepartementService {
   // PUT /api/departements/:id
   // Modifie un département existant
   // ──────────────────────────────────────────────────
-  modifier(id: number, data: DepartementForm): Observable<Departement> {
+  modifier(id: string, data: DepartementForm): Observable<Departement> {
     return this.http.put<Departement>(`${API_URL}/departements/${id}`, data)
       .pipe(
         tap((modifie) => {
           // On remplace le département modifié dans le signal
           this._departements.update(liste =>
-            liste.map((d: Departement) => d.id === id ? modifie : d)
+            liste.map((d: Departement) =>
+              d.id === id ? { ...modifie, nbServices: d.nbServices ?? 0 } : d
+            )
           );
         }),
         catchError((err: HttpErrorResponse) => throwError(() => err))
@@ -120,7 +121,7 @@ export class DepartementService {
   // DELETE /api/departements/:id
   // Supprime un département
   // ──────────────────────────────────────────────────
-  supprimer(id: number): Observable<void> {
+  supprimer(id: string): Observable<void> {
     return this.http.delete<void>(`${API_URL}/departements/${id}`)
       .pipe(
         tap(() => {
@@ -134,7 +135,7 @@ export class DepartementService {
   }
 
   // Vérifie si un nom de département existe déjà (validation locale)
-  nomExiste(nom: string, idExclu?: number): boolean {
+  nomExiste(nom: string, idExclu?: string): boolean {
     return this._departements().some((d: Departement) =>
       d.nom.toLowerCase() === nom.toLowerCase() &&
       d.id !== idExclu

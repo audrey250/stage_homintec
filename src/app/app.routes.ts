@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
+import { firstLoginGuard } from './guards/first-login.guard';
 
 export const routes: Routes = [
 
@@ -18,6 +20,7 @@ export const routes: Routes = [
   },
   {
     path: 'changer-mot-de-passe',
+    canActivate: [firstLoginGuard],
     loadComponent: () =>
       import('./auth/changer-mot-de-passe/changer-mot-de-passe')
       .then(m => m.ChangerMotDePasseComponent)
@@ -78,35 +81,77 @@ export const routes: Routes = [
           .then(m => m.NouvelUtilisateurComponent)
       },
 
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      // Dans le bloc children (routes protégées) :
-
-     // Dans le bloc children des routes protégées
-
-// ---- Départements ----
-{
-  path: 'departements',
-  loadComponent: () =>
-    import('./departements/liste-departements/liste-departements')
-    .then(m => m.ListeDepartementsComponent)
-},
-{
-  path: 'departements/nouveau',
-  loadComponent: () =>
-    import('./departements/ajout-departement/ajout-departement')
-    .then(m => m.DepartementFormComponent)
-},
-{
-  path: 'departements/:id/modifier',
-  loadComponent: () =>
-    import('./departements/ajout-departement/ajout-departement')
-    .then(m => m.DepartementFormComponent)
-},
-
-
-
-        ]
+      {
+        path: 'services',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./services-rh/liste-services/liste-services')
+          .then(m => m.ListeServices)
+      },
+      {
+        path: 'services/nouveau',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./services-rh/service-form/service-form')
+          .then(m => m.ServiceFormComponent)
+      },
+      {
+        path: 'services/:id/modifier',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./services-rh/service-form/service-form')
+          .then(m => m.ServiceFormComponent)
       },
 
-      { path: '**', redirectTo: 'login' }
-    ];
+      {
+        path: 'roles',
+        loadComponent: () =>
+          import('./roles/liste-roles/liste-roles')
+          .then(m => m.ListeRolesComponent)
+      },
+      {
+        path: 'roles/nouveau',
+        loadComponent: () =>
+          import('./roles/role-form/role-form')
+          .then(m => m.RoleFormComponent)
+      },
+      {
+        path: 'roles/:id/modifier',
+        loadComponent: () =>
+          import('./roles/role-form/role-form')
+          .then(m => m.RoleFormComponent)
+      },
+
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'departements',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./departements/liste-departements/liste-departements')
+          .then(m => m.ListeDepartementsComponent)
+      },
+      {
+        path: 'departements/nouveau',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./departements/ajout-departement/ajout-departement')
+          .then(m => m.DepartementFormComponent)
+      },
+      {
+        path: 'departements/:id/modifier',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'rh'] },
+        loadComponent: () =>
+          import('./departements/ajout-departement/ajout-departement')
+          .then(m => m.DepartementFormComponent)
+      }
+    ]
+  },
+
+  { path: '**', redirectTo: 'login' }
+];

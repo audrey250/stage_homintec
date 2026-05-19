@@ -1,10 +1,9 @@
-<p>service-form works!</p>
 <div class="row justify-content-center">
   <div class="col-12 col-lg-8 col-xl-7">
 
     <!-- EN-TÊTE -->
     <div class="d-flex align-items-center gap-3 mb-4">
-      <a routerLink="/services-rh" class="btn-retour">
+      <a routerLink="/services" class="btn-retour">
         <i class="fas fa-arrow-left"></i>
       </a>
       <div>
@@ -13,7 +12,7 @@
           {{ titreFormulaire }}
         </h4>
         <div class="breadcrumb-nav">
-          <a routerLink="/services-rh" class="text-muted text-decoration-none"
+          <a routerLink="/services" class="text-muted text-decoration-none"
              style="font-size:.8rem">
             Services
           </a>
@@ -118,7 +117,7 @@
             </div>
 
             <!-- Département (select) -->
-            <div class="col-12 col-sm-6">
+            <div class="col-12">
               <label class="form-label fw-semibold required"
                      style="font-size:.88rem">
                 Département
@@ -139,37 +138,13 @@
                 [class.is-invalid]="erreurs['departementId']"
                 [disabled]="loading()"
               >
-                <option [value]="0">Choisir un département...</option>
+                <option value="">Choisir un département...</option>
                 <option *ngFor="let d of departements" [value]="d.id">
                   {{ d.nom }}
                 </option>
               </select>
               <div *ngIf="erreurs['departementId']" class="invalid-feedback">
                 {{ erreurs['departementId'] }}
-              </div>
-            </div>
-
-            <!-- Responsable (select) -->
-            <div class="col-12 col-sm-6">
-              <label class="form-label fw-semibold required"
-                     style="font-size:.88rem">
-                Responsable
-              </label>
-              <select
-                class="form-select"
-                [(ngModel)]="form.responsableId"
-                name="responsableId"
-                [class.is-invalid]="erreurs['responsableId']"
-                [disabled]="loading()"
-              >
-                <option [value]="0">Choisir un responsable...</option>
-                <option *ngFor="let u of responsablesPossibles" [value]="u.id">
-                  {{ u.prenom }} {{ u.nom }}
-                  <span> — {{ u.role | uppercase }}</span>
-                </option>
-              </select>
-              <div *ngIf="erreurs['responsableId']" class="invalid-feedback">
-                {{ erreurs['responsableId'] }}
               </div>
             </div>
 

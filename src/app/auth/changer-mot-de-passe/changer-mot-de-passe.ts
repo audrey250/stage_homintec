@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,8 +12,8 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './changer-mot-de-passe.html',
   styleUrl: './changer-mot-de-passe.css'
 })
-export class ChangerMotDePasseComponent {
-user: any = null; 
+export class ChangerMotDePasseComponent implements OnInit {
+  user: any = null;
   // =====================
   // FORM DATA
   // =====================
@@ -36,6 +36,10 @@ user: any = null;
     public authService: AuthService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    this.user = this.authService.currentUser();
+  }
 
   // =====================
   // PASSWORD STRENGTH
@@ -88,25 +92,21 @@ user: any = null;
 
     // loading start
     this.loading.set(true);
-this.authService.changerMotDePasse(this.nouveaumotDePasse).subscribe({
-  next: () => {
-    this.loading.set(false);
+    this.authService.changerMotDePasse(this.nouveaumotDePasse).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.authService.forceLogoutToLogin();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
 
-    // 🔥 sécurité : petit délai pour éviter blocage guard
-    setTimeout(() => {
-      this.router.navigate(['/dashboard']);
-    }, 50);
-  },
-  error: (err: HttpErrorResponse) => {
-    this.loading.set(false);
-
-    if (err.status === 0) {
-      this.erreurGlobal.set('Serveur inaccessible.');
-    } else {
-      this.erreurGlobal.set(err.error?.message || 'Une erreur est survenue.');
-    }
-  }
-});
+        if (err.status === 0) {
+          this.erreurGlobal.set('Serveur inaccessible.');
+        } else {
+          this.erreurGlobal.set(err.error?.message || 'Une erreur est survenue.');
+        }
+      }
+    });
    
   }
 }

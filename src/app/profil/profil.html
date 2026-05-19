@@ -1,55 +1,86 @@
-<h1 class="h3 mb-4 text-gray-800 fw-bold">Mon profil</h1>
+<section class="profile-page" *ngIf="user as currentUser">
+  <header class="profile-hero card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 p-lg-5 d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3 gap-md-4">
+      <div class="profile-avatar">{{ initials }}</div>
 
-<div class="row justify-content-center">
-  <div class="col-lg-7">
-    <div class="card shadow">
-      <div class="card-body p-4 text-center">
+      <div class="profile-identity flex-grow-1">
+        <h2 class="profile-name mb-1">{{ fullName }}</h2>
+        <p class="profile-email mb-2">{{ currentUser.email }}</p>
+        <span [class]="roleClass">{{ roleLabel }}</span>
+      </div>
 
-        <!-- Avatar grand -->
-        <div class="profil-avatar mx-auto mb-3">
-          {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
-        </div>
-
-        <h4 class="fw-bold mb-1">
-          {{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}
-        </h4>
-
-        <span
-          class="badge mb-3"
-          [ngClass]="{
-            'bg-secondary': authService.currentUser()?.Poste === 'employe',
-            'bg-info':      authService.currentUser()?.Poste === 'manager',
-            'bg-success':   authService.currentUser()?.Poste === 'rh',
-            'bg-danger':    authService.currentUser()?.Poste === 'admin'
-          }"
-        >
-          {{ authService.currentUser()?.Poste | uppercase }}
-        </span>
-
-        <hr>
-
-        <div class="row text-start g-3">
-          <div class="col-sm-6">
-            <div class="text-muted" style="font-size: 0.78rem;">Email</div>
-            <div class="fw-semibold">{{ authService.currentUser()?.email }}</div>
-          </div>
-          <div class="col-sm-6">
-            <div class="text-muted" style="font-size: 0.78rem;">Département</div>
-            <div class="fw-semibold">{{ authService.currentUser()?.departementId }}</div>
-          </div>
-          <div class="col-sm-6">
-            <div class="text-muted" style="font-size: 0.78rem;">Poste</div>
-            <div class="fw-semibold">{{ authService.currentUser()?.Poste }}</div>
-          </div>
-          <div class="col-sm-6">
-            <!--<div class="text-muted" style="font-size: 0.78rem;">Solde congés</div>
-            <div class="fw-semibold text-primary">
-              {{ authService.currentUser()?.soldeConges }} jours
-            </div>
-          </div>-->
-        </div>
-
+      <div class="profile-actions d-flex flex-wrap gap-2">
+        <button class="btn btn-outline-secondary" type="button" (click)="goTo('/messagerie')">
+          <i class="fas fa-envelope me-2"></i>
+          Messagerie
+        </button>
+        <button class="btn btn-primary" type="button" (click)="goTo('/changer-mot-de-passe')">
+          <i class="fas fa-key me-2"></i>
+          Changer le mot de passe
+        </button>
       </div>
     </div>
+  </header>
+
+  <div class="row g-3 g-lg-4">
+    <div class="col-12 col-lg-6">
+      <article class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <h3 class="section-title mb-3">
+            <i class="fas fa-id-card me-2"></i>
+            Informations personnelles
+          </h3>
+
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Prenom</span>
+              <span class="info-value">{{ currentUser.prenom }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Nom</span>
+              <span class="info-value">{{ currentUser.nom }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Email</span>
+              <span class="info-value info-value--break">{{ currentUser.email }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Telephone</span>
+              <span class="info-value">{{ currentUser.telephone || '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <article class="card border-0 shadow-sm h-100">
+        <div class="card-body p-4">
+          <h3 class="section-title mb-3">
+            <i class="fas fa-briefcase me-2"></i>
+            Informations professionnelles
+          </h3>
+
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Poste</span>
+              <span class="info-value">{{ currentUser.Poste || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Role</span>
+              <span class="info-value">{{ currentUser.role.nom || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Departement</span>
+              <span class="info-value">{{ currentUser.departementId || '-' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Statut du compte</span>
+              <span class="info-value">{{ currentUser.statut_compte || '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
   </div>
-</div>
+</section>

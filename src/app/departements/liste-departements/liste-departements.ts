@@ -7,8 +7,8 @@
 import { Component, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 // On importe le service et les interfaces
 import {
@@ -19,7 +19,7 @@ import {
 @Component({
   selector: 'app-liste-departements',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './liste-departements.html',
   styleUrl:    './liste-departements.scss'
 })
@@ -30,14 +30,10 @@ export class ListeDepartementsComponent implements OnInit {
   recherche = signal('');
 
   // ---- Suppression ----
-  // signal<number | null>(null) = aucun département sélectionné pour suppression
-  confirmSupprId = signal<number | null>(null);
-  erreurSuppr    = signal('');
-
   // ---- Formulaire d'ajout/édition (modal) ----
   modalOuvert    = signal(false);
-  // null = création, number = édition de ce département
-  modeEditionId  = signal<number | null>(null);
+  // null = création, string = édition de ce département
+  modeEditionId  = signal<string | null>(null);
   formLoading    = signal(false);
   formErreur     = signal('');
 
@@ -68,7 +64,7 @@ export class ListeDepartementsComponent implements OnInit {
     const tous: Departement[] = this.departementService.departements();
     return {
       total:        tous.length,
-      totalEmployes: tous.reduce((sum, d) => sum + d.nbEmployes, 0)
+      totalServices: tous.reduce((sum, d) => sum + (d.nbServices ?? 0), 0)
     };
   });
 
@@ -185,42 +181,49 @@ export class ListeDepartementsComponent implements OnInit {
   // ============================================================
   // SUPPRESSION
   // ============================================================
-  demanderSuppression(id: number): void {
-    this.confirmSupprId.set(id);
-    this.erreurSuppr.set('');
-  }
-
-  annulerSuppression(): void {
-    this.confirmSupprId.set(null);
-  }
-
-  confirmerSuppression(): void {
-    const id = this.confirmSupprId();
-    if (id === null) return;
-
-    this.departementService.supprimer(id).subscribe({
-      next: () => {
-        this.confirmSupprId.set(null);
-      },
-      error: (err: HttpErrorResponse) => {
-        if (err.status === 409) {
-          // Spring Boot refuse si des employés sont encore dans ce département
-          this.erreurSuppr.set(
-            'Impossible de supprimer : ce département contient des employés.'
-          );
-        } else {
-          this.erreurSuppr.set('Erreur lors de la suppression.');
-        }
+  demanderSuppression(id: string, nom: string): void {
+    Swal.fire({
+      title: 'Confirmer la suppression',
+      text: `Supprimer le departement "${nom}" ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (!result.isConfirmed) {
+        return;
       }
-    });
-  }
 
-  get nomASupprimer(): string {
-    const id = this.confirmSupprId();
-    if (id === null) return '';
-    const d = this.departementService.departements()
-      .find((d: Departement) => d.id === id);
-    return d?.nom ?? '';
+      this.departementService.supprimer(id).subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Supprime',
+            text: 'Departement supprime avec succes',
+            timer: 1400,
+            showConfirmButton: false
+          });
+        },
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 409) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Suppression refusee',
+              text: 'Impossible de supprimer: ce departement contient des employes.'
+            });
+            return;
+          }
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: err.error?.message || 'Erreur lors de la suppression.'
+          });
+        }
+      });
+    });
   }
 
   get titreModal(): string {

@@ -1,71 +1,97 @@
 <nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow-sm">
 
-  <!-- Bouton hamburger mobile -->
-  <button class="btn btn-link d-md-none rounded-circle me-3" (click)="toggle()">
-    <i class="fa fa-bars"></i>
+  <!-- Bouton toggle sidebar (visible sur tous les appareils) -->
+  <button class="btn btn-sidebar-toggle me-2 me-md-3" (click)="toggle()" title="Toggle Sidebar">
+    <i class="fas fa-fw fa-bars"></i>
   </button>
 
   <!-- Éléments à droite -->
-  <div class="ms-auto d-flex align-items-center gap-3">
+  <div class="ms-auto d-flex align-items-center gap-2 gap-sm-3">
 
-    <!-- Badge congés 
-    <div class="solde-badge conges d-none d-lg-flex">
-      <i class="fas fa-umbrella-beach"></i>
-      <span>{{ authService.currentUser()?.soldeConges }} j. congés</span>
-    </div>
-
-    Badge permissions 
-    <div class="solde-badge permissions d-none d-lg-flex">
-      <i class="fas fa-clock"></i>
-      <span>{{ authService.currentUser()?.soldePermissions }} permissions</span>
-    </div>-->
-
+    <!-- Divider -->
     <div class="topbar-divider d-none d-sm-block"></div>
 
     <!-- Menu utilisateur -->
     <div class="nav-item dropdown no-arrow" [class.show]="dropdownOpen">
 
-      <a class="nav-link d-flex align-items-center gap-2"
-         href="#"
-         (click)="$event.preventDefault(); toggleDropdown()">
+      <button
+        type="button"
+        class="nav-link user-profile-link d-flex align-items-center gap-2 gap-lg-3 border-0 bg-transparent"
+        [attr.aria-expanded]="dropdownOpen"
+        aria-haspopup="true"
+        (click)="toggleDropdown($event)"
+      >
 
-        <!-- Nom + badge rôle -->
-        <div class="text-end d-none d-lg-block">
-          <div class="fw-semibold" style="font-size:0.85rem; line-height:1.2">
+        <!-- Nom + badge rôle (visible en desktop) -->
+        <div class="user-info d-none d-lg-flex flex-column align-items-end">
+          <div class="user-name fw-semibold">
             {{ authService.currentUser()?.prenom }}
             {{ authService.currentUser()?.nom }}
           </div>
-          <div>
-            <span class="badge"
-              [ngClass]="{
-                'bg-secondary': authService.currentUser()?.Poste === 'employe',
-                'bg-info':      authService.currentUser()?.Poste === 'manager',
-                'bg-success':   authService.currentUser()?.Poste === 'rh',
-                'bg-danger':    authService.currentUser()?.Poste === 'admin'
-              }">
-              {{ authService.currentUser()?.Poste | uppercase }}
-            </span>
-          </div>
+          <span class="user-role badge"
+            [ngClass]="{
+              'bg-secondary': authService.currentUser()?.Poste === 'employe',
+              'bg-info':      authService.currentUser()?.Poste === 'manager',
+              'bg-success':   authService.currentUser()?.Poste === 'rh',
+              'bg-danger':    authService.currentUser()?.Poste === 'admin'
+            }">
+            {{ authService.currentUser()?.Poste | uppercase }}
+          </span>
         </div>
 
         <!-- Avatar -->
         <div class="user-avatar">
           {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
         </div>
-      </a>
+      </button>
 
-      <!-- Dropdown -->
-      <div class="dropdown-menu dropdown-menu-end shadow"
-           [class.show]="dropdownOpen">
+      <!-- Dropdown Menu -->
+      <div class="dropdown-menu dropdown-menu-end user-dropdown"
+           [class.show]="dropdownOpen"
+         (click)="$event.stopPropagation()">
+        
+        <!-- Header du dropdown -->
+        <div class="dropdown-header border-bottom pb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="user-avatar-lg">
+              {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
+            </div>
+            <div class="dropdown-user-meta">
+              <div class="fw-bold dropdown-user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</div>
+              <div class="text-muted small dropdown-user-email">{{ authService.currentUser()?.email }}</div>
+              <div class="mt-2">
+                <span class="badge"
+                  [ngClass]="{
+                    'bg-secondary': authService.currentUser()?.Poste === 'employe',
+                    'bg-info':      authService.currentUser()?.Poste === 'manager',
+                    'bg-success':   authService.currentUser()?.Poste === 'rh',
+                    'bg-danger':    authService.currentUser()?.Poste === 'admin'
+                  }">
+                  {{ authService.currentUser()?.Poste | uppercase }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu items -->
         <a class="dropdown-item" routerLink="/profil"
            (click)="dropdownOpen = false">
-          <i class="fas fa-user fa-sm fa-fw me-2 text-muted"></i>
+          <i class="fas fa-user fa-fw me-2 text-primary"></i>
           Mon profil
         </a>
+
+        <a class="dropdown-item" routerLink="/messagerie"
+           (click)="dropdownOpen = false">
+          <i class="fas fa-envelope fa-fw me-2 text-primary"></i>
+          Messagerie
+        </a>
+
         <div class="dropdown-divider"></div>
+
         <a class="dropdown-item text-danger" href="#"
            (click)="$event.preventDefault(); logout()">
-          <i class="fas fa-sign-out-alt fa-sm fa-fw me-2"></i>
+          <i class="fas fa-sign-out-alt fa-fw me-2"></i>
           Déconnexion
         </a>
       </div>
@@ -73,152 +99,3 @@
     </div>
   </div>
 </nav>
-
-<!-- ===== SIDEBAR ===== -->
-<ul class="navbar-nav sidebar sidebar-dark accordion"
-    id="accordionSidebar"
-    [class.toggled]="collapsed()">
-
-  <!-- Logo -->
-  <a class="sidebar-brand d-flex align-items-center justify-content-center"
-     routerLink="/dashboard">
-    <div class="sidebar-brand-icon">🏢</div>
-    <div class="sidebar-brand-text mx-2">HOMINTEC</div>
-  </a>
-
-  <hr class="sidebar-divider my-0">
-
-  <!-- Dashboard -->
-  <li class="nav-item">
-    <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
-      <i class="fas fa-fw fa-tachometer-alt"></i>
-      <span>Tableau de bord</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Congés & Permissions</div>
-
-  <li class="nav-item">
-    <a class="nav-link" routerLink="/conges/nouvelle-demande" routerLinkActive="active">
-      <i class="fas fa-fw fa-plus-circle"></i>
-      <span>Nouvelle demande</span>
-    </a>
-  </li>
-
-  <li class="nav-item">
-    <a class="nav-link" routerLink="/conges/mes-demandes" routerLinkActive="active">
-      <i class="fas fa-fw fa-list-alt"></i>
-      <span>Mes demandes</span>
-    </a>
-  </li>
-
-  <li class="nav-item" *ngIf="authService.hasRole('manager','rh','admin')">
-    <a class="nav-link" routerLink="/conges/validation" routerLinkActive="active">
-      <i class="fas fa-fw fa-check-double"></i>
-      <span>Validation</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Communication</div>
-
-  <li class="nav-item">
-    <a class="nav-link" routerLink="/messagerie" routerLinkActive="active">
-      <i class="fas fa-fw fa-envelope"></i>
-      <span>Messagerie</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Utilisateurs</div>
-
-  <li class="nav-item" *ngIf="authService.hasRole('admin','rh','manager')">
-    <a class="nav-link" routerLink="/utilisateurs" routerLinkActive="active">
-      <i class="fas fa-fw fa-list"></i>
-      <span>Liste des utilisateurs</span>
-    </a>
-  </li>
-
-  <li class="nav-item" *ngIf="authService.hasRole('rh','admin')">
-    <a class="nav-link" routerLink="/utilisateurs/nouveau" routerLinkActive="active">
-      <i class="fas fa-fw fa-user-plus"></i>
-      <span>Nouvel utilisateur</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Mon compte</div>
-
-  <li class="nav-item">
-    <a class="nav-link" routerLink="/profil" routerLinkActive="active">
-      <i class="fas fa-fw fa-user"></i>
-      <span>Mon profil</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider d-none d-md-block">
-
-  <!-- Bouton réduire -->
-  <div class="text-center d-none d-md-inline">
-    <button class="rounded-circle border-0"
-            id="sidebarToggle"
-            (click)="toggle()">
-    </button>
-  </div>
-  <!-- Cloche notifications -->
-<div class="nav-item dropdown" [class.show]="notifsOpen">
-  <a class="nav-link position-relative px-2"
-     href="#"
-     (click)="$event.preventDefault(); toggleNotifs()">
-    <i class="fas fa-bell fa-fw" style="color:#12471D;font-size:1.1rem"></i>
-    <!-- Badge rouge avec le nombre de non lues -->
-    <span *ngIf="authService.notifsNonLues() > 0"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          style="font-size:0.6rem;padding:3px 5px">
-      {{ authService.notifsNonLues() }}
-    </span>
-  </a>
-
-  <!-- Liste des notifications -->
-  <div class="dropdown-menu dropdown-menu-end shadow"
-       style="width:320px;max-height:360px;overflow-y:auto"
-       [class.show]="notifsOpen">
-
-    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
-      <span class="fw-bold" style="font-size:0.88rem">Notifications</span>
-      <button class="btn btn-link btn-sm text-muted p-0"
-              style="font-size:0.75rem"
-              (click)="authService.toutMarquerLu()">
-        Tout marquer lu
-      </button>
-    </div>
-
-    <div *ngFor="let n of authService.notifications()"
-         class="dropdown-item d-flex gap-2 py-2"
-         [class.fw-semibold]="!n.lu"
-         style="white-space:normal;font-size:0.83rem;cursor:pointer"
-         (click)="authService.marquerLu(n.id)">
-      <i class="fas mt-1 fa-fw"
-         [class.fa-check-circle]="n.type === 'success'"
-         [class.fa-info-circle]="n.type === 'info'"
-         [class.fa-exclamation-triangle]="n.type === 'warning'"
-         [class.text-success]="n.type === 'success'"
-         [class.text-info]="n.type === 'info'"
-         [class.text-warning]="n.type === 'warning'">
-      </i>
-      <div>
-        <div>{{ n.message }}</div>
-        <div class="text-muted" style="font-size:0.75rem">{{ n.date }}</div>
-      </div>
-    </div>
-
-    <div *ngIf="authService.notifications().length === 0"
-         class="text-center text-muted py-3" style="font-size:0.85rem">
-      Aucune notification
-    </div>
-
-  </div>
-</div>
-
-</ul>

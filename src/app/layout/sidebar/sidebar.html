@@ -1,201 +1,141 @@
-<!--
-  [class.toggled] = ajoute la classe CSS "toggled" si collapsed() est true
-  SB Admin 2 utilise cette classe pour réduire la sidebar
--->
 <ul
   class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion"
   id="accordionSidebar"
-  [class.toggled]="collapsed()"
 >
 
- <div class="text-center mb-4">
-
-      <!--
-        ✅ CORRIGÉ : le logo doit être dans src/assets/
-        Étapes :
-          1. Copie homintec_logo.png dans src/assets/
-          2. Le chemin devient simplement "assets/homintec_logo.png"
-        On n'utilise JAMAIS un chemin Windows local (c:\Users\...)
-      -->
+  <div class="text-center mb-3">
       <img
         src="assets/homintec_logo.png"
         alt="Logo HOMINTEC"
-        class="mb-3"
-        style="height: 70px; object-fit: contain;"
+        style="height: 60px; object-fit: contain;"
         onerror="this.style.display='none'"
       />
-      <!-- onerror = si le logo n'est pas encore là, on le cache sans erreur -->
-
-      <h1 class="text-white fw-bold" style="font-size: 1.8rem; letter-spacing: 2px;">
-        HOMINTEC
-      </h1>
-      
-    </div>
-
-  <hr class="sidebar-divider my-0">
-
-  <!-- Dashboard — visible par tous -->
-  <li class="nav-item">
-    <a  class="nav-link" routerLink="/dashboard" routerLinkActive="active">
-      <i class="fas fa-fw fa-tachometer-alt"></i>
-      <span>Tableau de bord</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Congés & Permissions</div>
-
-  <!-- Nouvelle demande — tous les employés -->
-  <li class="nav-item">
-    <a 
-      class="nav-link"
-      routerLink="/conges/nouvelle-demande"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-plus-circle"></i>
-      <span>Nouvelle demande</span>
-    </a>
-  </li>
-  
-  <!-- Mes demandes -->
-  <li class="nav-item">
-    <a 
-      class="nav-link"
-      routerLink="/conges/mes-demandes"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-list-alt"></i>
-      <span>Mes demandes</span>
-    </a>
-  </li>
-
-  <!--
-    Validation : visible SEULEMENT pour manager, rh, admin
-    *ngIf = directive Angular, affiche ce bloc si la condition est vraie
-  -->
-  <li
-    class="nav-item"
-    *ngIf="authService.hasRole('manager', 'rh', 'admin')"
-  >
-    <a 
-      class="nav-link"
-      routerLink="/conges/validation"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-check-double"></i>
-      <span>Validation</span>
-    </a>
-  </li>
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Communication</div>
-
-  <li class="nav-item">
-    <a 
-      class="nav-link"
-      routerLink="/messagerie"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-envelope"></i>
-      <span>Messagerie</span>
-    </a>
-  </li>
-
-  
-  <hr class="sidebar-divider">
-<div class="sidebar-heading">Organisation</div>
-
-<li class="nav-item"
-    *ngIf="authService.hasRole('admin', 'rh')">
-  <a class="nav-link"
-     routerLink="/departements/nouveau"
-     routerLinkActive="active">
-    <i class="fas fa-fw fa-building"></i>
-    <span>nouveau departements</span>
-  </a>
-</li>
-
-<li class="nav-item"
-    *ngIf="authService.hasRole('admin', 'rh')">
-  <a class="nav-link"
-     routerLink="/departements/liste-departements"
-     routerLinkActive="active">
-    <i class="fas fa-fw fa-building"></i>
-    <span> liste des departement</span>
-  </a>
-</li>
-
-
-  <hr class="sidebar-divider">
-  <div class="sidebar-heading">Gestion des utilisateurs</div>
-  <!-- Gestion des utilisateurs : visible SEULEMENT pour admin -->
- 
-  <li
-   class="nav-item"
-    *ngIf="authService.hasRole('admin')"
-  >
-   
-   
-    <a 
-      class="nav-link"
-      routerLink="/utilisateurs"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-users"></i>
-      <span>Utilisateurs</span>
-    </a>
-  </li>
-  <!--nouvel utilisateur-->
-  <li class="nav-item"
-    *ngIf="authService.hasRole('rh')"
-  >
-    <a 
-      class="nav-link"
-      routerLink="/utilisateurs/nouveau"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-user-plus"></i>
-      <span>Nouvel utilisateur</span>
-    </a>
-  </li>
-<!--liste des utilisateurs-->
-  <li class="nav-item"
-    *ngIf="authService.hasRole('rh', 'admin', 'manager')">
-    <a 
-      class="nav-link"
-      routerLink="/utilisateurs/liste-utilisateurs"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-list"></i>
-      <span>Liste des utilisateurs</span>
-    </a>
-  </li>
-
-   <!-- Profil utilisateur -->
-   <hr class="sidebar-divider">
-   <div class="sidebar-heading">Mon compte</div>
-
-   <li class="nav-item">
-    <a 
-      class="nav-link"
-      routerLink="/profil"
-      routerLinkActive="active"
-    >
-      <i class="fas fa-fw fa-user"></i>
-      <span>Mon profil</span>
-    </a>
-  </li>
-
-  
-  <hr class="sidebar-divider d-none d-md-block">
-
-  <!-- Bouton réduire/agrandir la sidebar -->
-  <div class="text-center d-none d-md-inline">
-    <button
-      class="rounded-circle border-0"
-      id="sidebarToggle"
-      (click)="toggle()"
-    ></button>
   </div>
+
+  <li class="nav-category">
+    <div class="nav-category-title">General</div>
+    <ul class="nav-submenu">
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active" (click)="onNavLinkClick()">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Tableau de bord</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/messagerie"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-envelope"></i>
+          <span>Messagerie</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/profil"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-user"></i>
+          <span>Mon profil</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  <li class="nav-category">
+    <div class="nav-category-title">Conges</div>
+    <ul class="nav-submenu">
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/conges/nouvelle-demande"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-plus-circle"></i>
+          <span>Nouvelle demande</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/conges/mes-demandes"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-list-alt"></i>
+          <span>Mes demandes</span>
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="authService.hasRole('manager', 'rh', 'admin')">
+        <a
+          class="nav-link"
+          routerLink="/conges/validation"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-check-double"></i>
+          <span>Validation</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  <li
+    class="nav-category"
+    *ngIf="authService.hasRole('admin', 'rh', 'manager')"
+  >
+    <div class="nav-category-title">Administration</div>
+    <ul class="nav-submenu">
+      <li class="nav-item" *ngIf="authService.hasRole('admin', 'rh')">
+        <a
+          class="nav-link"
+          routerLink="/departements"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-sitemap"></i>
+          <span>Départements</span>
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="authService.hasRole('admin', 'rh')">
+        <a
+          class="nav-link"
+          routerLink="/services"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-network-wired"></i>
+          <span>Services</span>
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="authService.hasRole('rh', 'admin')">
+        <a
+          class="nav-link"
+          routerLink="/roles"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-user-tag"></i>
+          <span>Rôles</span>
+        </a>
+      </li>
+      <li class="nav-item" *ngIf="authService.hasRole('rh', 'admin')">
+        <a
+          class="nav-link"
+          routerLink="/utilisateurs"
+          routerLinkActive="active"
+          (click)="onNavLinkClick()"
+        >
+          <i class="fas fa-fw fa-list"></i>
+          <span>Utilisateurs</span>
+        </a>
+      </li>
+    </ul>
+  </li>
 
 </ul>

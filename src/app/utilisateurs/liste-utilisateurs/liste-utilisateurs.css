@@ -1,0 +1,162 @@
+table {
+  border-collapse: collapse;
+}
+
+table thead th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #101828;
+  border-top: 0;
+  border: 1px solid #d0d5dd;
+  padding: 12px;
+  background: #ffffff;
+  font-weight: 600;
+}
+
+table tbody td {
+  font-size: 0.9rem;
+  border: 1px solid #d0d5dd;
+  padding: 12px;
+  color: #101828 !important;
+}
+
+table tbody tr:hover {
+  background-color: #f8f9fc;
+}
+
+.users-table-wrap {
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-action.btn-delete {
+  background: rgba(231, 76, 59, 0.1);
+  color: #e74c3b;
+}
+
+.btn-action.btn-delete:hover {
+  background: #e74c3b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(231, 76, 59, 0.2);
+}
+
+.avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.bg-admin { background: #e74c3b; }
+.bg-rh { background: #17a2b8; }
+.bg-manager { background: #1cc88a; }
+.bg-employe { background: #4e73df; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 700px;
+  width: 100%;
+  animation: slideUp 0.2s ease;
+}
+
+.btn-close-modal {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f8f9fc;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-modal:hover {
+  background: #e9ecef;
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: #e74c3b;
+}
+
+.modal-card .form-control,
+.modal-card .form-select {
+  border-radius: 8px;
+  border: 1.5px solid #e3e6f0;
+  font-size: 0.95rem;
+  width: 100%;
+  min-height: 46px;
+  padding: 0.6rem 0.9rem;
+}
+
+.modal-card .form-select {
+  padding-right: 2.25rem;
+}
+
+.modal-card .form-control:focus,
+.modal-card .form-select:focus {
+  border-color: #12471d;
+  box-shadow: 0 0 0 3px rgba(18, 71, 29, 0.1);
+}
+
+.modal-actions {
+  gap: 12px;
+}
+
+.modal-actions .btn {
+  min-width: 140px;
+}
+
+@media (max-width: 767.98px) {
+  .modal-card {
+    padding: 20px;
+    max-width: 95vw;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

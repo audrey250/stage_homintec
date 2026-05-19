@@ -25,8 +25,8 @@ import {
 export class DepartementFormComponent implements OnInit {
 
   // ---- Mode du formulaire ----
-  // null = création / number = édition de ce département
-  modeEditionId = signal<number | null>(null);
+  // null = création / string = édition de ce département
+  modeEditionId = signal<string | null>(null);
 
   // ---- États HTTP ----
   loading = signal(false);
@@ -56,15 +56,14 @@ export class DepartementFormComponent implements OnInit {
 
     if (idParam) {
       // Mode édition : charger les données du département existant
-      const id = parseInt(idParam, 10);
-      this.modeEditionId.set(id);
-      this.chargerDepartement(id);
+      this.modeEditionId.set(idParam);
+      this.chargerDepartement(idParam);
     }
     // Sinon : mode création, le formulaire est déjà vide
   }
 
   // ---- Charger un département pour l'édition ----
-  private chargerDepartement(id: number): void {
+  private chargerDepartement(id: string): void {
     this.loading.set(true);
 
     // GET /api/departements/:id

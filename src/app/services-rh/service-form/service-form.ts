@@ -18,8 +18,6 @@ import {
   DepartementService,
   Departement
 } from '../../services/departement.service';
-import { UtilisateurService } from '../../services/utilisateur.service';
-import { User } from '../../services/auth.service';
 
 @Component({
   selector: 'app-service-form',
@@ -38,16 +36,14 @@ export class ServiceFormComponent implements OnInit {
   form: ServiceRHForm = {
     nom:           '',
     description:   '',
-    departementId: 0,
-    responsableId: 0
+    departementId: ''
   };
 
   erreurs: Record<string, string> = {};
 
   constructor(
     private serviceRHService:   ServiceRHService,
-    private departementService: DepartementService,
-    private utilisateurService: UtilisateurService,
+    public departementService: DepartementService,
     private router:             Router,
     private route:              ActivatedRoute
   ) {}
@@ -55,7 +51,6 @@ export class ServiceFormComponent implements OnInit {
   ngOnInit(): void {
     // Charger les listes pour les <select>
     this.departementService.chargerTout();
-    this.utilisateurService.chargerTout();
 
     // Détecter le mode édition via l'URL
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -73,8 +68,7 @@ export class ServiceFormComponent implements OnInit {
         this.form = {
           nom:           service.nom,
           description:   service.description,
-          departementId: service.departementId,
-          responsableId: service.responsableId
+          departementId: service.departementId
         };
         this.loading.set(false);
       },
@@ -92,12 +86,6 @@ export class ServiceFormComponent implements OnInit {
   // ---- Accesseurs pour le HTML ----
   get departements(): Departement[] {
     return this.departementService.departements();
-  }
-
-  get responsablesPossibles(): User[] {
-    return this.utilisateurService.utilisateurs().filter((u: User) =>
-      ['manager', 'rh', 'admin'].includes(u.role.nom)
-    );
   }
 
   // ---- Validation ----
@@ -123,12 +111,8 @@ export class ServiceFormComponent implements OnInit {
       this.erreurs['description'] = 'Minimum 10 caractères.';
     }
 
-    if (!this.form.departementId || this.form.departementId === 0) {
+    if (!this.form.departementId || String(this.form.departementId).trim() === '') {
       this.erreurs['departementId'] = 'Le département est obligatoire.';
-    }
-
-    if (!this.form.responsableId || this.form.responsableId === 0) {
-      this.erreurs['responsableId'] = 'Le responsable est obligatoire.';
     }
 
     return Object.keys(this.erreurs).length === 0;
@@ -144,8 +128,7 @@ export class ServiceFormComponent implements OnInit {
     const data: ServiceRHForm = {
       nom:           this.form.nom.trim(),
       description:   this.form.description.trim(),
-      departementId: Number(this.form.departementId),
-      responsableId: Number(this.form.responsableId)
+      departementId: this.form.departementId
     };
 
     const idEdition = this.modeEditionId();
@@ -158,7 +141,7 @@ export class ServiceFormComponent implements OnInit {
       next: () => {
         this.loading.set(false);
         this.succes.set(true);
-        setTimeout(() => this.router.navigate(['/services-rh']), 1500);
+        setTimeout(() => this.router.navigate(['/services']), 1500);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
@@ -174,7 +157,7 @@ export class ServiceFormComponent implements OnInit {
   }
 
   annuler(): void {
-    this.router.navigate(['/services-rh']);
+    this.router.navigate(['/services']);
   }
 
   get titreFormulaire(): string {

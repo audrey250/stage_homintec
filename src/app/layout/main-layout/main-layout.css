@@ -1,21 +1,30 @@
-/*Sidebar fixe*/
-app-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  overflow-y: auto;
-  z-index: 100;
+#content {
+  flex: 1;
+  padding-top: 70px;
 }
 
-/*Navbar fixe en haut*/
-app-navbar {
-  position: sticky;
-  top: 0;
-  z-index: 99;
+.container-fluid {
+  min-height: calc(100vh - 130px);
+  padding-top: 1rem;
 }
 
-/*Contenu décalé pour ne pas se cacher derrière la sidebar*/
-#content-wrapper {
-  margin-left: 224px; /* largeur standard SB Admin 2*/
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.28);
+    z-index: 1500;
+  }
+}
+
+@media (max-width: 576px) {
+  .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }

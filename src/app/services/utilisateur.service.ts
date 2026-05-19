@@ -16,8 +16,9 @@ export type NouvelUtilisateur = {
   nom: string;
   email: string;
   poste: string;
-  departementId: number;
-  //telephone:number;
+  serviceId?: string | number;
+  roleId?: string | number;
+  departementId?: number;
 
 };
 
@@ -55,7 +56,16 @@ export class UtilisateurService {
 
   // ---- POST /api/utilisateurs ----
   ajouter(data: NouvelUtilisateur): Observable<User> {
-    return this.http.post<User>(`${API_URL}/utilisateurs`, data).pipe(
+    const payload = {
+      prenom: data.prenom,
+      nom: data.nom,
+      email: data.email,
+      poste: data.poste,
+      serviceId: data.serviceId ?? data.departementId,
+      roleId: data.roleId
+    };
+
+    return this.http.post<User>(`${API_URL}/utilisateurs`, payload).pipe(
       tap((nouveau) => {
         // Spring Boot renvoie l'utilisateur créé avec son vrai id
         this._utilisateurs.update(liste => [...liste, nouveau]);

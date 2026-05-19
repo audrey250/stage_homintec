@@ -6,9 +6,12 @@ import { Component, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 
 import { UtilisateurService } from '../../services/utilisateur.service';
 import { User } from '../../services/auth.service';
+import { RoleService } from '../../services/role.service';
+import { ServiceRHService } from '../../services/service-rh.service';
 
 type Poste = 'employe' | 'manager' | 'rh' | 'admin';
 
@@ -26,26 +29,38 @@ export class ListeUtilisateursComponent implements OnInit {
   filtreRole = signal('');
   filtreDept = signal('');
 
-  // ---- Suppression ----
-  confirmSupprId = signal<number | null>(null);
-  suppressionErr  = signal('');
+  // ---- Modal et formulaire ----
+  modalOuvert = signal(false);
+  formLoading = signal(false);
+  formErreur = signal('');
+
+  form = {
+    prenom: '',
+    nom: '',
+    email: '',
+    poste: '' as Poste | '',
+    roleId: '',
+    serviceId: '',
+  };
+
+  erreurs: Record<string, string> = {};
 
   // ---- Stats ----
   stats = computed(() => {
     const tous: User[] = this.utilisateurService.utilisateurs();
     return {
       total: tous.length,
-      employes: tous.filter(u => u.Poste === 'employe').length,
-      managers: tous.filter(u => u.Poste === 'manager').length,
-      rh: tous.filter(u => u.Poste === 'rh').length,
-      admins: tous.filter(u => u.Poste === 'admin').length,
+      employes: tous.filter(u => this.getPoste(u) === 'employe').length,
+      managers: tous.filter(u => this.getPoste(u) === 'manager').length,
+      rh: tous.filter(u => this.getPoste(u) === 'rh').length,
+      admins: tous.filter(u => this.getPoste(u) === 'admin').length,
     };
   });
 
   // ---- Départements uniques ----
   departements = computed(() => {
     const tous: User[] = this.utilisateurService.utilisateurs();
-    return [...new Set(tous.map(u => u.departementId))].sort();
+    return [...new Set(tous.map(u => this.getServiceId(u)))].sort();
   });
 
   // ---- Liste filtrée ----
@@ -63,68 +78,88 @@ export class ListeUtilisateursComponent implements OnInit {
         u.prenom.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q);
 
-      const matchRole = !poste || u.Poste === poste;
+      const matchRole = !poste || this.getPoste(u) === poste;
 
       const matchDept =
-        !dept || u.departementId === Number(dept);
+        !dept || String(this.getServiceId(u)) === String(dept);
 
       return matchTexte && matchRole && matchDept;
     });
   });
 
-  constructor(public utilisateurService: UtilisateurService) {}
+  constructor(
+    public utilisateurService: UtilisateurService,
+    public roleService: RoleService,
+    public serviceRHService: ServiceRHService
+  ) {}
 
   ngOnInit(): void {
     this.utilisateurService.chargerTout();
-  }
-
-  // ---- Suppression ----
-
-  demanderSuppression(id: number): void {
-    this.confirmSupprId.set(id);
-    this.suppressionErr.set('');
-  }
-
-  annulerSuppression(): void {
-    this.confirmSupprId.set(null);
-  }
-
-  confirmerSuppression(): void {
-    const id = this.confirmSupprId();
-    if (id === null) return;
-
-    this.utilisateurService.supprimer(id).subscribe({
-      next: () => this.confirmSupprId.set(null),
-      error: (err: HttpErrorResponse) => {
-        this.suppressionErr.set(
-          err.status === 403
-            ? "Vous n'avez pas les droits pour supprimer cet utilisateur."
-            : "Erreur lors de la suppression."
-        );
-      }
-    });
-  }
-
-  get nomASupprimer(): string {
-    const id = this.confirmSupprId();
-    if (id === null) return '';
-
-    const u = this.utilisateurService.utilisateurs()
-      .find(u => u.id === id);
-
-    return u ? `${u.prenom} ${u.nom}` : '';
+    this.roleService.chargerTout();
+    this.serviceRHService.chargerTout();
   }
 
   // ---- Helpers ----
 
+  getPoste(u: User): string {
+    return ((u as unknown as { poste?: string }).poste ?? u.Poste ?? '').toLowerCase();
+  }
+
+  getServiceId(u: User): string | number {
+    return (u as unknown as { serviceId?: string | number }).serviceId ?? u.departementId;
+  }
+
+  getServiceNom(serviceId: string | number): string {
+    const service = this.serviceRHService.services().find(s => String(s.id) === String(serviceId));
+    return service?.nom ?? '-';
+  }
+
+  demanderSuppression(u: User): void {
+    Swal.fire({
+      title: 'Confirmer la suppression',
+      text: `Supprimer l'utilisateur "${u.prenom} ${u.nom}" ?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      this.utilisateurService.supprimer(u.id).subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Supprime',
+            text: 'Utilisateur supprime avec succes',
+            timer: 1400,
+            showConfirmButton: false
+          });
+        },
+        error: (err: HttpErrorResponse) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: err.status === 403
+              ? "Vous n'avez pas les droits pour supprimer cet utilisateur."
+              : (err.error?.message || 'Erreur lors de la suppression.')
+          });
+        }
+      });
+    });
+  }
+
   couleurRole(poste: string): string {
     const map: Record<string, string> = {
-      admin: 'badge-admin',
-      rh: 'badge-rh',
-      manager: 'badge-manager',
-      employe: 'badge-employe',
+      admin: 'admin',
+      rh: 'rh',
+      manager: 'manager',
+      employe: 'employe',
     };
-    return map[poste] || 'badge-employe';
+    return map[(poste || '').toLowerCase()] || 'employe';
   }
 
   libelleRole(poste: string): string {
@@ -151,64 +186,102 @@ export class ListeUtilisateursComponent implements OnInit {
     return map[poste] || '#4e73df';
   }
 
-  // ---- MODAL ----
-
-  modalOuvert = signal(false);
-
   ouvrirModal(): void {
+    this.form = {
+      prenom: '',
+      nom: '',
+      email: '',
+      poste: '' as Poste | '',
+      roleId: '',
+      serviceId: '',
+    };
+    this.formErreur.set('');
+    this.erreurs = {};
     this.modalOuvert.set(true);
   }
 
   fermerModal(): void {
-    this.modalOuvert.set(false);
-  }
-
-  // ---- FORMULAIRE ----
-
-  messageSucces = signal('');
-  messageErreur = signal('');
-
-  form = {
-    prenom: '',
-    nom: '',
-    email: '',
-    poste: '' as Poste,
-    departementId: 0,
-  };
-
-  soumettre(): void {
-    this.messageSucces.set('');
-    this.messageErreur.set('');
-
-    if (!this.form.prenom || !this.form.nom || !this.form.email) {
-      this.messageErreur.set('Veuillez remplir les champs obligatoires.');
+    if (this.formLoading()) {
       return;
     }
 
+    this.modalOuvert.set(false);
+  }
+
+  private validerForm(): boolean {
+    this.erreurs = {};
+
+    if (!this.form.prenom.trim()) {
+      this.erreurs['prenom'] = 'Le prenom est obligatoire.';
+    }
+
+    if (!this.form.nom.trim()) {
+      this.erreurs['nom'] = 'Le nom est obligatoire.';
+    }
+
+    if (!this.form.email.trim()) {
+      this.erreurs['email'] = 'L\'email est obligatoire.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email.trim())) {
+      this.erreurs['email'] = 'Format d\'email invalide.';
+    } else if (this.utilisateurService.emailExiste(this.form.email.trim())) {
+      this.erreurs['email'] = 'Cet email est deja utilise.';
+    }
+
+    if (!this.form.poste) {
+      this.erreurs['poste'] = 'Le poste est obligatoire.';
+    }
+
+    if (!this.form.roleId) {
+      this.erreurs['roleId'] = 'Le role est obligatoire.';
+    }
+
+    if (!this.form.serviceId) {
+      this.erreurs['serviceId'] = 'Le service est obligatoire.';
+    }
+
+    return Object.keys(this.erreurs).length === 0;
+  }
+
+  soumettre(): void {
+    if (!this.validerForm()) {
+      return;
+    }
+
+    this.formLoading.set(true);
+    this.formErreur.set('');
+
     this.utilisateurService.ajouter({
-      prenom: this.form.prenom,
-      nom: this.form.nom,
-      email: this.form.email,
+      prenom: this.form.prenom.trim(),
+      nom: this.form.nom.trim(),
+      email: this.form.email.trim(),
       poste: this.form.poste,
-      departementId: Number(this.form.departementId),
+      roleId: this.form.roleId,
+      serviceId: this.form.serviceId,
     }).subscribe({
       next: () => {
-        this.messageSucces.set('Utilisateur ajouté avec succès ✅');
-
-        this.form = {
-          prenom: '',
-          nom: '',
-          email: '',
-          poste: '' as Poste,
-          departementId: 0,
-        };
-
+        this.formLoading.set(false);
+        Swal.fire({
+          icon: 'success',
+          title: 'Utilisateur ajoute',
+          text: 'Le compte a ete cree avec succes',
+          timer: 1400,
+          showConfirmButton: false
+        });
         this.fermerModal();
       },
       error: (err: HttpErrorResponse) => {
-        this.messageErreur.set(
-          err.error?.message || 'Erreur lors de la création.'
-        );
+        this.formLoading.set(false);
+        if (err.status === 409) {
+          this.erreurs['email'] = 'Cet email est deja utilise.';
+          return;
+        }
+
+        if (err.status === 0) {
+          this.formErreur.set('Serveur inaccessible.');
+          return;
+        }
+
+        this.formErreur.set(err.error?.message || 'Erreur lors de la creation.');
       }
     });
   }

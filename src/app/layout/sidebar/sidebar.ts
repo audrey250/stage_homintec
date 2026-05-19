@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { SidebarService } from '../../services/sidebar.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,12 +13,18 @@ import { AuthService } from '../../services/auth.service';
 })
 export class SidebarComponent {
 
-  // Contrôle si la sidebar est réduite ou non
-  collapsed = signal(false);
+  constructor(
+    public authService: AuthService,
+    private readonly sidebarService: SidebarService
+  ) {}
 
-  constructor(public authService: AuthService) {}
+  onNavLinkClick(): void {
+    if (!this.sidebarService.isMobileViewport()) {
+      return;
+    }
 
-  toggle(): void {
-    this.collapsed.set(!this.collapsed());
+    // Close on next tick so RouterLink navigation completes first.
+    setTimeout(() => this.sidebarService.closeMobile(), 0);
   }
+
 }

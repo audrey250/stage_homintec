@@ -1,0 +1,149 @@
+<div class="page-wrapper">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="fas fa-user-tag text-primary me-2"></i>
+        Roles
+      </h4>
+      <p class="text-muted mb-0" style="font-size:0.85rem">
+        {{ stats().total }} role{{ stats().total > 1 ? 's' : '' }}
+      </p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="ouvrirCreation()">
+      <i class="fas fa-plus me-2"></i>
+      Ajouter un role
+    </button>
+  </div>
+
+  <div *ngIf="roleService.erreur()" class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ roleService.erreur() }}
+  </div>
+
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body p-3">
+      <div class="input-group" style="max-width:400px">
+        <span class="input-group-text bg-light border-end-0">
+          <i class="fas fa-search text-muted" style="font-size:0.8rem"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control border-start-0"
+          placeholder="Rechercher un role..."
+          [ngModel]="recherche()"
+          (ngModelChange)="recherche.set($event)"
+        />
+        <button *ngIf="recherche()" class="input-group-text bg-light border-start-0" type="button" (click)="recherche.set('')">
+          <i class="fas fa-times text-muted" style="font-size:0.75rem"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="roleService.loading()" class="text-center py-5">
+    <div class="spinner-border text-primary"></div>
+    <p class="text-muted mt-2 mb-0" style="font-size:0.85rem">
+      Chargement des roles...
+    </p>
+  </div>
+
+  <div *ngIf="!roleService.loading()">
+    <div *ngIf="rolesFiltres().length === 0" class="text-center py-5 text-muted">
+      <i class="fas fa-user-tag fa-2x mb-3"></i>
+      <p class="mb-0">Aucun role trouve.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm" *ngIf="rolesFiltres().length > 0">
+      <div class="card-body p-2 p-md-3">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Description</th>
+                <th class="text-center" style="width: 150px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of rolesFiltres()">
+                <td class="fw-semibold text-dark">{{ r.nom }}</td>
+                <td class="text-dark">{{ r.description || '-' }}</td>
+                <td class="text-center">
+                  <div class="role-action-group">
+                    <button class="btn-action btn-edit" title="Modifier" (click)="ouvrirEdition(r)">
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-action btn-delete" title="Supprimer" (click)="demanderSuppression(r.id, r.nom)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="modalOuvert()" class="modal-overlay" (click)="fermerModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">
+        <i class="fas fa-user-tag text-primary me-2"></i>
+        {{ titreModal }}
+      </h5>
+      <button class="btn-close-modal" (click)="fermerModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div *ngIf="formErreur()" class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ formErreur() }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold required" style="font-size:0.88rem">
+        Nom du role
+      </label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="form.nom"
+        placeholder="Ex : ADMIN, RH, EMPLOYE"
+        [class.is-invalid]="erreurs['nom']"
+      />
+      <div *ngIf="erreurs['nom']" class="invalid-feedback">
+        {{ erreurs['nom'] }}
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold required" style="font-size:0.88rem">
+        Description
+      </label>
+      <textarea
+        class="form-control"
+        [(ngModel)]="form.description"
+        rows="3"
+        placeholder="Decrivez le role et ses responsabilites..."
+        [class.is-invalid]="erreurs['description']"
+      ></textarea>
+      <div *ngIf="erreurs['description']" class="invalid-feedback">
+        {{ erreurs['description'] }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary" (click)="fermerModal()" [disabled]="formLoading()">
+        Annuler
+      </button>
+      <button class="btn btn-primary" (click)="soumettre()" [disabled]="formLoading()">
+        <span *ngIf="formLoading()" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!formLoading()" class="fas fa-save me-2"></i>
+        {{ formLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -30,10 +30,14 @@ telephone:number;
 }
 
 export interface Notification {
-  id:      number;
-  contenu:string;
-  date_envoi:    Date ;
-  statut:    'lu' | 'non_lu' | 'envoyer'|'archive' | 'echec';
+  id: number;
+  contenu: string;
+  message?: string;
+  date_envoi: Date;
+  date?: Date;
+  statut: 'lu' | 'non_lu' | 'envoyer' | 'archive' | 'echec';
+  lu?: boolean;
+  type?: 'success' | 'info' | 'warning';
 }
 
 export interface LoginResponse {
@@ -42,7 +46,8 @@ export interface LoginResponse {
   nom:              string;
   prenom:           string;
   email:            string;
-  Poste:             string;
+  Poste?:            string;
+  poste?:            string;
   departementId:      number;
   telephone:number;
   statut_compte?:'  innactif'|'actif'|'supprimer'|'en_attente';
@@ -53,7 +58,7 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private _currentUser   = signal<User | null>(null);
+  private _currentUser   = signal<User | null>(this.getStoredUser());
   currentUser            = this._currentUser.asReadonly();
 
   private _notifications = signal<Notification[]>([]);
@@ -68,18 +73,32 @@ export class AuthService {
     this.restaurerSession();
   }
 
+  private getStoredUser(): User | null {
+    const userStr = localStorage.getItem('homintec_user');
+    if (!userStr) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(userStr) as User;
+    } catch {
+      localStorage.removeItem('homintec_user');
+      return null;
+    }
+  }
+
   // ---- Restaurer la session au démarrage ----
   private restaurerSession(): void {
     const token   = localStorage.getItem('homintec_token');
-    const userStr = localStorage.getItem('homintec_user');
-    if (token && userStr) {
-      try {
-        this._currentUser.set(JSON.parse(userStr));
-        this.chargerNotifications().subscribe();
-      } catch {
-        this.viderSession();
-      }
+    const storedUser = this.getStoredUser();
+
+    if (token && storedUser) {
+      this._currentUser.set(storedUser);
+      this.chargerNotifications().subscribe();
+      return;
     }
+
+    this.viderSession();
   }
 
   // ---- POST /api/auth/login ----
@@ -96,7 +115,7 @@ export class AuthService {
             nom: res.nom,
             prenom: res.prenom,
             email: res.email,
-            Poste: res.Poste,
+            Poste: res.Poste ?? res.poste ?? '',
             departementId: res.departementId || 0,
             telephone:res.telephone,
             statut_compte:res.statut_compte||'actif',
@@ -122,6 +141,11 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  forceLogoutToLogin(): void {
+    this.viderSession();
+    this.router.navigate(['/login']);
+  }
+
   private viderSession(): void {
     localStorage.removeItem('homintec_token');
     localStorage.removeItem('homintec_user');
@@ -130,12 +154,12 @@ export class AuthService {
     this.notifsNonLues.set(0);
   }
 
-  // ---- PUT /api/auth/changer-mot-de-passe ----
-  changerMotDePasse(nouveauMdp: string): Observable<void> {
+  // ---- PUT /api/auth/change-password ----
+  changerMotDePasse(nouveauMdp: string): Observable<string> {
     return this.http
-      .put<void>(`${API_URL}/auth/changer-mot-de-passe`, {
+      .put(`${API_URL}/auth/change-password`, {
         nouveauMotDePasse: nouveauMdp
-      })
+      }, { responseType: 'text' })
       .pipe(
         tap(() => {
           const user = this._currentUser();
@@ -192,6 +216,15 @@ export class AuthService {
 
   hasRole(...roles: string[]): boolean {
     const u = this._currentUser();
-    return !!u && roles.includes(u.role.nom);
+    const roleName = u?.role?.nom ?? u?.Poste;
+
+    if (!roleName) {
+      return false;
+    }
+
+    const normalizedCurrentRole = roleName.trim().toLowerCase();
+    const normalizedExpectedRoles = roles.map(r => r.trim().toLowerCase());
+
+    return normalizedExpectedRoles.includes(normalizedCurrentRole);
   }
 }
