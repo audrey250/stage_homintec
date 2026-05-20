@@ -45,8 +45,11 @@
     <p class="text-muted mb-0">
       <strong>{{ form.prenom }} {{ form.nom }}</strong>
       a été ajouté en tant que
-      <strong>{{ libellePoste(form.poste) }}</strong>.
+      <strong>{{ form.poste }}</strong>.
     </p>
+              <!-- Rôle supprimé: le poste est saisi manuellement -->
+              
+              
 
     <p class="text-muted mt-1" style="font-size:.85rem">
       Redirection en cours...
@@ -123,7 +126,7 @@
                 [style.color]="couleurPoste"
                 [style.borderColor]="couleurPoste+ '40'">
 
-            {{ libellePoste(form.poste) || 'Rôle' }}
+            {{ form.poste || 'Rôle' }}
           </span>
 
           <div class="preview-dept text-muted mt-2" style="font-size:.8rem">
@@ -189,23 +192,7 @@
 
             <div class="row g-3">
 
-              <div class="col-12">
-                <label class="form-label">Rôle</label>
-
-                <div class="role-grid">
-
-                  <div *ngFor="let r of roles"
-                       class="role-card"
-                       [class.selected]="form.poste === r.value"
-                       (click)="form.poste = r.value">
-
-                    <i class="fas" [class]="r.icon"></i>
-                    <span>{{ r.label }}</span>
-
-                  </div>
-
-                </div>
-              </div>
+              <!-- Rôle selection removed: poste is entered manually -->
 
               <div class="col-12 col-sm-6">
                 <label class="form-label">Département</label>
@@ -227,9 +214,9 @@
               <div class="col-12 col-sm-6">
                 <label class="form-label">Poste</label>
 
-                <input class="form-control"
-                       [(ngModel)]="form.poste"
-                       name="poste">
+                  <input class="form-control"
+                    [(ngModel)]="form.poste"
+                    name="poste">
               </div>
 
             </div>

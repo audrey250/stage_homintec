@@ -9,15 +9,15 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { CongeService, Demande } from '../../services/conge.service';
+import { DemandeService, Demande } from '../../services/demande.service';
 
 @Component({
   selector: 'app-mes-demandes',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mes-demandes.html',
-  styleUrl: './mes-demandes.css'
-})
+  styleUrls: ['./mes-demandes.css']
+})      
 export class MesDemandesComponent implements OnInit {
 
   filtreStatut = signal<string>('tous');
@@ -31,7 +31,7 @@ export class MesDemandesComponent implements OnInit {
     const filtre = this.filtreStatut();
     const toutes = this.congeService.demandes();
     if (filtre === 'tous') return toutes;
-    return toutes.filter(d => d.statut === filtre);
+    return toutes.filter(d => this.normalizeStatut(d.statut) === filtre);
   });
 
   // Compteurs pour les onglets
@@ -39,24 +39,31 @@ export class MesDemandesComponent implements OnInit {
     const toutes = this.congeService.demandes();
     return {
       tous:       toutes.length,
-      en_attente: toutes.filter(d => d.statut === 'en_attente').length,
-      approuve:   toutes.filter(d => d.statut === 'approuve').length,
-      rejete:     toutes.filter(d => d.statut === 'rejete').length,
+      en_attente: toutes.filter(d => this.normalizeStatut(d.statut) === 'en_attente').length,
+      valide:     toutes.filter(d => this.normalizeStatut(d.statut) === 'valide').length,
+      refuse:     toutes.filter(d => this.normalizeStatut(d.statut) === 'refuse').length,
     };
   });
 
+  // Normalise le statut retourné par le serveur (ex: "En attente", "EN_ATTENTE", "en attente")
+  private normalizeStatut(statut: string | undefined): string {
+    if (!statut) return '';
+    return statut
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/-+/g, '_');
+  }
+
   constructor(
     public authService:  AuthService,
-    public congeService: CongeService
+    public congeService: DemandeService
   ) {}
 
   // ---- Au chargement : récupère les demandes de l'employé connecté ----
   ngOnInit(): void {
-    this.congeService.chargerMesDemandes().subscribe({
-      error: (err: HttpErrorResponse) => {
-        console.error('Erreur chargement mes demandes', err);
-      }
-    });
+    this.congeService.chargerMesDemandes();
   }
 
   // ---- Annuler une demande en attente via HTTP ----
@@ -94,8 +101,8 @@ export class MesDemandesComponent implements OnInit {
   getBadgeClass(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'badge-warning',
-      approuve:   'badge-success',
-      rejete:     'badge-danger'
+      valide:     'badge-success',
+      refuse:     'badge-danger'
     };
     return map[statut] ?? 'badge-secondary';
   }
@@ -103,9 +110,14 @@ export class MesDemandesComponent implements OnInit {
   getStatutLabel(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'En attente',
-      approuve:   'Approuvé',
-      rejete:     'Rejeté'
+      valide:     'Approuvé',
+      refuse:     'Rejeté'
     };
     return map[statut] ?? statut;
+  }
+
+  dernierCommentaire(demande: Demande): string {
+    const done = demande.etapes?.filter(e => e.statut !== 'en_attente') ?? [];
+    return done.length > 0 ? done[done.length - 1].commentaire ?? '—' : '—';
   }
 }

@@ -9,15 +9,14 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { UtilisateurService } from '../../services/utilisateur.service';
-
-type Poste = 'employe' | 'manager' | 'rh' | 'admin';
+  
 
 export interface FormulaireUtilisateur {
  
   nom:              string;
    prenom:           string;
   email:            string;
-  poste:             Poste;
+  poste:             string;
   departementId:       number|null;
   
   
@@ -28,7 +27,7 @@ export interface FormulaireUtilisateur {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './nouvel-utilisateur.html',
-  styleUrl:    './nouvel-utilisateur.css'
+  styleUrls: ['./nouvel-utilisateur.css']
 })
 export class NouvelUtilisateurComponent {
 
@@ -38,6 +37,7 @@ export class NouvelUtilisateurComponent {
   erreurGlobal = signal('');
   showPassword = signal(false);
   showConfirm  = signal(false);
+  
 
   erreurs: Record<string, string> = {};
 
@@ -45,18 +45,13 @@ export class NouvelUtilisateurComponent {
     prenom:           '',
     nom:              '',
     email:            '',
-    poste:             'employe',
+    poste:             '',
     departementId:      null as number | null,
    
    
   };
 
-  roles: { value: Poste; label: string; icon: string }[] = [
-    { value: 'employe', label: 'Employé',        icon: 'fa-user'        },
-    { value: 'manager', label: 'Manager',         icon: 'fa-user-tie'    },
-    { value: 'rh',      label: 'Responsable RH',  icon: 'fa-user-shield' },
-    { value: 'admin',   label: 'Administrateur',  icon: 'fa-user-cog'    },
-  ];
+  
 
   departements = [
     'informatique'
@@ -66,6 +61,8 @@ export class NouvelUtilisateurComponent {
     private utilisateurService: UtilisateurService,
     private router: Router
   ) {}
+
+  
 
   etapeSuivante(): void {
     if (this.validerEtape(this.etapeActive())) {
@@ -166,10 +163,12 @@ export class NouvelUtilisateurComponent {
       admin: '#e74c3b', rh: '#17a2b8',
       manager: '#1cc88a', employe: '#4e73df'
     };
-    return map[this.form.poste] || '#4e73df';
+    const key = (this.form.poste ?? '').toString().toLowerCase();
+    if (key.includes('admin')) return map['admin'];
+    if (key.includes('rh') || key.includes('responsable')) return map['rh'];
+    if (key.includes('manager')) return map['manager'];
+    if (key.includes('employ')) return map['employe'];
+    return '#4e73df';
   }
-
-  libellePoste(poste: Poste): string {
-  return this.roles.find(r => r.value === poste)?.label ?? '';
-}
+  
 }

@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { User } from './auth.service';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://192.168.1.142:8080/api';
 
 // Omit<User, 'id' | 'premiereCo'> = tous les champs sauf id et premiereCo
 // Spring Boot génère l'id et met premiereCo à true automatiquement
@@ -83,6 +83,17 @@ export class UtilisateurService {
         );
       }),
       catchError((err) => throwError(() => err))
+    );
+  }
+
+  // ---- GET /api/utilisateurs/:id ----
+  // Récupère un utilisateur par son ID (utile pour enrichir les demandes)
+  getParId(id: number): Observable<User> {
+    return this.http.get<User>(`${API_URL}/utilisateurs/${id}`).pipe(
+      catchError((err) => {
+        console.error(`Impossible de récupérer l'utilisateur ${id}:`, err);
+        return throwError(() => err);
+      })
     );
   }
 

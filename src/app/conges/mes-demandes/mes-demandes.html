@@ -38,8 +38,8 @@
         *ngFor="let onglet of [
           { val: 'tous',       label: 'Toutes',     count: compte().tous       },
           { val: 'en_attente', label: 'En attente', count: compte().en_attente },
-          { val: 'approuve',   label: 'Approuvées', count: compte().approuve   },
-          { val: 'rejete',     label: 'Rejetées',   count: compte().rejete     }
+          { val: 'valide',     label: 'Validées',   count: compte().valide     },
+          { val: 'refuse',     label: 'Rejetées',   count: compte().refuse     }
         ]"
       >
         <button
@@ -90,12 +90,12 @@
               <i
                 class="fas fa-fw me-1"
                 [ngClass]="{
-                  'fa-umbrella-beach text-primary': d.type === 'Congé annuel',
-                  'fa-clock text-warning':          d.type === 'Permission',
-                  'fa-heartbeat text-danger':       d.type === 'Congé maladie'
+                  'fa-umbrella-beach text-primary': d.typeDemande=== 'conge_annuel',
+                  'fa-clock text-warning':          d.typeDemande === 'permission',
+                  'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie'
                 }"
               ></i>
-              {{ d.type }}
+              {{ congeService.libelleType(d.typeDemande) }}
             </td>
 
             <!-- Dates -->
@@ -105,7 +105,7 @@
 
             <!-- Jours -->
             <td>
-              <span class="fw-semibold">{{ d.jours }}j</span>
+              <span class="fw-semibold">{{ d.nbJours }}j</span>
             </td>
 
             <!-- Motif tronqué -->
@@ -122,9 +122,9 @@
               </span>
             </td>
 
-            <!-- ✅ CORRIGÉ : d.commentaireRH → d.commentaireValidateur -->
+            <!-- ✅ CORRIGÉ : d.commentaireRH → dernierCommentaire(d) -->
             <td style="font-size:0.82rem; color:#666; max-width:140px;">
-              {{ d.commentaireValidateur ?? '—' }}
+              {{ dernierCommentaire(d) }}
             </td>
 
             <!-- Action annuler -->

@@ -13,7 +13,7 @@ import { User } from '../../services/auth.service';
 import { RoleService } from '../../services/role.service';
 import { ServiceRHService } from '../../services/service-rh.service';
 
-type Poste = 'employe' | 'manager' | 'rh' | 'admin';
+type Poste = string;
 
 @Component({
   selector: 'app-liste-utilisateurs',

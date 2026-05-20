@@ -42,7 +42,7 @@ export class ProfilComponent {
     const labels: Record<string, string> = {
       admin: 'Administrateur',
       rh: 'Ressources Humaines',
-      manager: 'Manager',
+      Responsable: 'Responsable',
       employe: 'Employe'
     };
 

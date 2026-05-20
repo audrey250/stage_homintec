@@ -9,17 +9,17 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import {
-  CongeService,
+  DemandeService,
   Demande,
   DecisionDemande
-} from '../../services/conge.service';
+} from '../../services/demande.service';
 
 @Component({
   selector: 'app-validation',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './validation.html',
-  styleUrl: './validation.css'
+  styleUrls: ['./validation.css']
 })
 export class ValidationComponent implements OnInit {
 
@@ -33,9 +33,11 @@ export class ValidationComponent implements OnInit {
   erreurAction = signal('');
 
   // Computed depuis le cache du service (se met à jour automatiquement)
-  demandesEnAttente = computed(() =>
-    this.congeService.demandes().filter(d => d.statut === 'en_attente')
-  );
+  demandesEnAttente = computed(() => {
+    const role = this.currentRole();
+    if (!role) return [];
+    return this.congeService.getEnAttentePour(role);
+  });
 
   demandesTraitees = computed(() =>
     this.congeService.demandes().filter(d => d.statut !== 'en_attente')
@@ -43,16 +45,21 @@ export class ValidationComponent implements OnInit {
 
   constructor(
     public authService:  AuthService,
-    public congeService: CongeService
+    public congeService: DemandeService
   ) {}
+
+  currentRole(): string {
+    const user = this.authService.currentUser();
+    if (!user) return '';
+    return (user.role?.nom || user.Poste || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+  }
 
   // ---- Au chargement : récupère toutes les demandes depuis Spring Boot ----
   ngOnInit(): void {
-    this.congeService.chargerTout().subscribe({
-      error: (err: HttpErrorResponse) => {
-        console.error('Erreur chargement demandes', err);
-      }
-    });
+    this.congeService.chargerTout();
   }
 
   // ---- Ouvrir la modale ----
@@ -90,7 +97,7 @@ export class ValidationComponent implements OnInit {
     this.erreurAction.set('');
 
     const decision: DecisionDemande = {
-      statut:      action === 'approuver' ? 'approuve' : 'rejete',
+      statut:      action === 'approuver' ? 'valide' : 'refuse',
       commentaire: this.commentaireAction().trim()
     };
 
@@ -121,8 +128,8 @@ export class ValidationComponent implements OnInit {
   getBadgeClass(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'badge-warning',
-      approuve:   'badge-success',
-      rejete:     'badge-danger'
+      valide:     'badge-success',
+      refuse:     'badge-danger'
     };
     return map[statut] ?? 'badge-secondary';
   }
@@ -130,9 +137,34 @@ export class ValidationComponent implements OnInit {
   getStatutLabel(statut: string): string {
     const map: Record<string, string> = {
       en_attente: 'En attente',
-      approuve:   'Approuvé',
-      rejete:     'Rejeté'
+      valide:     'Approuvé',
+      refuse:     'Rejeté'
     };
     return map[statut] ?? statut;
+  }
+
+  dernierCommentaire(demande: Demande): string {
+    const done = demande.etapes.filter(e => e.statut !== 'en_attente');
+    return done.length > 0 ? done[done.length - 1].commentaire ?? '—' : '—';
+  }
+
+  // Affiche le nom complet avec fallback sur un champ `employe` si présent
+  displayNom(demande: any): string {
+    if (!demande) return '—';
+    const prenom = demande.utilisateurPrenom ?? demande.prenom;
+    const nom = demande.utilisateurNom ?? demande.nom;
+    if (prenom) return `${prenom} ${nom ?? ''}`.trim();
+    return demande['employe'] ?? '—';
+  }
+
+  // Calcule des initiales en évitant les erreurs si les champs manquent
+  initiales(demande: any): string {
+    if (!demande) return '?';
+    const p = demande.utilisateurPrenom ?? demande.prenom ?? demande['employe'] ?? '';
+    const n = demande.utilisateurNom ?? demande.nom ?? '';
+    const a = (p && p.charAt(0)) || '';
+    const b = (n && n.charAt(0)) || (p && p.charAt(1)) || '';
+    const res = (a + b).toUpperCase();
+    return res || '?';
   }
 }

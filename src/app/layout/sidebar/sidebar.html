@@ -71,7 +71,7 @@
           <span>Mes demandes</span>
         </a>
       </li>
-      <li class="nav-item" *ngIf="authService.hasRole('manager', 'rh', 'admin')">
+      <li class="nav-item" *ngIf="authService.hasRole('responsable', 'rh', 'admin')">
         <a
           class="nav-link"
           routerLink="/conges/validation"

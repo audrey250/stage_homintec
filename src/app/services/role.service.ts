@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://192.168.1.142:8080/api';
 
 export interface RoleModel {
   id: number;

@@ -22,6 +22,7 @@ export interface User {
   email:            string;
   Poste:             string;
   departementId:      number;
+  departementNom?:    string;
  statut_compte:'  innactif'|'actif'|'supprimer'|'en_attente';
 telephone:number;
   premiereCo?:       boolean;
