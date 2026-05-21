@@ -1,4 +1,7 @@
+@use 'sass:color';
+
 $primary:  #12471D;
+$primary-soft: #e9f5ec;
 $success:  #1cc88a;
 $danger:   #e74c3b;
 $warning:  #f6c23e;
@@ -6,12 +9,176 @@ $border:   #e3e6f0;
 
 // Avatar initiales
 .avatar-sm {
-  width: 34px; height: 34px;
+  width: 36px; height: 36px;
   border-radius: 50%;
   background: rgba($primary, .12);
   color: $primary;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
+}
+
+.role-badge {
+  background: $primary;
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 8px 16px rgba(18, 71, 29, 0.18);
+}
+
+.workflow-banner {
+  background: #e8f4ee;
+  border-left: 4px solid $primary;
+  color: #14532d;
+}
+
+.workflow-icon {
+  color: $primary;
+}
+
+.filters-card {
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.filters-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.filter-item {
+  margin: 0;
+}
+
+.filter-pill {
+  border: 1px solid #dde3ee;
+  background: #f7f9fc;
+  color: #475467;
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  border-color: #b8c3d6;
+  background: #eef2f8;
+}
+
+.filter-pill.active {
+  border-color: $primary;
+  background: $primary;
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(18, 71, 29, 0.18);
+}
+
+.filter-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(71, 84, 103, 0.14);
+  color: inherit;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-pill.active .filter-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.validation-card {
+  border: 1px solid #e6eaf2;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table-responsive {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.validation-card .table-responsive {
+  margin: 8px 0 0;
+  border: 1px solid #e8edf5;
+  background: #fff;
+}
+
+.validation-card .card-body {
+  padding: 0 14px 14px !important;
+}
+
+.validation-table thead th {
+  background: #f8fafc;
+  color: #667085;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  border-bottom: 1px solid #e4e7ec;
+  padding: 12px 14px;
+}
+
+.validation-table tbody td {
+  border-top: 1px solid #eef2f7;
+  padding: 14px;
+  font-size: 0.84rem;
+  color: #1d2939;
+  vertical-align: middle;
+}
+
+.validation-table tbody tr:hover {
+  background: #fcfdff;
+}
+
+.validation-table {
+  min-width: 920px;
+}
+
+.motif-col {
+  max-width: 180px;
+}
+
+.action-buttons {
+  gap: 10px;
+}
+
+.btn-action {
+  min-height: 34px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-approve {
+  background: $primary;
+  border-color: $primary;
+}
+
+.btn-approve:hover {
+  background: color.adjust($primary, $lightness: -6%);
+  border-color: color.adjust($primary, $lightness: -6%);
+}
+
+.btn-reject {
+  background: #fff;
+  color: $danger;
+  border-color: rgba($danger, 0.6);
+}
+
+.btn-reject:hover {
+  background: rgba($danger, 0.08);
+  color: color.adjust($danger, $lightness: -6%);
+  border-color: $danger;
 }
 
 // ---- Badge d'étape du workflow ----
@@ -36,14 +203,14 @@ $border:   #e3e6f0;
   // Validé (vert)
   &.etape-valide {
     background: rgba($success, .1);
-    color: darken($success, 10%);
+    color: color.adjust($success, $lightness: -10%);
     border-color: rgba($success, .3);
   }
 
   // Refusé (rouge)
   &.etape-refuse {
     background: rgba($danger, .1);
-    color: darken($danger, 5%);
+    color: color.adjust($danger, $lightness: -5%);
     border-color: rgba($danger, .3);
   }
 
@@ -83,6 +250,28 @@ $border:   #e3e6f0;
 }
 
 .modal-card-body { padding: 24px; }
+
+@media (max-width: 768px) {
+  .filters-list {
+    gap: 8px;
+  }
+
+  .filter-pill {
+    font-size: 0.8rem;
+    padding: 0.38rem 0.75rem;
+  }
+
+  .validation-table thead th,
+  .validation-table tbody td {
+    padding: 10px;
+  }
+
+  .validation-card .table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp {

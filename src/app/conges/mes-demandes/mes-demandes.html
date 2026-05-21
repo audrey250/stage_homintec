@@ -9,10 +9,10 @@
       Historique de toutes vos demandes
     </p>
   </div>
-  <a routerLink="/conges/nouvelle-demande"
-     class="btn btn-primary btn-sm shadow-sm mt-2 mt-sm-0">
-    <i class="fas fa-plus me-1"></i>Nouvelle demande
-  </a>
+  <button (click)="ouvrirModal()"
+          class="btn btn-primary shadow-sm mt-2 mt-sm-0">
+    <i class="fas fa-plus me-1"></i> Nouvelle demande
+  </button>
 </div>
 
 <!-- Spinner -->
@@ -39,23 +39,23 @@
   {{ congeService.erreur() }}
 </div>
 
-<div class="card shadow mb-4" *ngIf="!congeService.loading()">
+<div class="card shadow mb-4 demandes-card" *ngIf="!congeService.loading()">
 
   <!-- Onglets filtres -->
-  <div class="card-header p-0">
-    <ul class="nav nav-tabs border-0">
-      <li class="nav-item"
+  <div class="card-header p-3 border-0 bg-white">
+    <ul class="filters-list mb-0">
+      <li class="filter-item"
           *ngFor="let onglet of [
             { val: 'tous',       label: 'Toutes',     count: compte().tous       },
             { val: 'en_attente', label: 'En attente', count: compte().en_attente },
             { val: 'valide',     label: 'Approuvées', count: compte().valide     },
             { val: 'refuse',     label: 'Rejetées',   count: compte().refuse     }
           ]">
-        <button class="nav-link"
+        <button class="filter-pill"
                 [class.active]="filtreStatut() === onglet.val"
                 (click)="filtreStatut.set(onglet.val)">
           {{ onglet.label }}
-          <span class="badge bg-secondary ms-1" style="font-size:0.72rem">
+          <span class="filter-count ms-1">
             {{ onglet.count }}
           </span>
         </button>
@@ -75,16 +75,16 @@
     <!-- Tableau -->
     <div class="table-responsive"
          *ngIf="demandesFiltrees().length > 0">
-      <table class="table table-hover align-middle mb-0">
+      <table class="table table-hover align-middle mb-0 demandes-table">
 
-        <thead class="table-light">
+        <thead>
           <tr>
-            <th style="font-size:0.82rem">Employé</th>
-            <th style="font-size:0.82rem">Type</th>
-            <th style="font-size:0.82rem">Période</th>
-            <th style="font-size:0.82rem">Statut</th>
-            <th style="font-size:0.82rem">Motif</th>
-            <th style="font-size:0.82rem">Action</th>
+            <th>Employé</th>
+            <th>Type</th>
+            <th>Période</th>
+            <th>Statut</th>
+            <th>Motif</th>
+            <th class="text-center">Action</th>
           </tr>
         </thead>
 
@@ -96,14 +96,14 @@
               <div class="d-flex align-items-center gap-2">
                 <div class="avatar-sm">{{ initiales(d) }}</div>
                 <div class="fw-semibold" style="font-size:0.85rem">
-                  {{ d.utilisateur?.prenom ?? d.prenom }}
-                  {{ d.utilisateur?.nom    ?? d.nom    }}
+                  {{ prenomEmploye(d) }}
+                  {{ nomEmploye(d) }}
                 </div>
               </div>
             </td>
 
             <!-- Type -->
-            <td style="font-size:0.85rem">
+            <td class="type-cell">
               <i class="fas fa-fw me-1"
                  [ngClass]="{
                    'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
@@ -116,19 +116,19 @@
             </td>
 
             <!-- Dates -->
-            <td style="font-size:0.83rem">
+            <td class="periode-cell">
               {{ d.dateDebut }} → {{ d.dateFin }}
             </td>
 
             <!-- Statut -->
             <td>
-              <span class="badge {{ getBadgeClass(d.statut) }}">
+              <span class="badge statut-badge {{ getBadgeClass(d.statut) }}">
                 {{ getStatutLabel(d.statut) }}
               </span>
             </td>
 
             <!-- Motif -->
-            <td style="font-size:0.83rem; max-width:160px">
+            <td class="motif-cell">
               <span class="text-truncate d-block text-muted"
                     [title]="d.motif">
                 {{ d.motif }}
@@ -136,10 +136,10 @@
             </td>
 
             <!-- Action -->
-            <td>
+            <td class="text-center">
               <button
                 *ngIf="estAnnulable(d)"
-                class="btn btn-outline-danger btn-sm py-0 px-2"
+                class="btn btn-outline-danger btn-sm btn-annuler"
                 (click)="annuler(d.id)"
                 [disabled]="annulationEnCours() === d.id"
                 title="Annuler cette demande">
@@ -151,13 +151,158 @@
                 </i>
               </button>
               <span *ngIf="!estAnnulable(d)"
-                    class="text-muted"
-                    style="font-size:0.78rem">—</span>
+                  class="text-muted">—</span>
             </td>
 
           </tr>
         </tbody>
       </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== MODAL FORMULAIRE NOUVELLE DEMANDE ===== -->
+<div *ngIf="modalOuvert()" class="modal-overlay" (click)="fermerModal()">
+  <div class="modal-card" style="max-width: 700px; max-height: 90vh; overflow-y: auto;" (click)="$event.stopPropagation()">
+
+    <!-- En-tête modal -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">
+        <i class="fas fa-file-alt text-primary me-2"></i>
+        Nouvelle demande
+      </h5>
+      <button class="btn-close-modal" (click)="fermerModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Erreur globale -->
+    <div *ngIf="formErreur()"
+         class="alert alert-danger py-2 mb-3"
+         style="font-size:0.85rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ formErreur() }}
+    </div>
+
+    <!-- ÉTAPE 1 : Type de demande -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Type de demande <span class="text-danger">*</span>
+      </label>
+      <div class="row g-3">
+        <div
+          class="col-md-4"
+          *ngFor="let type of types"
+        >
+          <div
+            class="type-card"
+            [class.selected]="formData().type === type.value"
+            (click)="updateField('type', type.value)"
+            style="cursor: pointer; padding: 15px; border: 2px solid #e3e6f0; border-radius: 8px; text-align: center; transition: all 0.3s;"
+          >
+            <i class="fas {{ type.icone }} fa-2x {{ type.couleur }} mb-2"></i>
+            <div class="fw-semibold" style="font-size: 0.88rem;">
+              {{ type.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 2 : Dates -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date de début <span class="text-danger">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-control"
+          [min]="dateMin"
+          [ngModel]="formData().dateDebut"
+          (ngModelChange)="updateField('dateDebut', $event)"
+          name="dateDebut"
+        />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date de fin <span class="text-danger">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-control"
+          [min]="formData().dateDebut || dateMin"
+          [ngModel]="formData().dateFin"
+          (ngModelChange)="updateField('dateFin', $event)"
+          name="dateFin"
+        />
+      </div>
+    </div>
+
+    <!-- Résumé jours calculés -->
+    <div
+      class="alert alert-info py-2 mb-3"
+      *ngIf="nombreJours() > 0"
+      style="font-size: 0.85rem;"
+    >
+      <i class="fas fa-calendar-check me-2 text-primary"></i>
+      <strong>{{ nombreJours() }}</strong> jour(s) de
+      {{ formData().type === 'permission' ? 'permission' : 'congé' }}
+    </div>
+
+    <!-- ÉTAPE 3 : Motif -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Motif <span class="text-danger">*</span>
+      </label>
+      <textarea
+        class="form-control"
+        rows="3"
+        placeholder="Décrivez brièvement le motif de votre demande..."
+        [ngModel]="formData().motif"
+        (ngModelChange)="updateField('motif', $event)"
+        name="motif"
+        maxlength="500"
+      ></textarea>
+      <div class="text-muted text-end mt-1" style="font-size: 0.78rem;">
+        {{ formData().motif.length }}/500
+      </div>
+    </div>
+
+    <!-- Case urgence -->
+    <div class="mb-4">
+      <div class="form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="urgence"
+          [ngModel]="formData().urgence"
+          (ngModelChange)="updateField('urgence', $event)"
+          name="urgence"
+        />
+        <label class="form-check-label fw-semibold" for="urgence" style="font-size:0.88rem">
+          <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+          Demande urgente (traitement prioritaire)
+        </label>
+      </div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary"
+              (click)="fermerModal()"
+              [disabled]="formLoading()">
+        Annuler
+      </button>
+      <button class="btn btn-primary"
+              (click)="soumettre()"
+              [disabled]="formLoading()">
+        <span *ngIf="formLoading()"
+              class="spinner-border spinner-border-sm me-2">
+        </span>
+        <i *ngIf="!formLoading()" class="fas fa-save me-2"></i>
+        {{ formLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+      </button>
     </div>
 
   </div>

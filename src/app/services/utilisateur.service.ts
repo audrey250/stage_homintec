@@ -6,8 +6,9 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { User } from './auth.service';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://192.168.1.142:8080/api';
+const API_URL = environment.apiUrl;
 
 // Omit<User, 'id' | 'premiereCo'> = tous les champs sauf id et premiereCo
 // Spring Boot génère l'id et met premiereCo à true automatiquement

@@ -42,7 +42,6 @@ export class ListeUtilisateursComponent implements OnInit {
     poste: '' as Poste | '',
     roleId: '',
     serviceId: '',
-    departementId: '',
   };
 
   erreurs: Record<string, string> = {};
@@ -203,7 +202,6 @@ export class ListeUtilisateursComponent implements OnInit {
       poste: '' as Poste | '',
       roleId: '',
       serviceId: '',
-      departementId: '',
     };
     this.formErreur.set('');
     this.erreurs = {};
@@ -248,12 +246,22 @@ export class ListeUtilisateursComponent implements OnInit {
     if (!this.form.serviceId) {
       this.erreurs['serviceId'] = 'Le service est obligatoire.';
     }
-if (!this.form.departementId) {
-      this.erreurs['departementId'] = 'Le département est obligatoire.';
-    }
 
     
     return Object.keys(this.erreurs).length === 0;
+  }
+
+  private getDepartementIdFromService(serviceId: string | number): number | undefined {
+    const service = this.serviceRHService
+      .services()
+      .find(s => String(s.id) === String(serviceId));
+
+    if (!service) {
+      return undefined;
+    }
+
+    const deptId = Number(service.departementId);
+    return Number.isNaN(deptId) ? undefined : deptId;
   }
 
   soumettre(): void {
@@ -271,7 +279,7 @@ if (!this.form.departementId) {
       poste: this.form.poste,
       roleId: this.form.roleId,
       serviceId: this.form.serviceId,
-      departementId: this.form.departementId ? parseInt(this.form.departementId as string, 10) : undefined,
+      departementId: this.getDepartementIdFromService(this.form.serviceId),
     }).subscribe({
       next: () => {
         this.formLoading.set(false);

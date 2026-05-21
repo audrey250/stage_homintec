@@ -17,18 +17,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       })
     : req;
 
-  // Debug: afficher si token présent
-  if (!isAuthEndpoint && token) {
-    console.log('✓ Token envoyé:', token.substring(0, 20) + '...');
-  } else if (!isAuthEndpoint && !token) {
-    console.warn('⚠ Pas de token trouvé pour:', req.method, req.url);
-  }
 
   return next(reqAvecToken).pipe(
     catchError((err) => {
       if (!isAuthEndpoint && err.status === 401) {
-        // Token expiré ou invalide → retour au login
-        console.error('❌ Token expiré ou invalide');
         localStorage.removeItem('homintec_token');
         localStorage.removeItem('homintec_user');
         router.navigate(['/login']);
@@ -36,9 +28,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         console.error('❌ Erreur 403 - Accès refusé:', err.url);
         console.error('   Vérifier les permissions utilisateur pour cette action');
       }
-      // Ne redirige pas globalement sur 403 ici.
-      // La gestion d'autorisation de navigation est déjà faite par les guards.
-      // Sinon, un 403 d'une simple requête API peut forcer une redirection inattendue.
       return throwError(() => err);
     })
   );

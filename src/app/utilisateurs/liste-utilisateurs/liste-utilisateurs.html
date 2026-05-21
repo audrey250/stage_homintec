@@ -205,15 +205,6 @@
           </select>
           <div *ngIf="erreurs['serviceId']" class="invalid-feedback">{{ erreurs['serviceId'] }}</div>
         </div>
-
-        <div class="col-12">
-          <label class="form-label fw-semibold required" style="font-size:0.88rem">Département</label>
-          <select class="form-select" [(ngModel)]="form.departementId" name="departementId" [class.is-invalid]="erreurs['departementId']">
-            <option value="">Choisir un département...</option>
-            <option *ngFor="let dept of departementService.departements()" [value]="dept.id">{{ dept.nom }}</option>
-          </select>
-          <div *ngIf="erreurs['departementId']" class="invalid-feedback">{{ erreurs['departementId'] }}</div>
-        </div>
       </div>
 
       <div class="d-flex justify-content-end mt-4 modal-actions">

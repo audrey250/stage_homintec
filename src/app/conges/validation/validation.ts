@@ -40,24 +40,12 @@ export class ValidationComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('USER =', this.authService.currentUser());
-    console.log('ROLE =', this.monRole);
     this.demandeService.chargerEnAttente();
-
-    // Debug après chargement
-    setTimeout(() => {
-      console.log('Demandes chargées :', this.demandeService.demandes());
-      console.log('En attente :', this.demandesEnAttente());
-    }, 2000);
   }
 
-  // ---- Rôle de l'utilisateur connecté ----
-  // On lit user.role qui est une string simple dans ton AuthService
   get monRole(): string {
 
   const user: any = this.authService.currentUser();
-
-  console.log('USER = ', user);
 
   if (!user) return '';
 
@@ -75,6 +63,14 @@ export class ValidationComponent implements OnInit {
     .trim()
     .toUpperCase();
 }
+
+  private roleNormalise(role: string): string {
+    return (role || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .trim();
+  }
 
   // ---- Demandes en attente ----
   // Statuts intermédiaires = pas encore terminés
@@ -159,20 +155,23 @@ export class ValidationComponent implements OnInit {
 
     const decision: DecisionDemande = {
       statut:      action === 'valide' ? 'APPROUVE' : 'REFUSE',
-      commentaire: this.commentaireAction().trim()
+      commentaire: this.commentaireAction().trim(),
+      validateurId: String(this.authService.currentUser()?.id ?? '')
     };
 
     // ---- Routage selon le rôle ----
     let request$;
-    const role = this.monRole;
+    const role = this.roleNormalise(this.monRole);
+
+    if (!decision.validateurId) {
+      this.erreurAction.set('Impossible d’identifier le validateur connecté.');
+      this.traitement.set(false);
+      return;
+    }
 
     if (role === 'RESPONSABLE' || role === 'MANAGER') {
       request$ = this.demandeService.validerParResponsable(demande.id, decision);
-    } else if (
-      
-      role === 'CHEF DÉPARTEMENT' 
-      
-    ) {
+    } else if (role === 'CHEF DEPARTEMENT') {
       request$ = this.demandeService.validerParChefDepartement(demande.id, decision);
     } else if (role === 'RH') {
       request$ = this.demandeService.validerParRH(demande.id, decision);
@@ -191,7 +190,6 @@ export class ValidationComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.traitement.set(false);
-        console.error('Erreur lors de la validation:', err);
         
         if (err.status === 403) {
           // 403 = Permissions insuffisantes
@@ -233,6 +231,29 @@ export class ValidationComponent implements OnInit {
     return this.demandeService.libelleStatut(String(statut));
   }
 
+  prenomEmploye(d: Demande): string {
+    return (
+      d.utilisateur?.prenom ??
+      d.utilisateurPrenom ??
+      d.prenom ??
+      ''
+    ).trim();
+  }
+
+  nomEmploye(d: Demande): string {
+    return (
+      d.utilisateur?.nom ??
+      d.utilisateurNom ??
+      d.nom ??
+      ''
+    ).trim();
+  }
+
+  nomCompletEmploye(d: Demande): string {
+    const nomComplet = `${this.prenomEmploye(d)} ${this.nomEmploye(d)}`.trim();
+    return nomComplet || 'Employé';
+  }
+
   labelRole(role: string): string {
 
   const r = role?.toUpperCase().trim();
@@ -248,8 +269,8 @@ export class ValidationComponent implements OnInit {
   return map[r] ?? role;
 }
   initiales(d: Demande): string {
-    const prenom = (d.utilisateur?.prenom ?? d.prenom ?? 'U').trim();
-    const nom    = (d.utilisateur?.nom    ?? d.nom    ?? 'N').trim();
+    const prenom = this.prenomEmploye(d) || 'U';
+    const nom    = this.nomEmploye(d) || 'N';
     return (prenom.charAt(0) + nom.charAt(0)).toUpperCase();
   }
 

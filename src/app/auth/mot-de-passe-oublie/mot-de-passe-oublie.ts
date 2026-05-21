@@ -7,8 +7,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = environment.apiUrl;
 
 @Component({
   selector: 'app-mot-de-passe-oublie',

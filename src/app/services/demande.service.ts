@@ -7,8 +7,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://192.168.1.142:8080/api';
+const API_URL = environment.apiUrl;
 
 // ============================================================
 // TYPES
@@ -45,6 +46,10 @@ export interface Demande {
     email?: string;
   };
 
+  utilisateurId?: string;
+  utilisateurNom?: string;
+  utilisateurPrenom?: string;
+
   nom?: string;
   prenom?: string;
 }
@@ -52,6 +57,14 @@ export interface Demande {
 export interface DecisionDemande {
   statut: 'APPROUVE' | 'REFUSE';
   commentaire: string;
+  validateurId?: string;
+}
+
+export interface NouvelleDemandePayload {
+  typeDemande: 'CONGE' | 'PERMISSION';
+  dateDebut: string;
+  dateFin: string;
+  motif: string;
 }
 
 @Injectable({
@@ -76,6 +89,24 @@ export class DemandeService {
   constructor(private http: HttpClient) {}
 
   // ============================================================
+  // CRÉER UNE DEMANDE
+  // POST /api/demandes
+  // ============================================================
+
+  creerDemande(payload: NouvelleDemandePayload): Observable<Demande> {
+    return this.http
+      .post<Demande>(`${API_URL}/demandes`, payload)
+      .pipe(
+        tap((created) => {
+          this._demandes.update(liste => [created, ...liste]);
+        }),
+        catchError((err: HttpErrorResponse) => {
+          return throwError(() => err);
+        })
+      );
+  }
+
+  // ============================================================
   // CHARGER LES DEMANDES EN ATTENTE
   // ============================================================
 
@@ -90,16 +121,12 @@ export class DemandeService {
 
         tap((data) => {
 
-          console.log('Demandes reçues :', data);
-
           this._demandes.set(data);
 
           this._loading.set(false);
         }),
 
         catchError((err: HttpErrorResponse) => {
-
-          console.error('Erreur chargement :', err);
 
           this._loading.set(false);
 
@@ -123,15 +150,12 @@ export class DemandeService {
     decision: DecisionDemande
   ): Observable<Demande> {
     const url = `${API_URL}/demandes/${id}/valider-responsable`;
-    console.log('📤 PUT vers:', url);
-    console.log('📋 Body:', decision);
 
     return this.http
       .put<Demande>(url, decision)
       .pipe(
 
         tap((updated) => {
-          console.log('✅ Validation responsable réussie');
           this._demandes.update(liste =>
             liste.map(d =>
               d.id === id ? updated : d
@@ -140,13 +164,6 @@ export class DemandeService {
         }),
 
         catchError((err: HttpErrorResponse) => {
-          console.error('❌ Erreur validation responsable :', {
-            status: err.status,
-            statusText: err.statusText,
-            url: err.url,
-            message: err.error?.message || err.error?.detail || 'Erreur inconnue',
-            fullError: err
-          });
           return throwError(() => err);
         })
       );
@@ -161,16 +178,13 @@ export class DemandeService {
     id: string,
     decision: DecisionDemande
   ): Observable<Demande> {
-    const url = `${API_URL}/demandes/${id}/chef-departement`;
-    console.log('📤 PUT vers:', url);
-    console.log('📋 Body:', decision);
+    const url = `${API_URL}/demandes/${id}/valider-chef-departement`;
 
     return this.http
       .put<Demande>(url, decision)
       .pipe(
 
         tap((updated) => {
-          console.log('✅ Validation chef département réussie');
           this._demandes.update(liste =>
             liste.map(d =>
               d.id === id ? updated : d
@@ -179,12 +193,6 @@ export class DemandeService {
         }),
 
         catchError((err: HttpErrorResponse) => {
-          console.error('❌ Erreur validation département :', {
-            status: err.status,
-            statusText: err.statusText,
-            url: err.url,
-            message: err.error?.message || err.error?.detail || 'Erreur inconnue'
-          });
           return throwError(() => err);
         })
       );
@@ -199,16 +207,13 @@ export class DemandeService {
     id: string,
     decision: DecisionDemande
   ): Observable<Demande> {
-    const url = `${API_URL}/demandes/${id}/rh`;
-    console.log('📤 PUT vers:', url);
-    console.log('📋 Body:', decision);
+    const url = `${API_URL}/demandes/${id}/valider-rh`;
 
     return this.http
       .put<Demande>(url, decision)
       .pipe(
 
         tap((updated) => {
-          console.log('✅ Validation RH réussie');
           this._demandes.update(liste =>
             liste.map(d =>
               d.id === id ? updated : d
@@ -217,12 +222,6 @@ export class DemandeService {
         }),
 
         catchError((err: HttpErrorResponse) => {
-          console.error('❌ Erreur validation RH :', {
-            status: err.status,
-            statusText: err.statusText,
-            url: err.url,
-            message: err.error?.message || err.error?.detail || 'Erreur inconnue'
-          });
           return throwError(() => err);
         })
       );
@@ -250,8 +249,6 @@ export class DemandeService {
       return demande.statut === 'EN_ATTENTE';
     }
 
-    // ---------------- CHEF DEPARTEMENT ----------------
-
     if (
       role === 'CHEF DÉPARTEMENT'
     ) {
@@ -260,8 +257,6 @@ export class DemandeService {
         demande.statut === 'APPROUVEE_RESPONSABLE'
       );
     }
-
-    // ---------------- RH ----------------
 
     if (role === 'RH') {
 

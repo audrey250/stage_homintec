@@ -6,8 +6,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://192.168.1.142:8080/api';
+const API_URL = environment.apiUrl;
 
 export interface Message {
   id:               number;

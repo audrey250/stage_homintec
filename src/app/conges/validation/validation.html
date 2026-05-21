@@ -17,16 +17,16 @@
         · Workflow hiérarchique actif
       </p>
     </div>
-    <span class="badge bg-primary px-3 py-2" style="font-size:0.8rem">
+    <span class="badge role-badge px-3 py-2" style="font-size:0.8rem">
       <i class="fas fa-user-shield me-1"></i>
       {{ labelRole(monRole) | uppercase }}
     </span>
   </div>
 
   <!-- ===== RÈGLE DU WORKFLOW ===== -->
-  <div class="alert alert-info d-flex align-items-center gap-3 py-2 mb-4"
-       style="font-size:0.82rem; border-left:4px solid #0d6efd;">
-    <i class="fas fa-info-circle fa-lg text-primary flex-shrink-0"></i>
+  <div class="alert workflow-banner d-flex align-items-center gap-3 py-2 mb-4"
+       style="font-size:0.82rem;">
+    <i class="fas fa-info-circle fa-lg workflow-icon flex-shrink-0"></i>
     <div>
       <strong>Workflow :</strong>
       <strong>Responsable</strong> →
@@ -55,31 +55,29 @@
   <ng-container *ngIf="!demandeService.loading()">
 
     <!-- ===== ONGLETS ===== -->
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header bg-white border-0 p-0">
-        <ul class="nav nav-tabs border-0">
+    <div class="card border-0 shadow-sm mb-3 filters-card">
+      <div class="card-header bg-white border-0 p-3">
+        <ul class="filters-list mb-0">
 
-          <li class="nav-item">
-            <button class="nav-link"
+          <li class="filter-item">
+            <button class="filter-pill"
                     [class.active]="filtreActif() === 'en_attente'"
                     (click)="filtreActif.set('en_attente')">
               <i class="fas fa-clock me-1 text-warning"></i>
               En attente
-              <span class="badge bg-warning text-dark ms-1"
-                    style="font-size:0.7rem">
+              <span class="filter-count ms-1">
                 {{ demandesEnAttente().length }}
               </span>
             </button>
           </li>
 
-          <li class="nav-item">
-            <button class="nav-link"
+          <li class="filter-item">
+            <button class="filter-pill"
                     [class.active]="filtreActif() === 'traite'"
                     (click)="filtreActif.set('traite')">
               <i class="fas fa-history me-1 text-muted"></i>
               Historique
-              <span class="badge bg-secondary ms-1"
-                    style="font-size:0.7rem">
+              <span class="filter-count ms-1">
                 {{ demandesTraitees().length }}
               </span>
             </button>
@@ -107,19 +105,19 @@
 
       <!-- Tableau -->
       <div *ngIf="demandesEnAttente().length > 0"
-           class="card border-0 shadow-sm">
+           class="card border-0 shadow-sm validation-card">
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 validation-table">
 
-              <thead class="table-light">
+              <thead>
                 <tr>
-                  <th style="font-size:0.8rem">Employé</th>
-                  <th style="font-size:0.8rem">Type</th>
-                  <th style="font-size:0.8rem">Période</th>
-                  <th style="font-size:0.8rem">Étape actuelle</th>
-                  <th style="font-size:0.8rem">Motif</th>
-                  <th style="font-size:0.8rem; text-align:center">Actions</th>
+                  <th>Employé</th>
+                  <th>Type</th>
+                  <th>Période</th>
+                  <th>Étape actuelle</th>
+                  <th>Motif</th>
+                  <th class="text-center">Actions</th>
                 </tr>
               </thead>
 
@@ -130,12 +128,11 @@
                   <td>
                     <div class="d-flex align-items-center gap-2">
                       <div class="avatar-sm">
-                        {{ initiales(d) }}
+                        {{ initiales(d) }} 
                       </div>
                       <div>
                         <div class="fw-semibold" style="font-size:0.85rem">
-                          {{ d.utilisateur?.prenom ?? d.prenom }}
-                          {{ d.utilisateur?.nom    ?? d.nom    }}
+                          {{ nomCompletEmploye(d) }}
                         </div>
                       </div>
                     </div>
@@ -232,7 +229,7 @@
                   </td>
 
                   <!-- Motif -->
-                  <td>
+                  <td class="motif-col">
                     <span class="text-muted text-truncate d-block"
                           style="font-size:0.8rem; max-width:140px"
                           [title]="d.motif">
@@ -243,14 +240,14 @@
                   <!-- Actions -->
                   <td class="text-center">
                     <ng-container *ngIf="peutAgir(d)">
-                      <div class="d-flex gap-1 justify-content-center">
-                        <button class="btn btn-success btn-sm"
+                      <div class="d-flex justify-content-center action-buttons">
+                        <button class="btn btn-success btn-sm btn-approve btn-action"
                                 (click)="ouvrirAction(d, 'valide')">
-                          <i class="fas fa-check me-1"></i>Approuver
+                          <i class="fas fa-check me-1"></i>
                         </button>
-                        <button class="btn btn-danger btn-sm"
+                        <button class="btn btn-danger btn-sm btn-reject btn-action"
                                 (click)="ouvrirAction(d, 'refuse')">
-                          <i class="fas fa-times"></i>
+                          <i class="fas fa-times me-1"></i>
                         </button>
                       </div>
                     </ng-container>
@@ -286,18 +283,18 @@
       </div>
 
       <div *ngIf="demandesTraitees().length > 0"
-           class="card border-0 shadow-sm">
+           class="card border-0 shadow-sm validation-card">
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 validation-table">
 
-              <thead class="table-light">
+              <thead>
                 <tr>
-                  <th style="font-size:0.8rem">Employé</th>
-                  <th style="font-size:0.8rem">Type</th>
-                  <th style="font-size:0.8rem">Période</th>
-                  <th style="font-size:0.8rem">Statut final</th>
-                  <th style="font-size:0.8rem">Commentaire</th>
+                  <th>Employé</th>
+                  <th>Type</th>
+                  <th>Période</th>
+                  <th>Statut final</th>
+                  <th>Commentaire</th>
                 </tr>
               </thead>
 
@@ -306,8 +303,7 @@
 
                   <td>
                     <div class="fw-semibold" style="font-size:0.85rem">
-                      {{ d.utilisateur?.prenom ?? d.prenom }}
-                      {{ d.utilisateur?.nom    ?? d.nom    }}
+                      {{ nomCompletEmploye(d) }}
                     </div>
                   </td>
 
