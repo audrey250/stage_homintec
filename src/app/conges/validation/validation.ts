@@ -66,14 +66,14 @@ export class ValidationComponent implements OnInit {
     return (user.role.nom || '')
       .toString()
       .trim()
-      .toLowerCase();
+      .toUpperCase();
   }
 
   // role string
   return (user.role || '')
     .toString()
     .trim()
-    .toLowerCase();
+    .toUpperCase();
 }
 
   // ---- Demandes en attente ----
@@ -166,11 +166,11 @@ export class ValidationComponent implements OnInit {
     let request$;
     const role = this.monRole;
 
-    if (role === 'responsable' || role === 'manager') {
+    if (role === 'RESPONSABLE' || role === 'MANAGER') {
       request$ = this.demandeService.validerParResponsable(demande.id, decision);
     } else if (
       
-      role === 'chef département' 
+      role === 'CHEF DÉPARTEMENT' 
       
     ) {
       request$ = this.demandeService.validerParChefDepartement(demande.id, decision);
@@ -235,12 +235,12 @@ export class ValidationComponent implements OnInit {
 
   labelRole(role: string): string {
 
-  const r = role?.toLowerCase().trim();
+  const r = role?.toUpperCase().trim();
 
   const map: Record<string, string> = {
 
-    'responsable': 'responsable',
-    'chef département': 'Chef département',
+    'RESPONSABLE': 'RESPONSABLE',
+    'CHEF DÉPARTEMENT': 'CHEF DÉPARTEMENT',
     'RH': 'RH'
 
   };

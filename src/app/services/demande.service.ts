@@ -240,12 +240,12 @@ export class DemandeService {
     const role = roleUtilisateur
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
-  .toLowerCase()
+  .toUpperCase()
   .trim();
 
     // ---------------- RESPONSABLE ----------------
 
-    if (role === 'responsable') {
+    if (role === 'RESPONSABLE') {
 
       return demande.statut === 'EN_ATTENTE';
     }
@@ -253,7 +253,7 @@ export class DemandeService {
     // ---------------- CHEF DEPARTEMENT ----------------
 
     if (
-      role === 'chef département'
+      role === 'CHEF DÉPARTEMENT'
     ) {
 
       return (
@@ -286,12 +286,12 @@ export class DemandeService {
  const role = roleUtilisateur
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
-  .toLowerCase()
+  .toUpperCase()
   .trim();
     // ---------------- RESPONSABLE ----------------
 
     if (
-      role === 'responsable'
+      role === 'RESPONSABLE'
       && demande.statut !== 'EN_ATTENTE'
     ) {
 
@@ -302,7 +302,7 @@ export class DemandeService {
 
     if (
       (
-        role === 'chef département'
+        role === 'CHEF DÉPARTEMENT'
         
       )
       &&
@@ -315,7 +315,7 @@ export class DemandeService {
     // ---------------- RH ----------------
 
     if (
-      role === 'rh'
+      role === 'RH'
       &&
       demande.statut !==
       'APPROUVEE_CHEF_DEPARTEMENT'

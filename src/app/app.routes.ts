@@ -84,7 +84,7 @@ export const routes: Routes = [
       {
         path: 'services',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./services-rh/liste-services/liste-services')
           .then(m => m.ListeServices)
@@ -92,7 +92,7 @@ export const routes: Routes = [
       {
         path: 'services/nouveau',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./services-rh/service-form/service-form')
           .then(m => m.ServiceFormComponent)
@@ -100,7 +100,7 @@ export const routes: Routes = [
       {
         path: 'services/:id/modifier',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./services-rh/service-form/service-form')
           .then(m => m.ServiceFormComponent)
@@ -129,7 +129,7 @@ export const routes: Routes = [
       {
         path: 'departements',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./departements/liste-departements/liste-departements')
           .then(m => m.ListeDepartementsComponent)
@@ -137,7 +137,7 @@ export const routes: Routes = [
       {
         path: 'departements/nouveau',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./departements/ajout-departement/ajout-departement')
           .then(m => m.DepartementFormComponent)
@@ -145,7 +145,7 @@ export const routes: Routes = [
       {
         path: 'departements/:id/modifier',
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'rh'] },
+        data: { roles: ['ADMIN', 'RH'] },
         loadComponent: () =>
           import('./departements/ajout-departement/ajout-departement')
           .then(m => m.DepartementFormComponent)

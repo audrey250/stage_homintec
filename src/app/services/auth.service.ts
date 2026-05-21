@@ -242,8 +242,8 @@ export class AuthService {
       return false;
     }
 
-    const normalizedCurrentRole = roleName.trim().toLowerCase();
-    const normalizedExpectedRoles = roles.map(r => r.trim().toLowerCase());
+    const normalizedCurrentRole = roleName.trim().toUpperCase();
+    const normalizedExpectedRoles = roles.map(r => r.trim().toUpperCase());
 
     return normalizedExpectedRoles.includes(normalizedCurrentRole);
   }
