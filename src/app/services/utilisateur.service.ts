@@ -18,8 +18,7 @@ export type NouvelUtilisateur = {
   poste: string;
   serviceId?: string | number;
   roleId?: string | number;
-  departementId?: number;
-
+  departementId?: number | undefined;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -61,7 +60,8 @@ export class UtilisateurService {
       nom: data.nom,
       email: data.email,
       poste: data.poste,
-      serviceId: data.serviceId ?? data.departementId,
+      serviceId: data.serviceId,
+      departementId: data.departementId,
       roleId: data.roleId
     };
 

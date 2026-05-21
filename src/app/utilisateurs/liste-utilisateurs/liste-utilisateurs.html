@@ -65,6 +65,7 @@
           <tr>
             <th>Utilisateur</th>
             <th>Email</th>
+            <th>Departement</th>
             <th>Service</th>
             <th>Poste</th>
             <th>Role</th>
@@ -87,6 +88,7 @@
             </td>
 
             <td>{{ u.email }}</td>
+            <td>{{ getDepartementNom(u.departementId) }}</td>
             <td>{{ getServiceNom(getServiceId(u)) }}</td>
             <td>{{ getPoste(u) }}</td>
 
@@ -123,7 +125,7 @@
         <div class="flex-fill">
           <div class="fw-semibold">{{ u.prenom }} {{ u.nom }}</div>
           <div class="text-muted" style="font-size:.78rem">
-            {{ getPoste(u) }} · {{ getServiceNom(getServiceId(u)) }}
+            {{ getPoste(u) }} · {{ getDepartementNom(u.departementId) }} · {{ getServiceNom(getServiceId(u)) }}
           </div>
 
           <span class="badge mt-1" [class]="'bg-' + couleurRole(u.role.nom)">
@@ -202,6 +204,15 @@
             <option *ngFor="let service of serviceRHService.services()" [value]="service.id">{{ service.nom }}</option>
           </select>
           <div *ngIf="erreurs['serviceId']" class="invalid-feedback">{{ erreurs['serviceId'] }}</div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-semibold required" style="font-size:0.88rem">Département</label>
+          <select class="form-select" [(ngModel)]="form.departementId" name="departementId" [class.is-invalid]="erreurs['departementId']">
+            <option value="">Choisir un département...</option>
+            <option *ngFor="let dept of departementService.departements()" [value]="dept.id">{{ dept.nom }}</option>
+          </select>
+          <div *ngIf="erreurs['departementId']" class="invalid-feedback">{{ erreurs['departementId'] }}</div>
         </div>
       </div>
 

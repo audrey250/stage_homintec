@@ -201,11 +201,11 @@
                         [(ngModel)]="form.departementId"
                         name="departement">
 
-                  <option value="">Choisir...</option>
+                  <option [value]="null">Choisir...</option>
 
-                  <option *ngFor="let dept of departements"
-                          [value]="dept">
-                    {{ dept }}
+                  <option *ngFor="let dept of departementService.departements()"
+                          [value]="dept.id">
+                    {{ dept.nom }}
                   </option>
 
                 </select>

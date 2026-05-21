@@ -1,17 +1,18 @@
 // ============================================================
-// src/app/conges/validation/validation.ts
-// VERSION SPRING BOOT
+// FICHIER : src/app/conges/validation/validation.ts
 // ============================================================
 
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+
 import { AuthService } from '../../services/auth.service';
 import {
   DemandeService,
   Demande,
-  DecisionDemande
+  DecisionDemande,
+  StatutDemande
 } from '../../services/demande.service';
 
 @Component({
@@ -19,77 +20,137 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './validation.html',
-  styleUrls: ['./validation.css']
+  styleUrl: './validation.scss'
 })
 export class ValidationComponent implements OnInit {
 
-  // Demande ouverte dans la modale
+  // ---- Modal ----
   demandeSelectionnee = signal<Demande | null>(null);
-  modeAction          = signal<'approuver' | 'rejeter' | null>(null);
+  modeAction          = signal<'valide' | 'refuse' | null>(null);
   commentaireAction   = signal('');
+  traitement          = signal(false);
+  erreurAction        = signal('');
 
-  // États HTTP
-  traitement   = signal(false);
-  erreurAction = signal('');
-
-  // Computed depuis le cache du service (se met à jour automatiquement)
-  demandesEnAttente = computed(() => {
-    const role = this.currentRole();
-    if (!role) return [];
-    return this.congeService.getEnAttentePour(role);
-  });
-
-  demandesTraitees = computed(() =>
-    this.congeService.demandes().filter(d => d.statut !== 'en_attente')
-  );
+  // ---- Filtre ----
+  filtreActif = signal<'en_attente' | 'traite'>('en_attente');
 
   constructor(
-    public authService:  AuthService,
-    public congeService: DemandeService
+    public demandeService: DemandeService,
+    public authService:    AuthService
   ) {}
 
-  currentRole(): string {
-    const user = this.authService.currentUser();
-    if (!user) return '';
-    return (user.role?.nom || user.Poste || '')
+  ngOnInit(): void {
+    console.log('USER =', this.authService.currentUser());
+    console.log('ROLE =', this.monRole);
+    this.demandeService.chargerEnAttente();
+
+    // Debug après chargement
+    setTimeout(() => {
+      console.log('Demandes chargées :', this.demandeService.demandes());
+      console.log('En attente :', this.demandesEnAttente());
+    }, 2000);
+  }
+
+  // ---- Rôle de l'utilisateur connecté ----
+  // On lit user.role qui est une string simple dans ton AuthService
+  get monRole(): string {
+
+  const user: any = this.authService.currentUser();
+
+  console.log('USER = ', user);
+
+  if (!user) return '';
+
+  // role objet
+  if (typeof user.role === 'object') {
+    return (user.role.nom || '')
       .toString()
       .trim()
       .toLowerCase();
   }
 
-  // ---- Au chargement : récupère toutes les demandes depuis Spring Boot ----
-  ngOnInit(): void {
-    this.congeService.chargerTout();
+  // role string
+  return (user.role || '')
+    .toString()
+    .trim()
+    .toLowerCase();
+}
+
+  // ---- Demandes en attente ----
+  // Statuts intermédiaires = pas encore terminés
+  demandesEnAttente = computed(() => {
+    return this.demandeService.demandes().filter(d => {
+      const s = String(d.statut);
+      return (
+        s === 'EN_ATTENTE' ||
+        s === 'APPROUVEE_RESPONSABLE' ||
+        s === 'APPROUVEE_CHEF_DEPARTEMENT'
+      );
+    });
+  });
+
+  // ---- Demandes traitées (historique) ----
+  demandesTraitees = computed(() => {
+    return this.demandeService.demandes().filter(d => {
+      const s = String(d.statut);
+      return (
+        s === 'APPROUVEE_RH' ||
+        s === 'REFUSEE_RESPONSABLE' ||
+        s === 'REFUSEE_CHEF_DEPARTEMENT' ||
+        s === 'REFUSEE_RH'
+      );
+    });
+  });
+
+  // ---- Peut-il agir sur cette demande ? ----
+  peutAgir(d: Demande): boolean {
+    return this.demandeService.peutDecider(d, this.monRole);
   }
 
-  // ---- Ouvrir la modale ----
-  ouvrirAction(
-    demande: Demande,
-    action: 'approuver' | 'rejeter'
-  ): void {
-    this.demandeSelectionnee.set(demande);
+  // ---- Raison du blocage ----
+  raisonBlocage(d: Demande): string {
+    return this.demandeService.raisonBlocage(d, this.monRole);
+  }
+
+  // ---- Étape courante lisible ----
+  etapeCourante(d: Demande): string {
+    const s = String(d.statut);
+    switch (s) {
+      case 'EN_ATTENTE':                return 'Attend Responsable';
+      case 'APPROUVEE_RESPONSABLE':     return 'Attend Chef Département';
+      case 'APPROUVEE_CHEF_DEPARTEMENT':return 'Attend RH';
+      case 'APPROUVEE_RH':              return 'Approuvée ✅';
+      case 'REFUSEE_RESPONSABLE':       return 'Refusée par Responsable';
+      case 'REFUSEE_CHEF_DEPARTEMENT':  return 'Refusée par Chef Département';
+      case 'REFUSEE_RH':                return 'Refusée par RH';
+      default:                          return s;
+    }
+  }
+
+  // ---- Ouvrir le modal ----
+  ouvrirAction(d: Demande, action: 'valide' | 'refuse'): void {
+    this.demandeSelectionnee.set(d);
     this.modeAction.set(action);
     this.commentaireAction.set('');
     this.erreurAction.set('');
   }
 
+  // ---- Fermer le modal ----
   fermerModal(): void {
     this.demandeSelectionnee.set(null);
     this.modeAction.set(null);
     this.erreurAction.set('');
   }
 
-  // ---- Confirmer l'action via HTTP ----
+  // ---- Confirmer la décision ----
   confirmerAction(): void {
     const demande = this.demandeSelectionnee();
     const action  = this.modeAction();
     if (!demande || !action) return;
 
-    // Commentaire obligatoire pour un rejet
-    if (action === 'rejeter' && !this.commentaireAction().trim()) {
-      this.erreurAction.set(
-        'Un commentaire est obligatoire pour rejeter une demande.'
-      );
+    // Commentaire obligatoire pour un refus
+    if (action === 'refuse' && !this.commentaireAction().trim()) {
+      this.erreurAction.set('Le commentaire est obligatoire pour un refus.');
       return;
     }
 
@@ -97,74 +158,104 @@ export class ValidationComponent implements OnInit {
     this.erreurAction.set('');
 
     const decision: DecisionDemande = {
-      statut:      action === 'approuver' ? 'valide' : 'refuse',
+      statut:      action === 'valide' ? 'APPROUVE' : 'REFUSE',
       commentaire: this.commentaireAction().trim()
     };
 
-    // PUT /api/demandes/:id/decision
-    this.congeService.decider(demande.id, decision).subscribe({
+    // ---- Routage selon le rôle ----
+    let request$;
+    const role = this.monRole;
+
+    if (role === 'responsable' || role === 'manager') {
+      request$ = this.demandeService.validerParResponsable(demande.id, decision);
+    } else if (
+      
+      role === 'chef département' 
+      
+    ) {
+      request$ = this.demandeService.validerParChefDepartement(demande.id, decision);
+    } else if (role === 'RH') {
+      request$ = this.demandeService.validerParRH(demande.id, decision);
+    } else {
+      this.erreurAction.set('Rôle non autorisé : ' + role);
+      this.traitement.set(false);
+      return;
+    }
+
+    request$.subscribe({
       next: () => {
         this.traitement.set(false);
         this.fermerModal();
+        // Recharge pour avoir l'état à jour
+        this.demandeService.chargerEnAttente();
       },
       error: (err: HttpErrorResponse) => {
         this.traitement.set(false);
+        console.error('Erreur lors de la validation:', err);
+        
         if (err.status === 403) {
+          // 403 = Permissions insuffisantes
+          const errMsg = err.error?.message || err.error?.detail || '';
           this.erreurAction.set(
-            'Vous n\'avez pas les droits pour cette action.'
+            'Accès refusé. ' +
+            (errMsg ? `(${errMsg})` : 'Vérifiez que vous êtes responsable de cette demande ou que votre session est valide.')
           );
-        } else if (err.status === 404) {
-          this.erreurAction.set('Demande introuvable.');
+        } else if (err.status === 409) {
+          this.erreurAction.set('Cette demande a déjà été traitée.');
+        } else if (err.status === 401) {
+          this.erreurAction.set('Votre session a expiré. Veuillez vous reconnecter.');
+        } else if (err.status === 0) {
+          this.erreurAction.set('Erreur réseau. Vérifiez votre connexion.');
         } else {
-          this.erreurAction.set(
-            `Erreur serveur (${err.status}). Veuillez réessayer.`
-          );
+          this.erreurAction.set(`Erreur serveur (${err.status} ${err.statusText}). Veuillez réessayer.`);
         }
       }
     });
   }
 
-  // ---- Helpers visuels ----
-  getBadgeClass(statut: string): string {
+  // ---- Helpers d'affichage ----
+
+  getBadgeClass(statut: any): string {
+    const s = String(statut);
     const map: Record<string, string> = {
-      en_attente: 'badge-warning',
-      valide:     'badge-success',
-      refuse:     'badge-danger'
+      EN_ATTENTE:                  'badge-warning',
+      APPROUVEE_RESPONSABLE:       'badge-info',
+      APPROUVEE_CHEF_DEPARTEMENT:  'badge-primary',
+      APPROUVEE_RH:                'badge-success',
+      REFUSEE_RESPONSABLE:         'badge-danger',
+      REFUSEE_CHEF_DEPARTEMENT:    'badge-danger',
+      REFUSEE_RH:                  'badge-danger'
     };
-    return map[statut] ?? 'badge-secondary';
+    return map[s] ?? 'badge-secondary';
   }
 
-  getStatutLabel(statut: string): string {
-    const map: Record<string, string> = {
-      en_attente: 'En attente',
-      valide:     'Approuvé',
-      refuse:     'Rejeté'
-    };
-    return map[statut] ?? statut;
+  getStatutLabel(statut: any): string {
+    return this.demandeService.libelleStatut(String(statut));
   }
 
-  dernierCommentaire(demande: Demande): string {
-    const done = demande.etapes.filter(e => e.statut !== 'en_attente');
-    return done.length > 0 ? done[done.length - 1].commentaire ?? '—' : '—';
+  labelRole(role: string): string {
+
+  const r = role?.toLowerCase().trim();
+
+  const map: Record<string, string> = {
+
+    'responsable': 'responsable',
+    'chef département': 'Chef département',
+    'RH': 'RH'
+
+  };
+
+  return map[r] ?? role;
+}
+  initiales(d: Demande): string {
+    const prenom = (d.utilisateur?.prenom ?? d.prenom ?? 'U').trim();
+    const nom    = (d.utilisateur?.nom    ?? d.nom    ?? 'N').trim();
+    return (prenom.charAt(0) + nom.charAt(0)).toUpperCase();
   }
 
-  // Affiche le nom complet avec fallback sur un champ `employe` si présent
-  displayNom(demande: any): string {
-    if (!demande) return '—';
-    const prenom = demande.utilisateurPrenom ?? demande.prenom;
-    const nom = demande.utilisateurNom ?? demande.nom;
-    if (prenom) return `${prenom} ${nom ?? ''}`.trim();
-    return demande['employe'] ?? '—';
-  }
-
-  // Calcule des initiales en évitant les erreurs si les champs manquent
-  initiales(demande: any): string {
-    if (!demande) return '?';
-    const p = demande.utilisateurPrenom ?? demande.prenom ?? demande['employe'] ?? '';
-    const n = demande.utilisateurNom ?? demande.nom ?? '';
-    const a = (p && p.charAt(0)) || '';
-    const b = (n && n.charAt(0)) || (p && p.charAt(1)) || '';
-    const res = (a + b).toUpperCase();
-    return res || '?';
+  // Dernier commentaire — le service ne stocke pas les étapes
+  // donc on retourne le motif si pas de commentaire disponible
+  dernierCommentaire(d: Demande): string {
+    return d.motif ?? '—';
   }
 }

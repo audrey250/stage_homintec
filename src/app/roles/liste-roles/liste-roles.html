@@ -66,7 +66,7 @@
             </thead>
             <tbody>
               <tr *ngFor="let r of rolesFiltres()">
-                <td class="fw-semibold text-dark">{{ r.nom }}</td>
+                <td class="fw-semibold text-dark">{{ r.nom | uppercase }}</td>
                 <td class="text-dark">{{ r.description || '-' }}</td>
                 <td class="text-center">
                   <div class="role-action-group">

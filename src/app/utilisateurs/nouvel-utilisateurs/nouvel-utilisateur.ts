@@ -2,14 +2,14 @@
 // src/app/utilisateurs/nouvel-utilisateur/nouvel-utilisateur.ts
 // ============================================================
 
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { UtilisateurService } from '../../services/utilisateur.service';
-  
+import { DepartementService } from '../../services/departement.service';
 
 export interface FormulaireUtilisateur {
  
@@ -29,7 +29,7 @@ export interface FormulaireUtilisateur {
   templateUrl: './nouvel-utilisateur.html',
   styleUrls: ['./nouvel-utilisateur.css']
 })
-export class NouvelUtilisateurComponent {
+export class NouvelUtilisateurComponent implements OnInit {
 
   etapeActive  = signal(1);
   loading      = signal(false);
@@ -59,8 +59,14 @@ export class NouvelUtilisateurComponent {
 
   constructor(
     private utilisateurService: UtilisateurService,
+    public departementService: DepartementService,
     private router: Router
   ) {}
+
+  ngOnInit(): void {
+    // Charger la liste complète des départements au chargement du composant
+    this.departementService.chargerTout();
+  }
 
   
 

@@ -6,7 +6,7 @@
       <div class="profile-identity flex-grow-1">
         <h2 class="profile-name mb-1">{{ fullName }}</h2>
         <p class="profile-email mb-2">{{ currentUser.email }}</p>
-        <span [class]="roleClass">{{ roleLabel }}</span>
+        <span [class]="roleClass">{{ roleLabel | uppercase }}</span>
       </div>
 
       <div class="profile-actions d-flex flex-wrap gap-2">
@@ -68,7 +68,7 @@
             </div>
             <div class="info-item">
               <span class="info-label">Role</span>
-              <span class="info-value">{{ currentUser.role.nom || '-' }}</span>
+              <span class="info-value">{{ (currentUser.role.nom || '-') | uppercase }}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Departement</span>

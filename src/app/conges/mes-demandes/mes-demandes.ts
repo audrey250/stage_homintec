@@ -1,6 +1,5 @@
 // ============================================================
-// src/app/conges/mes-demandes/mes-demandes.ts
-// VERSION SPRING BOOT
+// FICHIER : src/app/conges/mes-demandes/mes-demandes.ts
 // ============================================================
 
 import { Component, signal, computed, OnInit } from '@angular/core';
@@ -8,72 +7,88 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+
 import { AuthService } from '../../services/auth.service';
-import { DemandeService, Demande } from '../../services/demande.service';
+import {
+  DemandeService,
+  Demande,
+  StatutDemande
+} from '../../services/demande.service';
 
 @Component({
   selector: 'app-mes-demandes',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mes-demandes.html',
-  styleUrls: ['./mes-demandes.css']
-})      
+  styleUrl: './mes-demandes.css'
+})
 export class MesDemandesComponent implements OnInit {
 
   filtreStatut = signal<string>('tous');
 
-  // États HTTP
-  erreurAnnulation = signal('');
-  annulationEnCours = signal<number | null>(null); // ID de la demande en cours
+  erreurAnnulation  = signal('');
+  annulationEnCours = signal<string | null>(null);
 
-  // Computed filtrées depuis le cache du service
+  // ---- Liste filtrée ----
   demandesFiltrees = computed(() => {
     const filtre = this.filtreStatut();
     const toutes = this.congeService.demandes();
     if (filtre === 'tous') return toutes;
-    return toutes.filter(d => this.normalizeStatut(d.statut) === filtre);
+    return toutes.filter(d =>
+      this.normaliserStatut(String(d.statut)) === filtre
+    );
   });
 
-  // Compteurs pour les onglets
+  // ---- Compteurs pour les onglets ----
   compte = computed(() => {
     const toutes = this.congeService.demandes();
     return {
       tous:       toutes.length,
-      en_attente: toutes.filter(d => this.normalizeStatut(d.statut) === 'en_attente').length,
-      valide:     toutes.filter(d => this.normalizeStatut(d.statut) === 'valide').length,
-      refuse:     toutes.filter(d => this.normalizeStatut(d.statut) === 'refuse').length,
+      en_attente: toutes.filter(d => {
+        const s = String(d.statut);
+        return (
+          s === 'EN_ATTENTE' ||
+          s === 'APPROUVEE_RESPONSABLE' ||
+          s === 'APPROUVEE_CHEF_DEPARTEMENT'
+        );
+      }).length,
+      valide: toutes.filter(d =>
+        String(d.statut) === 'APPROUVEE_RH'
+      ).length,
+      refuse: toutes.filter(d =>
+        String(d.statut).includes('REFUSEE')
+      ).length
     };
   });
-
-  // Normalise le statut retourné par le serveur (ex: "En attente", "EN_ATTENTE", "en attente")
-  private normalizeStatut(statut: string | undefined): string {
-    if (!statut) return '';
-    return statut
-      .toString()
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/-+/g, '_');
-  }
 
   constructor(
     public authService:  AuthService,
     public congeService: DemandeService
   ) {}
 
-  // ---- Au chargement : récupère les demandes de l'employé connecté ----
   ngOnInit(): void {
     this.congeService.chargerMesDemandes();
   }
 
-  // ---- Annuler une demande en attente via HTTP ----
-  annuler(id: number): void {
+  // ---- Normalise le statut pour le filtre ----
+  private normaliserStatut(statut: string): string {
+    if (statut === 'APPROUVEE_RH') return 'valide';
+    if (statut.includes('REFUSEE'))  return 'refuse';
+    if (
+      statut === 'EN_ATTENTE' ||
+      statut === 'APPROUVEE_RESPONSABLE' ||
+      statut === 'APPROUVEE_CHEF_DEPARTEMENT'
+    ) return 'en_attente';
+    return statut.toLowerCase();
+  }
+
+  // ---- Annuler une demande ----
+  annuler(id: string): void {
     if (!confirm('Confirmer l\'annulation de cette demande ?')) return;
 
     this.annulationEnCours.set(id);
     this.erreurAnnulation.set('');
 
-    // DELETE /api/demandes/:id
     this.congeService.annuler(id).subscribe({
       next: () => {
         this.annulationEnCours.set(null);
@@ -91,33 +106,44 @@ export class MesDemandesComponent implements OnInit {
             `Erreur (${err.status}). Veuillez réessayer.`
           );
         }
-        // Effacer le message après 4 secondes
         setTimeout(() => this.erreurAnnulation.set(''), 4000);
       }
     });
   }
 
   // ---- Helpers visuels ----
+
   getBadgeClass(statut: string): string {
-    const map: Record<string, string> = {
-      en_attente: 'badge-warning',
-      valide:     'badge-success',
-      refuse:     'badge-danger'
-    };
-    return map[statut] ?? 'badge-secondary';
+    const s = String(statut);
+    if (s === 'APPROUVEE_RH')      return 'badge-success';
+    if (s.includes('REFUSEE'))     return 'badge-danger';
+    if (s === 'APPROUVEE_RESPONSABLE' ||
+        s === 'APPROUVEE_CHEF_DEPARTEMENT') return 'badge-info';
+    if (s === 'EN_ATTENTE')        return 'badge-warning';
+    return 'badge-secondary';
   }
 
   getStatutLabel(statut: string): string {
-    const map: Record<string, string> = {
-      en_attente: 'En attente',
-      valide:     'Approuvé',
-      refuse:     'Rejeté'
-    };
-    return map[statut] ?? statut;
+    return this.congeService.libelleStatut(String(statut));
   }
 
-  dernierCommentaire(demande: Demande): string {
-    const done = demande.etapes?.filter(e => e.statut !== 'en_attente') ?? [];
-    return done.length > 0 ? done[done.length - 1].commentaire ?? '—' : '—';
+  // ---- Initiales ----
+  initiales(d: Demande): string {
+    const prenom = (d.utilisateur?.prenom ?? d.prenom ?? 'U').trim();
+    const nom    = (d.utilisateur?.nom    ?? d.nom    ?? 'N').trim();
+    return (prenom.charAt(0) + nom.charAt(0)).toUpperCase();
+  }
+
+  // ---- Dernier commentaire ----
+  // Le nouveau service ne stocke pas d'étapes
+  // on retourne le motif comme fallback
+  dernierCommentaire(d: Demande): string {
+    return d.motif ?? '—';
+  }
+
+  // ---- Est annulable ? ----
+  // Seulement si en attente du premier niveau
+  estAnnulable(d: Demande): boolean {
+    return String(d.statut) === 'EN_ATTENTE';
   }
 }

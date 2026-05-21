@@ -6,7 +6,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, switchMap, of } from 'rxjs';
   
     const API_URL = environment.apiUrl;
 
@@ -107,8 +107,7 @@ export class AuthService {
     return this.http
       .post<any>(`${API_URL}/auth/login`, { email, motDePasse: motDePasse })
       .pipe(
-        tap((res: LoginResponse) => {
-
+        switchMap((res: LoginResponse) => {
           console.log("ok",res);
           
           const user: User = {
@@ -128,6 +127,26 @@ export class AuthService {
           localStorage.setItem('homintec_user', JSON.stringify(user));
           this._currentUser.set(user);
           this.chargerNotifications().subscribe();
+
+          // Charger le nom du département si departementId existe
+          if (user.departementId && user.departementId > 0) {
+            return this.http.get<any>(`${API_URL}/departements/${user.departementId}`)
+              .pipe(
+                tap((dept) => {
+                  // Mettre à jour l'utilisateur avec le nom du département
+                  const userWithDept: User = { ...user, departementNom: dept.nom };
+                  localStorage.setItem('homintec_user', JSON.stringify(userWithDept));
+                  this._currentUser.set(userWithDept);
+                }),
+                catchError((err) => {
+                  // Si le chargement du département échoue, continuer sans lui
+                  console.warn('Impossible de charger le département:', err);
+                  return of(user);
+                })
+              );
+          }
+
+          return of(res);
         }),
         catchError((err) => throwError(() => err))
       );

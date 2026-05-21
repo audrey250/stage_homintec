@@ -1,54 +1,61 @@
+<!-- ============================================================
+     mes-demandes.html
+     ============================================================ -->
+
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <div>
     <h1 class="h3 mb-0 text-gray-800 fw-bold">Mes demandes</h1>
-    <p class="text-muted mb-0" style="font-size:0.88rem;">
+    <p class="text-muted mb-0" style="font-size:0.88rem">
       Historique de toutes vos demandes
     </p>
   </div>
   <a routerLink="/conges/nouvelle-demande"
-     class="btn btn-primary btn-sm shadow-sm">
-    <i class="fas fa-plus me-1"></i> Nouvelle demande
+     class="btn btn-primary btn-sm shadow-sm mt-2 mt-sm-0">
+    <i class="fas fa-plus me-1"></i>Nouvelle demande
   </a>
 </div>
 
-<!-- Spinner chargement initial -->
+<!-- Spinner -->
 <div *ngIf="congeService.loading()" class="text-center py-5">
   <div class="spinner-border text-primary mb-2"></div>
-  <p class="text-muted mb-0" style="font-size:.85rem">
+  <p class="text-muted mb-0" style="font-size:0.85rem">
     Chargement de vos demandes...
   </p>
 </div>
 
-<!-- ✅ Erreur annulation -->
+<!-- Erreur annulation -->
 <div *ngIf="erreurAnnulation()"
-     class="alert alert-danger alert-dismissible mb-3"
-     style="font-size:.85rem;">
+     class="alert alert-danger mb-3"
+     style="font-size:0.85rem">
   <i class="fas fa-exclamation-circle me-2"></i>
   {{ erreurAnnulation() }}
 </div>
 
-<!-- Contenu principal -->
+<!-- Erreur chargement -->
+<div *ngIf="congeService.erreur()"
+     class="alert alert-danger mb-3"
+     style="font-size:0.85rem">
+  <i class="fas fa-exclamation-circle me-2"></i>
+  {{ congeService.erreur() }}
+</div>
+
 <div class="card shadow mb-4" *ngIf="!congeService.loading()">
 
   <!-- Onglets filtres -->
   <div class="card-header p-0">
     <ul class="nav nav-tabs border-0">
-      <li
-        class="nav-item"
-        *ngFor="let onglet of [
-          { val: 'tous',       label: 'Toutes',     count: compte().tous       },
-          { val: 'en_attente', label: 'En attente', count: compte().en_attente },
-          { val: 'valide',     label: 'Validées',   count: compte().valide     },
-          { val: 'refuse',     label: 'Rejetées',   count: compte().refuse     }
-        ]"
-      >
-        <button
-          class="nav-link"
-          [class.active]="filtreStatut() === onglet.val"
-          (click)="filtreStatut.set(onglet.val)"
-        >
+      <li class="nav-item"
+          *ngFor="let onglet of [
+            { val: 'tous',       label: 'Toutes',     count: compte().tous       },
+            { val: 'en_attente', label: 'En attente', count: compte().en_attente },
+            { val: 'valide',     label: 'Approuvées', count: compte().valide     },
+            { val: 'refuse',     label: 'Rejetées',   count: compte().refuse     }
+          ]">
+        <button class="nav-link"
+                [class.active]="filtreStatut() === onglet.val"
+                (click)="filtreStatut.set(onglet.val)">
           {{ onglet.label }}
-          <span class="badge bg-secondary ms-1" style="font-size:0.72rem;">
+          <span class="badge bg-secondary ms-1" style="font-size:0.72rem">
             {{ onglet.count }}
           </span>
         </button>
@@ -59,60 +66,58 @@
   <div class="card-body p-0">
 
     <!-- Liste vide -->
-    <div
-      *ngIf="demandesFiltrees().length === 0"
-      class="text-center py-5 text-muted"
-    >
+    <div *ngIf="demandesFiltrees().length === 0"
+         class="text-center py-5 text-muted">
       <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
       Aucune demande trouvée.
     </div>
 
     <!-- Tableau -->
-    <div class="table-responsive" *ngIf="demandesFiltrees().length > 0">
+    <div class="table-responsive"
+         *ngIf="demandesFiltrees().length > 0">
       <table class="table table-hover align-middle mb-0">
+
         <thead class="table-light">
           <tr>
-            <th style="font-size:0.82rem;">Type</th>
-            <th style="font-size:0.82rem;">Période</th>
-            <th style="font-size:0.82rem;">Jours</th>
-            <th style="font-size:0.82rem;">Motif</th>
-            <th style="font-size:0.82rem;">Statut</th>
-            <!-- ✅ CORRIGÉ : commentaireRH → Commentaire validateur -->
-            <th style="font-size:0.82rem;">Commentaire</th>
-            <th style="font-size:0.82rem;">Action</th>
+            <th style="font-size:0.82rem">Employé</th>
+            <th style="font-size:0.82rem">Type</th>
+            <th style="font-size:0.82rem">Période</th>
+            <th style="font-size:0.82rem">Statut</th>
+            <th style="font-size:0.82rem">Motif</th>
+            <th style="font-size:0.82rem">Action</th>
           </tr>
         </thead>
+
         <tbody>
           <tr *ngFor="let d of demandesFiltrees()">
 
-            <!-- Type avec icône -->
-            <td style="font-size:0.85rem;">
-              <i
-                class="fas fa-fw me-1"
-                [ngClass]="{
-                  'fa-umbrella-beach text-primary': d.typeDemande=== 'conge_annuel',
-                  'fa-clock text-warning':          d.typeDemande === 'permission',
-                  'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie'
-                }"
-              ></i>
+            <!-- Employé -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-sm">{{ initiales(d) }}</div>
+                <div class="fw-semibold" style="font-size:0.85rem">
+                  {{ d.utilisateur?.prenom ?? d.prenom }}
+                  {{ d.utilisateur?.nom    ?? d.nom    }}
+                </div>
+              </div>
+            </td>
+
+            <!-- Type -->
+            <td style="font-size:0.85rem">
+              <i class="fas fa-fw me-1"
+                 [ngClass]="{
+                   'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
+                   'fa-clock text-warning':          d.typeDemande === 'permission',
+                   'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie',
+                   'fa-baby text-info':              d.typeDemande === 'conge_maternite'
+                 }">
+              </i>
               {{ congeService.libelleType(d.typeDemande) }}
             </td>
 
             <!-- Dates -->
-            <td style="font-size:0.83rem;">
+            <td style="font-size:0.83rem">
               {{ d.dateDebut }} → {{ d.dateFin }}
-            </td>
-
-            <!-- Jours -->
-            <td>
-              <span class="fw-semibold">{{ d.nbJours }}j</span>
-            </td>
-
-            <!-- Motif tronqué -->
-            <td style="font-size:0.83rem; max-width:160px;">
-              <span class="text-truncate d-block" [title]="d.motif">
-                {{ d.motif }}
-              </span>
             </td>
 
             <!-- Statut -->
@@ -122,45 +127,38 @@
               </span>
             </td>
 
-            <!-- ✅ CORRIGÉ : d.commentaireRH → dernierCommentaire(d) -->
-            <td style="font-size:0.82rem; color:#666; max-width:140px;">
-              {{ dernierCommentaire(d) }}
+            <!-- Motif -->
+            <td style="font-size:0.83rem; max-width:160px">
+              <span class="text-truncate d-block text-muted"
+                    [title]="d.motif">
+                {{ d.motif }}
+              </span>
             </td>
 
-            <!-- Action annuler -->
+            <!-- Action -->
             <td>
-              <!--
-                ✅ AJOUTÉ : spinner pendant l'annulation
-                annulationEnCours() contient l'ID en cours d'annulation
-              -->
               <button
-                *ngIf="d.statut === 'en_attente'"
+                *ngIf="estAnnulable(d)"
                 class="btn btn-outline-danger btn-sm py-0 px-2"
                 (click)="annuler(d.id)"
                 [disabled]="annulationEnCours() === d.id"
-                title="Annuler cette demande"
-              >
-                <!-- Spinner si cette demande est en cours d'annulation -->
-                <span
-                  *ngIf="annulationEnCours() === d.id"
-                  class="spinner-border spinner-border-sm"
-                ></span>
-                <i
-                  *ngIf="annulationEnCours() !== d.id"
-                  class="fas fa-trash"
-                ></i>
+                title="Annuler cette demande">
+                <span *ngIf="annulationEnCours() === d.id"
+                      class="spinner-border spinner-border-sm">
+                </span>
+                <i *ngIf="annulationEnCours() !== d.id"
+                   class="fas fa-trash">
+                </i>
               </button>
-
-              <span
-                *ngIf="d.statut !== 'en_attente'"
-                class="text-muted"
-                style="font-size:0.78rem;"
-              >—</span>
+              <span *ngIf="!estAnnulable(d)"
+                    class="text-muted"
+                    style="font-size:0.78rem">—</span>
             </td>
 
           </tr>
         </tbody>
       </table>
     </div>
+
   </div>
 </div>

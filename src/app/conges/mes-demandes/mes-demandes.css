@@ -1,0 +1,29 @@
+/* Avatar initiales */
+.avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(18, 71, 29, 0.12);
+  color: #12471d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Responsive tables */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Card styles for mobile */
+.card {
+  border-radius: 8px;
+}
+
+.card.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}

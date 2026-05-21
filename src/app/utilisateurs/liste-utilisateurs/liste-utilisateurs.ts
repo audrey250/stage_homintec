@@ -12,6 +12,7 @@ import { UtilisateurService } from '../../services/utilisateur.service';
 import { User } from '../../services/auth.service';
 import { RoleService } from '../../services/role.service';
 import { ServiceRHService } from '../../services/service-rh.service';
+import { DepartementService } from '../../services/departement.service';
 
 type Poste = string;
 
@@ -41,6 +42,7 @@ export class ListeUtilisateursComponent implements OnInit {
     poste: '' as Poste | '',
     roleId: '',
     serviceId: '',
+    departementId: '',
   };
 
   erreurs: Record<string, string> = {};
@@ -90,13 +92,15 @@ export class ListeUtilisateursComponent implements OnInit {
   constructor(
     public utilisateurService: UtilisateurService,
     public roleService: RoleService,
-    public serviceRHService: ServiceRHService
+    public serviceRHService: ServiceRHService,
+    public departementService: DepartementService
   ) {}
 
   ngOnInit(): void {
     this.utilisateurService.chargerTout();
     this.roleService.chargerTout();
     this.serviceRHService.chargerTout();
+    this.departementService.chargerTout();
   }
 
   // ---- Helpers ----
@@ -112,6 +116,11 @@ export class ListeUtilisateursComponent implements OnInit {
   getServiceNom(serviceId: string | number): string {
     const service = this.serviceRHService.services().find(s => String(s.id) === String(serviceId));
     return service?.nom ?? '-';
+  }
+
+  getDepartementNom(departementId: number): string {
+    const dept = this.departementService.departements().find(d => String(d.id) === String(departementId));
+    return dept?.nom ?? '-';
   }
 
   demanderSuppression(u: User): void {
@@ -194,6 +203,7 @@ export class ListeUtilisateursComponent implements OnInit {
       poste: '' as Poste | '',
       roleId: '',
       serviceId: '',
+      departementId: '',
     };
     this.formErreur.set('');
     this.erreurs = {};
@@ -238,7 +248,11 @@ export class ListeUtilisateursComponent implements OnInit {
     if (!this.form.serviceId) {
       this.erreurs['serviceId'] = 'Le service est obligatoire.';
     }
+if (!this.form.departementId) {
+      this.erreurs['departementId'] = 'Le département est obligatoire.';
+    }
 
+    
     return Object.keys(this.erreurs).length === 0;
   }
 
@@ -257,6 +271,7 @@ export class ListeUtilisateursComponent implements OnInit {
       poste: this.form.poste,
       roleId: this.form.roleId,
       serviceId: this.form.serviceId,
+      departementId: this.form.departementId ? parseInt(this.form.departementId as string, 10) : undefined,
     }).subscribe({
       next: () => {
         this.formLoading.set(false);

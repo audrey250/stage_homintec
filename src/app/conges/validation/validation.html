@@ -1,257 +1,440 @@
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <div>
-    <h1 class="h3 mb-0 text-gray-800 fw-bold">Validation des demandes</h1>
-    <p class="text-muted mb-0" style="font-size:0.88rem;">
-      {{ demandesEnAttente().length }} demande(s) en attente de traitement
-    </p>
-    <p class="text-muted mb-0" style="font-size:0.82rem;">
-      Workflow hiérarchique : le responsable valide d'abord, puis la RH peut valider après cette validation.
+<!-- ============================================================
+     validation.html
+     Workflow : Responsable → Chef Département → RH
+     ============================================================ -->
+
+<div class="page-wrapper">
+
+  <!-- ===== EN-TÊTE ===== -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-1">
+        <i class="fas fa-check-double text-primary me-2"></i>
+        Validation des demandes
+      </h4>
+      <p class="text-muted mb-0" style="font-size:0.85rem">
+        {{ demandesEnAttente().length }} demande(s) en attente
+        · Workflow hiérarchique actif
+      </p>
+    </div>
+    <span class="badge bg-primary px-3 py-2" style="font-size:0.8rem">
+      <i class="fas fa-user-shield me-1"></i>
+      {{ labelRole(monRole) | uppercase }}
+    </span>
+  </div>
+
+  <!-- ===== RÈGLE DU WORKFLOW ===== -->
+  <div class="alert alert-info d-flex align-items-center gap-3 py-2 mb-4"
+       style="font-size:0.82rem; border-left:4px solid #0d6efd;">
+    <i class="fas fa-info-circle fa-lg text-primary flex-shrink-0"></i>
+    <div>
+      <strong>Workflow :</strong>
+      <strong>Responsable</strong> →
+      <strong>Chef Département</strong> →
+      <strong>RH</strong>.
+      Chaque étape est bloquée jusqu'à la validation précédente.
+    </div>
+  </div>
+
+  <!-- ===== ERREUR ===== -->
+  <div *ngIf="demandeService.erreur()"
+       class="alert alert-danger py-2 mb-3"
+       style="font-size:0.85rem">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ demandeService.erreur() }}
+  </div>
+
+  <!-- ===== SPINNER ===== -->
+  <div *ngIf="demandeService.loading()" class="text-center py-5">
+    <div class="spinner-border text-primary mb-2"></div>
+    <p class="text-muted mb-0" style="font-size:0.85rem">
+      Chargement des demandes...
     </p>
   </div>
-</div>
 
-<!-- Spinner chargement initial -->
-<div *ngIf="congeService.loading()" class="text-center py-5">
-  <div class="spinner-border text-primary mb-2"></div>
-  <p class="text-muted mb-0" style="font-size:.85rem">
-    Chargement des demandes...
-  </p>
-</div>
+  <ng-container *ngIf="!demandeService.loading()">
 
-<!-- Erreur chargement -->
-<div *ngIf="congeService.erreur()" class="alert alert-danger">
-  <i class="fas fa-exclamation-circle me-2"></i>
-  {{ congeService.erreur() }}
-</div>
+    <!-- ===== ONGLETS ===== -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white border-0 p-0">
+        <ul class="nav nav-tabs border-0">
 
-<!-- Contenu principal (affiché quand pas en chargement) -->
-<ng-container *ngIf="!congeService.loading()">
+          <li class="nav-item">
+            <button class="nav-link"
+                    [class.active]="filtreActif() === 'en_attente'"
+                    (click)="filtreActif.set('en_attente')">
+              <i class="fas fa-clock me-1 text-warning"></i>
+              En attente
+              <span class="badge bg-warning text-dark ms-1"
+                    style="font-size:0.7rem">
+                {{ demandesEnAttente().length }}
+              </span>
+            </button>
+          </li>
 
-  <!-- ===== DEMANDES EN ATTENTE ===== -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex align-items-center justify-content-between">
-      <h6 class="m-0 fw-bold text-warning">
-        <i class="fas fa-clock me-2"></i>En attente
-      </h6>
-      <span class="badge badge-warning">{{ demandesEnAttente().length }}</span>
+          <li class="nav-item">
+            <button class="nav-link"
+                    [class.active]="filtreActif() === 'traite'"
+                    (click)="filtreActif.set('traite')">
+              <i class="fas fa-history me-1 text-muted"></i>
+              Historique
+              <span class="badge bg-secondary ms-1"
+                    style="font-size:0.7rem">
+                {{ demandesTraitees().length }}
+              </span>
+            </button>
+          </li>
+
+        </ul>
+      </div>
     </div>
 
-    <div class="card-body p-0">
+    <!-- ===========================
+         ONGLET 1 — EN ATTENTE
+         =========================== -->
+    <ng-container *ngIf="filtreActif() === 'en_attente'">
 
-      <!-- Aucune demande en attente -->
+      <!-- Aucune demande -->
       <div *ngIf="demandesEnAttente().length === 0"
-           class="text-center py-5 text-muted">
-        <i class="fas fa-check-circle fa-3x text-success mb-3 d-block"></i>
-        Toutes les demandes ont été traitées !
+           class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="fas fa-check-circle fa-3x text-success mb-3 d-block"></i>
+          <p class="fw-semibold mb-0">
+            Toutes les demandes ont été traitées !
+          </p>
+        </div>
       </div>
 
-      <!-- Liste des demandes en attente -->
-      <div class="p-3">
-        <div
-          class="demande-card"
-          [class.urgente]="d.urgence"
-          *ngFor="let d of demandesEnAttente()"
-        >
-          <div class="row align-items-center g-2">
+      <!-- Tableau -->
+      <div *ngIf="demandesEnAttente().length > 0"
+           class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
 
-            <!-- Infos employé -->
-            <div class="col-md-3">
-              <div class="d-flex align-items-center gap-2">
-                <div class="avatar-md">{{ (($any(d).utilisateurPrenom ?? $any(d).prenom ?? $any(d)['employe'] ?? '').charAt(0) + ($any(d).utilisateurNom ?? $any(d).nom ?? '').charAt(0)).toUpperCase() }}</div>
-                <div>
-                  <div class="fw-semibold" style="font-size:0.88rem;">
-                    {{ ($any(d).utilisateurPrenom ?? $any(d).prenom) ? (($any(d).utilisateurPrenom ?? $any(d).prenom) + ' ' + ($any(d).utilisateurNom ?? $any(d).nom)) : ($any(d)['employe'] ?? '—') }}
-                  </div>
-                  <div class="text-muted" style="font-size:0.78rem;">
-                    {{ d.departement }}
-                  </div>
-                </div>
-              </div>
-            </div>
+              <thead class="table-light">
+                <tr>
+                  <th style="font-size:0.8rem">Employé</th>
+                  <th style="font-size:0.8rem">Type</th>
+                  <th style="font-size:0.8rem">Période</th>
+                  <th style="font-size:0.8rem">Étape actuelle</th>
+                  <th style="font-size:0.8rem">Motif</th>
+                  <th style="font-size:0.8rem; text-align:center">Actions</th>
+                </tr>
+              </thead>
 
-            <!-- Type + dates -->
-            <div class="col-md-3">
-              <div class="fw-semibold" style="font-size:0.85rem;">
-                <i
-                  class="fas fa-fw me-1"
-                    [ngClass]="{
-                    'fa-umbrella-beach text-primary': $any(d).typeDemande === 'conge_annuel' || $any(d).type === 'conge_annuel',
-                    'fa-clock text-warning':          $any(d).typeDemande === 'permission' || $any(d).type === 'permission',
-                    'fa-heartbeat text-danger':       $any(d).typeDemande === 'conge_maladie' || $any(d).type === 'conge_maladie'
-                  }"
-                ></i>
-                {{ congeService.libelleType($any(d).typeDemande ?? $any(d).type) }}
-              </div>
-              <div class="text-muted" style="font-size:0.78rem;">
-                {{ d.dateDebut }} → {{ d.dateFin }}
-                <span class="fw-semibold text-dark ms-1">({{ d.nbJours }}j)</span>
-              </div>
-            </div>
+              <tbody>
+                <tr *ngFor="let d of demandesEnAttente()">
 
-            <!-- Motif -->
-            <div class="col-md-3">
-              <div class="text-muted"
-                   style="font-size:0.82rem; font-style:italic;">
-                "{{ d.motif }}"
-              </div>
-              <span *ngIf="d.urgence"
-                    class="badge bg-danger mt-1"
-                    style="font-size:0.72rem;">
-                <i class="fas fa-bolt me-1"></i>URGENT
-              </span>
-            </div>
+                  <!-- Employé -->
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-sm">
+                        {{ initiales(d) }}
+                      </div>
+                      <div>
+                        <div class="fw-semibold" style="font-size:0.85rem">
+                          {{ d.utilisateur?.prenom ?? d.prenom }}
+                          {{ d.utilisateur?.nom    ?? d.nom    }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
 
-            <!-- Boutons action -->
-            <div class="col-md-3 text-end">
-              <div class="d-flex gap-2 justify-content-end">
-                <button
-                  class="btn btn-success btn-sm"
-                  (click)="ouvrirAction(d, 'approuver')"
-                >
-                  <i class="fas fa-check me-1"></i>Approuver
-                </button>
-                <button
-                  class="btn btn-danger btn-sm"
-                  (click)="ouvrirAction(d, 'rejeter')"
-                >
-                  <i class="fas fa-times me-1"></i>Rejeter
-                </button>
-              </div>
-            </div>
+                  <!-- Type -->
+                  <td style="font-size:0.83rem">
+                    <i class="fas fa-fw me-1"
+                       [ngClass]="{
+                         'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
+                         'fa-clock text-warning':          d.typeDemande === 'permission',
+                         'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie',
+                         'fa-baby text-info':              d.typeDemande === 'conge_maternite',
+                         'fa-file text-secondary':         d.typeDemande === 'autre'
+                       }">
+                    </i>
+                    {{ demandeService.libelleType(d.typeDemande) }}
+                  </td>
 
+                  <!-- Dates -->
+                  <td>
+                    <div style="font-size:0.82rem">
+                      {{ d.dateDebut }} → {{ d.dateFin }}
+                    </div>
+                  </td>
+
+                  <!-- Étape actuelle avec workflow visuel -->
+                  <td>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+
+                      <!-- Étape 1 : Responsable -->
+                      <div class="etape-badge"
+                           [class.etape-valide]="d.statut !== 'EN_ATTENTE' && !d.statut.includes('REFUSEE_RESPONSABLE')"
+                           [class.etape-refuse]="d.statut === 'REFUSEE_RESPONSABLE'"
+                           [class.etape-attente]="d.statut === 'EN_ATTENTE'">
+                        <i class="fas fa-xs"
+                           [class.fa-check]="d.statut !== 'EN_ATTENTE' && d.statut !== 'REFUSEE_RESPONSABLE'"
+                           [class.fa-times]="d.statut === 'REFUSEE_RESPONSABLE'"
+                           [class.fa-clock]="d.statut === 'EN_ATTENTE'">
+                        </i>
+                        <span>Resp.</span>
+                      </div>
+
+                      <i class="fas fa-chevron-right text-muted"
+                         style="font-size:0.6rem"></i>
+
+                      <!-- Étape 2 : Chef Département -->
+                      <div class="etape-badge"
+                           [class.etape-valide]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT' || d.statut === 'APPROUVEE_RH'"
+                           [class.etape-refuse]="d.statut === 'REFUSEE_CHEF_DEPARTEMENT'"
+                           [class.etape-attente]="d.statut === 'APPROUVEE_RESPONSABLE'"
+                           [class.etape-inactive]="d.statut === 'EN_ATTENTE'">
+                        <i class="fas fa-xs"
+                           [class.fa-check]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT' || d.statut === 'APPROUVEE_RH'"
+                           [class.fa-times]="d.statut === 'REFUSEE_CHEF_DEPARTEMENT'"
+                           [class.fa-clock]="d.statut === 'APPROUVEE_RESPONSABLE'"
+                           [class.fa-minus]="d.statut === 'EN_ATTENTE'">
+                        </i>
+                        <span>Chef Dept</span>
+                      </div>
+
+                      <i class="fas fa-chevron-right text-muted"
+                         style="font-size:0.6rem"></i>
+
+                      <!-- Étape 3 : RH -->
+                      <div class="etape-badge"
+                           [class.etape-valide]="d.statut === 'APPROUVEE_RH'"
+                           [class.etape-refuse]="d.statut === 'REFUSEE_RH'"
+                           [class.etape-attente]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT'"
+                           [class.etape-inactive]="d.statut === 'EN_ATTENTE' || d.statut === 'APPROUVEE_RESPONSABLE'">
+                        <i class="fas fa-xs"
+                           [class.fa-check]="d.statut === 'APPROUVEE_RH'"
+                           [class.fa-times]="d.statut === 'REFUSEE_RH'"
+                           [class.fa-clock]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT'"
+                           [class.fa-minus]="d.statut === 'EN_ATTENTE' || d.statut === 'APPROUVEE_RESPONSABLE'">
+                        </i>
+                        <span>RH</span>
+                      </div>
+
+                    </div>
+
+                    <!-- Étape courante lisible -->
+                    <div class="text-muted mt-1" style="font-size:0.72rem">
+                      {{ etapeCourante(d) }}
+                    </div>
+
+                    <!-- Blocage -->
+                    <div *ngIf="!peutAgir(d)"
+                         class="text-muted mt-1"
+                         style="font-size:0.72rem; font-style:italic">
+                      <i class="fas fa-lock me-1"></i>
+                      {{ raisonBlocage(d) }}
+                    </div>
+                  </td>
+
+                  <!-- Motif -->
+                  <td>
+                    <span class="text-muted text-truncate d-block"
+                          style="font-size:0.8rem; max-width:140px"
+                          [title]="d.motif">
+                      {{ d.motif }}
+                    </span>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="text-center">
+                    <ng-container *ngIf="peutAgir(d)">
+                      <div class="d-flex gap-1 justify-content-center">
+                        <button class="btn btn-success btn-sm"
+                                (click)="ouvrirAction(d, 'valide')">
+                          <i class="fas fa-check me-1"></i>Approuver
+                        </button>
+                        <button class="btn btn-danger btn-sm"
+                                (click)="ouvrirAction(d, 'refuse')">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </ng-container>
+
+                    <ng-container *ngIf="!peutAgir(d)">
+                      <span class="badge bg-light text-muted border"
+                            style="font-size:0.72rem">
+                        <i class="fas fa-lock me-1"></i>Bloqué
+                      </span>
+                    </ng-container>
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ===== HISTORIQUE DES TRAITEMENTS ===== -->
-  <div class="card shadow mb-4" *ngIf="demandesTraitees().length > 0">
-    <div class="card-header py-3">
-      <h6 class="m-0 fw-bold text-success">
-        <i class="fas fa-history me-2"></i>Historique des traitements
-      </h6>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th style="font-size:0.82rem;">Prénom</th>
-                    <th style="font-size:0.82rem;">Nom</th>
-                    <th style="font-size:0.82rem;">Type</th>
-                    <th style="font-size:0.82rem;">Date début</th>
-                    <th style="font-size:0.82rem;">Date fin</th>
-                    <th style="font-size:0.82rem;">Motif</th>
-                    <th style="font-size:0.82rem;">Statut</th>
-                    <th style="font-size:0.82rem;">Commentaire</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let d of demandesTraitees()">
-                    <td style="font-size:0.85rem;">{{ ($any(d).utilisateurPrenom ?? $any(d).prenom) ?? '—' }}</td>
-                    <td style="font-size:0.85rem;">{{ ($any(d).utilisateurNom ?? $any(d).nom) ?? '—' }}</td>
-                    <td style="font-size:0.85rem;">{{ congeService.libelleType($any(d).typeDemande ?? $any(d).type) }}</td>
-                    <td style="font-size:0.83rem;">{{ d.dateDebut }}</td>
-                    <td style="font-size:0.83rem;">{{ d.dateFin }}</td>
-                    <td style="font-size:0.83rem; max-width:220px;">
-                      <span class="text-truncate d-block" [title]="d.motif">{{ d.motif }}</span>
-                    </td>
-                    <td>
-                      <span class="badge {{ getBadgeClass(d.statut) }}">{{ getStatutLabel(d.statut) }}</span>
-                    </td>
-                    <td style="font-size:0.82rem; color:#666;">{{ dernierCommentaire(d) }}</td>
-                  </tr>
-                </tbody>
-        </table>
+    </ng-container>
+
+    <!-- ===========================
+         ONGLET 2 — HISTORIQUE
+         =========================== -->
+    <ng-container *ngIf="filtreActif() === 'traite'">
+
+      <div *ngIf="demandesTraitees().length === 0"
+           class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+          <p class="mb-0">Aucun historique disponible.</p>
+        </div>
       </div>
-    </div>
-  </div>
 
-</ng-container>
+      <div *ngIf="demandesTraitees().length > 0"
+           class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
 
-<!-- ===== MODALE CONFIRMATION ===== -->
-<div
-  class="modal-overlay"
-  *ngIf="demandeSelectionnee()"
-  (click)="fermerModal()"
->
+              <thead class="table-light">
+                <tr>
+                  <th style="font-size:0.8rem">Employé</th>
+                  <th style="font-size:0.8rem">Type</th>
+                  <th style="font-size:0.8rem">Période</th>
+                  <th style="font-size:0.8rem">Statut final</th>
+                  <th style="font-size:0.8rem">Commentaire</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let d of demandesTraitees()">
+
+                  <td>
+                    <div class="fw-semibold" style="font-size:0.85rem">
+                      {{ d.utilisateur?.prenom ?? d.prenom }}
+                      {{ d.utilisateur?.nom    ?? d.nom    }}
+                    </div>
+                  </td>
+
+                  <td style="font-size:0.83rem">
+                    {{ demandeService.libelleType(d.typeDemande) }}
+                  </td>
+
+                  <td style="font-size:0.82rem">
+                    {{ d.dateDebut }} → {{ d.dateFin }}
+                  </td>
+
+                  <td>
+                    <span class="badge {{ getBadgeClass(d.statut) }}">
+                      {{ getStatutLabel(d.statut) }}
+                    </span>
+                  </td>
+
+                  <td style="font-size:0.8rem; color:#666">
+                    {{ dernierCommentaire(d) }}
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </ng-container>
+
+</div>
+
+<!-- ===== MODAL CONFIRMATION ===== -->
+<div *ngIf="demandeSelectionnee()"
+     class="modal-overlay"
+     (click)="fermerModal()">
+
   <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <div
-      class="modal-card-header"
-      [class.header-success]="modeAction() === 'approuver'"
-      [class.header-danger]="modeAction() === 'rejeter'"
-    >
-      <i
-        class="fas fa-2x"
-        [class.fa-check-circle]="modeAction() === 'approuver'"
-        [class.fa-times-circle]="modeAction() === 'rejeter'"
-      ></i>
+    <!-- En-tête -->
+    <div class="modal-card-header"
+         [class.header-success]="modeAction() === 'valide'"
+         [class.header-danger]="modeAction() === 'refuse'">
+      <i class="fas fa-2x"
+         [class.fa-check-circle]="modeAction() === 'valide'"
+         [class.fa-times-circle]="modeAction() === 'refuse'">
+      </i>
       <span class="ms-2 fw-bold">
-        {{ modeAction() === 'approuver' ? 'Approuver la demande' : 'Rejeter la demande' }}
+        {{ modeAction() === 'valide' ? 'Approuver la demande' : 'Rejeter la demande' }}
       </span>
     </div>
 
     <div class="modal-card-body">
 
-      <!-- Résumé de la demande -->
-      <p style="font-size:0.9rem;">
-        Demande de <strong>{{ ($any(demandeSelectionnee())?.utilisateurPrenom ?? $any(demandeSelectionnee())?.prenom) ? (($any(demandeSelectionnee())?.utilisateurPrenom ?? $any(demandeSelectionnee())?.prenom) + ' ' + ($any(demandeSelectionnee())?.utilisateurNom ?? $any(demandeSelectionnee())?.nom)) : ($any(demandeSelectionnee())?.employe ?? '—') }}</strong>
-        — {{ congeService.libelleType($any(demandeSelectionnee())?.typeDemande ?? $any(demandeSelectionnee())?.type) }}
-        ({{ demandeSelectionnee()?.nbJours }} jour(s))
-      </p>
+      <!-- Résumé -->
+      <div class="bg-light rounded p-3 mb-3">
+        <div class="fw-semibold mb-1">
+          {{ demandeSelectionnee()?.utilisateur?.prenom ?? demandeSelectionnee()?.prenom }}
+          {{ demandeSelectionnee()?.utilisateur?.nom    ?? demandeSelectionnee()?.nom    }}
+        </div>
+        <div class="text-muted" style="font-size:0.83rem">
+          {{ demandeService.libelleType(demandeSelectionnee()?.typeDemande ?? '') }}
+          · {{ demandeSelectionnee()?.dateDebut }}
+          → {{ demandeSelectionnee()?.dateFin }}
+        </div>
+        <div class="text-muted mt-1" style="font-size:0.8rem; font-style:italic">
+          "{{ demandeSelectionnee()?.motif }}"
+        </div>
+      </div>
 
-      <!-- Erreur HTTP -->
+      <!-- Erreur -->
       <div *ngIf="erreurAction()"
            class="alert alert-danger py-2 mb-3"
-           style="font-size:0.85rem;">
+           style="font-size:0.85rem">
         <i class="fas fa-exclamation-circle me-2"></i>
         {{ erreurAction() }}
       </div>
 
       <!-- Commentaire -->
       <div class="mb-3">
-        <label class="form-label fw-semibold" style="font-size:0.88rem;">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
           Commentaire
-          <span *ngIf="modeAction() === 'rejeter'" class="text-danger">*</span>
+          <span *ngIf="modeAction() === 'refuse'" class="text-danger">*</span>
+          <span *ngIf="modeAction() === 'valide'"
+                class="text-muted fw-normal"
+                style="font-size:0.78rem">
+            (optionnel)
+          </span>
         </label>
-        <!--
-          ✅ CORRIGÉ : signal ne supporte pas [(ngModel)] directement
-          On utilise [ngModel] pour lire + (ngModelChange) pour écrire
-        -->
         <textarea
           class="form-control"
           rows="3"
-          [placeholder]="modeAction() === 'approuver'
+          [placeholder]="modeAction() === 'valide'
             ? 'Commentaire optionnel...'
-            : 'Motif du rejet (obligatoire)...'"
+            : 'Raison du rejet (obligatoire)...'"
           [ngModel]="commentaireAction()"
           (ngModelChange)="commentaireAction.set($event)"
-          name="commentaire"
-        ></textarea>
+          name="commentaire">
+        </textarea>
       </div>
 
       <!-- Boutons -->
       <div class="d-flex gap-2 justify-content-end">
-        <button
-          class="btn btn-outline-secondary"
-          (click)="fermerModal()"
-          [disabled]="traitement()"
-        >
+        <button class="btn btn-outline-secondary"
+                (click)="fermerModal()"
+                [disabled]="traitement()">
           Annuler
         </button>
-        <button
-          class="btn"
-          [class.btn-success]="modeAction() === 'approuver'"
-          [class.btn-danger]="modeAction() === 'rejeter'"
-          (click)="confirmerAction()"
-          [disabled]="traitement()"
-        >
+        <button class="btn"
+                [class.btn-success]="modeAction() === 'valide'"
+                [class.btn-danger]="modeAction() === 'refuse'"
+                (click)="confirmerAction()"
+                [disabled]="traitement()">
           <span *ngIf="traitement()"
                 class="spinner-border spinner-border-sm me-2">
           </span>
-          Confirmer
+          <i *ngIf="!traitement()" class="fas me-2"
+             [class.fa-check]="modeAction() === 'valide'"
+             [class.fa-times]="modeAction() === 'refuse'">
+          </i>
+          {{ traitement()
+             ? 'En cours...'
+             : (modeAction() === 'valide'
+                ? 'Confirmer l\'approbation'
+                : 'Confirmer le rejet') }}
         </button>
       </div>
 
