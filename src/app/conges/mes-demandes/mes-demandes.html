@@ -1,5 +1,5 @@
 <!-- ============================================================
-     mes-demandes.html
+     mes-demandes.html — avec gestion justificatif
      ============================================================ -->
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -9,53 +9,42 @@
       Historique de toutes vos demandes
     </p>
   </div>
-  <button (click)="ouvrirModal()"
-          class="btn btn-primary shadow-sm mt-2 mt-sm-0">
-    <i class="fas fa-plus me-1"></i> Nouvelle demande
+  <button (click)="ouvrirModal()" class="btn btn-primary shadow-sm mt-2 mt-sm-0">
+    <i class="fas fa-plus me-1"></i>Nouvelle demande
   </button>
 </div>
 
 <!-- Spinner -->
 <div *ngIf="congeService.loading()" class="text-center py-5">
   <div class="spinner-border text-primary mb-2"></div>
-  <p class="text-muted mb-0" style="font-size:0.85rem">
-    Chargement de vos demandes...
-  </p>
+  <p class="text-muted mb-0" style="font-size:0.85rem">Chargement...</p>
 </div>
 
-<!-- Erreur annulation -->
-<div *ngIf="erreurAnnulation()"
-     class="alert alert-danger mb-3"
-     style="font-size:0.85rem">
-  <i class="fas fa-exclamation-circle me-2"></i>
-  {{ erreurAnnulation() }}
+<!-- Erreurs globales -->
+<div *ngIf="erreurAnnulation()" class="alert alert-danger mb-3" style="font-size:0.85rem">
+  <i class="fas fa-exclamation-circle me-2"></i>{{ erreurAnnulation() }}
+</div>
+<div *ngIf="congeService.erreur()" class="alert alert-danger mb-3" style="font-size:0.85rem">
+  <i class="fas fa-exclamation-circle me-2"></i>{{ congeService.erreur() }}
 </div>
 
-<!-- Erreur chargement -->
-<div *ngIf="congeService.erreur()"
-     class="alert alert-danger mb-3"
-     style="font-size:0.85rem">
-  <i class="fas fa-exclamation-circle me-2"></i>
-  {{ congeService.erreur() }}
-</div>
+<div class="card shadow mb-4" *ngIf="!congeService.loading()">
 
-<div class="card shadow mb-4 demandes-card" *ngIf="!congeService.loading()">
-
-  <!-- Onglets filtres -->
+  <!-- Onglets -->
   <div class="card-header p-3 border-0 bg-white">
-    <ul class="filters-list mb-0">
-      <li class="filter-item"
+    <ul class="nav nav-tabs border-0">
+      <li class="nav-item"
           *ngFor="let onglet of [
             { val: 'tous',       label: 'Toutes',     count: compte().tous       },
             { val: 'en_attente', label: 'En attente', count: compte().en_attente },
             { val: 'valide',     label: 'Approuvées', count: compte().valide     },
             { val: 'refuse',     label: 'Rejetées',   count: compte().refuse     }
           ]">
-        <button class="filter-pill"
+        <button class="nav-link"
                 [class.active]="filtreStatut() === onglet.val"
                 (click)="filtreStatut.set(onglet.val)">
           {{ onglet.label }}
-          <span class="filter-count ms-1">
+          <span class="badge bg-secondary ms-1" style="font-size:0.72rem">
             {{ onglet.count }}
           </span>
         </button>
@@ -65,29 +54,25 @@
 
   <div class="card-body p-0">
 
-    <!-- Liste vide -->
-    <div *ngIf="demandesFiltrees().length === 0"
-         class="text-center py-5 text-muted">
+    <!-- Vide -->
+    <div *ngIf="demandesFiltrees().length === 0" class="text-center py-5 text-muted">
       <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
       Aucune demande trouvée.
     </div>
 
     <!-- Tableau -->
-    <div class="table-responsive"
-         *ngIf="demandesFiltrees().length > 0">
-      <table class="table table-hover align-middle mb-0 demandes-table">
-
-        <thead>
+    <div class="table-responsive" *ngIf="demandesFiltrees().length > 0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
           <tr>
-            <th>Employé</th>
-            <th>Type</th>
-            <th>Période</th>
-            <th>Statut</th>
-            <th>Motif</th>
-            <th class="text-center">Action</th>
+            <th style="font-size:0.82rem">Employé</th>
+            <th style="font-size:0.82rem">Type</th>
+            <th style="font-size:0.82rem">Période</th>
+            <th style="font-size:0.82rem">Progression</th>
+            <th style="font-size:0.82rem">Justificatif</th>
+            <th style="font-size:0.82rem; text-align:center">Actions</th>
           </tr>
         </thead>
-
         <tbody>
           <tr *ngFor="let d of demandesFiltrees()">
 
@@ -96,214 +81,503 @@
               <div class="d-flex align-items-center gap-2">
                 <div class="avatar-sm">{{ initiales(d) }}</div>
                 <div class="fw-semibold" style="font-size:0.85rem">
-                  {{ prenomEmploye(d) }}
-                  {{ nomEmploye(d) }}
+                  {{ prenomEmploye(d) }} {{ nomEmploye(d) }}
                 </div>
               </div>
             </td>
 
             <!-- Type -->
-            <td class="type-cell">
+            <td style="font-size:0.85rem">
               <i class="fas fa-fw me-1"
                  [ngClass]="{
-                   'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
-                   'fa-clock text-warning':          d.typeDemande === 'permission',
-                   'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie',
-                   'fa-baby text-info':              d.typeDemande === 'conge_maternite'
+                   'fa-umbrella-beach text-primary':
+                     d.typeDemande === 'CONGE' || d.typeDemande === 'conge_annuel',
+                   'fa-clock text-warning':
+                     d.typeDemande === 'PERMISSION' || d.typeDemande === 'permission'
                  }">
               </i>
               {{ congeService.libelleType(d.typeDemande) }}
             </td>
 
             <!-- Dates -->
-            <td class="periode-cell">
+            <td style="font-size:0.83rem">
               {{ d.dateDebut }} → {{ d.dateFin }}
             </td>
 
-            <!-- Statut -->
+            <!-- Workflow progression -->
             <td>
-              <span class="badge statut-badge {{ getBadgeClass(d.statut) }}">
-                {{ getStatutLabel(d.statut) }}
-              </span>
+              <div class="d-flex align-items-center gap-1">
+
+                <!-- Étape 1 Responsable -->
+                <div class="etape-badge"
+                     [class.etape-valide]="d.statut !== 'EN_ATTENTE' && !d.statut.includes('REFUSEE_RESPONSABLE')"
+                     [class.etape-refuse]="d.statut === 'REFUSEE_RESPONSABLE'"
+                     [class.etape-attente]="d.statut === 'EN_ATTENTE'">
+                  <i class="fas fa-xs"
+                     [class.fa-check]="d.statut !== 'EN_ATTENTE' && d.statut !== 'REFUSEE_RESPONSABLE'"
+                     [class.fa-times]="d.statut === 'REFUSEE_RESPONSABLE'"
+                     [class.fa-clock]="d.statut === 'EN_ATTENTE'">
+                  </i>
+                  <span>Resp.</span>
+                </div>
+
+                <i class="fas fa-chevron-right text-muted" style="font-size:0.6rem"></i>
+
+                <!-- Étape 2 Chef Département -->
+                <div class="etape-badge"
+                     [class.etape-valide]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT' || d.statut === 'APPROUVEE_RH'"
+                     [class.etape-refuse]="d.statut === 'REFUSEE_CHEF_DEPARTEMENT'"
+                     [class.etape-attente]="d.statut === 'APPROUVEE_RESPONSABLE'"
+                     [class.etape-inactive]="d.statut === 'EN_ATTENTE'">
+                  <i class="fas fa-xs"
+                     [class.fa-check]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT' || d.statut === 'APPROUVEE_RH'"
+                     [class.fa-times]="d.statut === 'REFUSEE_CHEF_DEPARTEMENT'"
+                     [class.fa-clock]="d.statut === 'APPROUVEE_RESPONSABLE'"
+                     [class.fa-minus]="d.statut === 'EN_ATTENTE'">
+                  </i>
+                  <span>Chef</span>
+                </div>
+
+                <i class="fas fa-chevron-right text-muted" style="font-size:0.6rem"></i>
+
+                <!-- Étape 3 RH -->
+                <div class="etape-badge"
+                     [class.etape-valide]="d.statut === 'APPROUVEE_RH'"
+                     [class.etape-refuse]="d.statut === 'REFUSEE_RH'"
+                     [class.etape-attente]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT'"
+                     [class.etape-inactive]="d.statut === 'EN_ATTENTE' || d.statut === 'APPROUVEE_RESPONSABLE'">
+                  <i class="fas fa-xs"
+                     [class.fa-check]="d.statut === 'APPROUVEE_RH'"
+                     [class.fa-times]="d.statut === 'REFUSEE_RH'"
+                     [class.fa-clock]="d.statut === 'APPROUVEE_CHEF_DEPARTEMENT'"
+                     [class.fa-minus]="d.statut === 'EN_ATTENTE' || d.statut === 'APPROUVEE_RESPONSABLE'">
+                  </i>
+                  <span>RH</span>
+                </div>
+
+              </div>
             </td>
 
-            <!-- Motif -->
-            <td class="motif-cell">
-              <span class="text-truncate d-block text-muted"
-                    [title]="d.motif">
-                {{ d.motif }}
-              </span>
+            <!-- Colonne Justificatif -->
+            <td>
+              <!-- Pas encore approuvée par RH ou date non passée -->
+              <span *ngIf="!congeService.peutGererJustificatif(d)"
+                    class="text-muted" style="font-size:0.78rem">—</span>
+
+              <!-- Approuvée RH + date passée -->
+              <ng-container *ngIf="congeService.peutGererJustificatif(d)">
+
+                <!-- Aucun justificatif déposé -->
+                <div *ngIf="!d.justificatifPath">
+                  <span class="badge bg-warning text-dark"
+                        style="font-size:0.72rem; display:block; margin-bottom:4px">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    À déposer
+                  </span>
+                </div>
+
+                <!-- Justificatif déposé, RH n'a pas encore téléchargé -->
+                <div *ngIf="d.justificatifPath && !d.justificatifTelecharge">
+                  <span class="badge bg-info text-white"
+                        style="font-size:0.72rem; display:block; margin-bottom:4px">
+                    <i class="fas fa-file me-1"></i>
+                    Déposé
+                  </span>
+                  <div class="text-muted" style="font-size:0.7rem">
+                    Modifiable
+                  </div>
+                </div>
+
+                <!-- Justificatif téléchargé par le RH → verrouillé -->
+                <div *ngIf="d.justificatifTelecharge">
+                  <span class="badge bg-success text-white"
+                        style="font-size:0.72rem; display:block; margin-bottom:4px">
+                    <i class="fas fa-lock me-1"></i>
+                    Consulté par RH
+                  </span>
+                  <div class="text-muted" style="font-size:0.7rem">
+                    Non modifiable
+                  </div>
+                </div>
+
+              </ng-container>
             </td>
 
-            <!-- Action -->
+            <!-- Actions -->
             <td class="text-center">
-              <button
-                *ngIf="estAnnulable(d)"
-                class="btn btn-outline-danger btn-sm btn-annuler"
-                (click)="annuler(d.id)"
-                [disabled]="annulationEnCours() === d.id"
-                title="Annuler cette demande">
-                <span *ngIf="annulationEnCours() === d.id"
-                      class="spinner-border spinner-border-sm">
-                </span>
-                <i *ngIf="annulationEnCours() !== d.id"
-                   class="fas fa-trash">
-                </i>
-              </button>
-              <span *ngIf="!estAnnulable(d)"
-                  class="text-muted">—</span>
+              <div class="d-flex gap-1 justify-content-center flex-wrap">
+
+                <!-- Modifier la demande (EN_ATTENTE seulement) -->
+                <button *ngIf="estModifiable(d)"
+                        class="btn btn-outline-warning btn-sm"
+                        (click)="ouvrirModification(d)"
+                        title="Modifier">
+                  <i class="fas fa-pen"></i>
+                </button>
+
+                <!-- Annuler (EN_ATTENTE seulement) -->
+                <button *ngIf="estAnnulable(d)"
+                        class="btn btn-outline-danger btn-sm"
+                        (click)="annuler(d.id)"
+                        [disabled]="annulationEnCours() === d.id"
+                        title="Annuler">
+                  <span *ngIf="annulationEnCours() === d.id"
+                        class="spinner-border spinner-border-sm"></span>
+                  <i *ngIf="annulationEnCours() !== d.id" class="fas fa-trash"></i>
+                </button>
+
+                <!-- PDF de la demande (APPROUVEE_RH) -->
+                <button *ngIf="d.statut === 'APPROUVEE_RH'"
+                        class="btn btn-outline-primary btn-sm"
+                        (click)="telechargerPdf(d)"
+                        title="Télécharger le PDF de la demande">
+                  <i class="fas fa-file-pdf"></i>
+                </button>
+
+                <!--
+                  DÉPOSER un justificatif
+                  Visible si : approuvée RH + date passée + pas encore déposé
+                -->
+                <button *ngIf="peutDeposerJustificatif(d)"
+                        class="btn btn-warning btn-sm text-white"
+                        (click)="ouvrirModalJustif(d)"
+                        title="Déposer le justificatif de retour">
+                  <i class="fas fa-upload me-1"></i>
+                  <span class="d-none d-md-inline">Justificatif</span>
+                </button>
+
+                <!--
+                  REMPLACER un justificatif
+                  Visible si : déposé + RH n'a pas encore téléchargé
+                -->
+                <button *ngIf="peutRemplacerJustificatif(d)"
+                        class="btn btn-outline-warning btn-sm"
+                        (click)="ouvrirModalJustif(d)"
+                        title="Remplacer le justificatif">
+                  <i class="fas fa-file-upload me-1"></i>
+                  <span class="d-none d-md-inline">Modifier</span>
+                </button>
+
+                <!--
+                  VOIR mon justificatif déposé
+                -->
+                <button *ngIf="d.justificatifPath"
+                        class="btn btn-outline-secondary btn-sm"
+                        (click)="voirJustificatif(d)"
+                        title="Télécharger mon justificatif">
+                  <i class="fas fa-eye"></i>
+                </button>
+
+                <!-- Aucune action -->
+                <span *ngIf="!estModifiable(d) && !estAnnulable(d)
+                             && d.statut !== 'APPROUVEE_RH'
+                             && !congeService.peutGererJustificatif(d)"
+                      class="text-muted">—</span>
+
+              </div>
             </td>
 
           </tr>
         </tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL JUSTIFICATIF
+     ============================================================ -->
+<div *ngIf="modalJustifOuvert()"
+     class="modal-overlay"
+     (click)="fermerModalJustif()">
+
+  <div class="modal-card"
+       style="max-width:500px"
+       (click)="$event.stopPropagation()">
+
+    <!-- En-tête -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">
+        <i class="fas fa-file-upload text-warning me-2"></i>
+        {{ modeJustif() === 'depot' ? 'Déposer mon justificatif' : 'Remplacer le justificatif' }}
+      </h5>
+      <button class="btn-close-modal" (click)="fermerModalJustif()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Info demande concernée -->
+    <div class="bg-light rounded p-3 mb-3" *ngIf="demandeJustif() as d">
+      <div class="fw-semibold mb-1" style="font-size:0.88rem">
+        {{ congeService.libelleType(d.typeDemande) }}
+        · {{ d.dateDebut }} → {{ d.dateFin }}
+      </div>
+      <div class="text-muted" style="font-size:0.8rem">{{ d.motif }}</div>
+    </div>
+
+    <!-- Info si remplacement -->
+    <div *ngIf="modeJustif() === 'remplacement'"
+         class="alert alert-warning py-2 mb-3"
+         style="font-size:0.83rem">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Le nouveau fichier remplacera l'ancien justificatif.
+      Cette action n'est possible que tant que le RH ne l'a pas encore téléchargé.
+    </div>
+
+    <!-- Succès -->
+    <div *ngIf="justifSucces()"
+         class="alert alert-success py-2 mb-3"
+         style="font-size:0.85rem">
+      <i class="fas fa-check-circle me-2"></i>{{ justifSucces() }}
+    </div>
+
+    <!-- Erreur -->
+    <div *ngIf="justifErreur()"
+         class="alert alert-danger py-2 mb-3"
+         style="font-size:0.85rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ justifErreur() }}
+    </div>
+
+    <!-- Zone de sélection de fichier -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Fichier <span class="text-danger">*</span>
+        <span class="text-muted fw-normal" style="font-size:0.78rem">
+          (PDF, JPG ou PNG · max 10 Mo)
+        </span>
+      </label>
+
+      <!-- Zone drag & drop stylisée -->
+      <label class="justif-upload-zone"
+             [class.fichier-selectionne]="fichierSelectionne"
+             for="inputFichierJustif">
+        <div *ngIf="!fichierSelectionne">
+          <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2 d-block"></i>
+          <div style="font-size:0.88rem; color:#666">
+            Cliquez pour sélectionner un fichier
+          </div>
+          <div style="font-size:0.75rem; color:#aaa; margin-top:4px">
+            ou glissez-déposez ici
+          </div>
+        </div>
+        <div *ngIf="fichierSelectionne">
+          <i class="fas fa-file-check fa-3x text-success mb-2 d-block"></i>
+          <div class="fw-semibold text-success" style="font-size:0.88rem">
+            {{ libelleFichier(fichierSelectionne) }}
+          </div>
+          <div style="font-size:0.75rem; color:#aaa; margin-top:4px">
+            Cliquez pour changer le fichier
+          </div>
+        </div>
+      </label>
+
+      <!-- Input masqué -->
+      <input type="file"
+             id="inputFichierJustif"
+             accept=".pdf,.jpg,.jpeg,.png"
+             style="display:none"
+             (change)="onFichierSelectionne($event)" />
+    </div>
+
+    <!-- Boutons -->
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary"
+              (click)="fermerModalJustif()"
+              [disabled]="justifLoading()">
+        Annuler
+      </button>
+      <button class="btn btn-warning text-white"
+              (click)="soumettreJustificatif()"
+              [disabled]="justifLoading() || !fichierSelectionne">
+        <span *ngIf="justifLoading()"
+              class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!justifLoading()" class="fas fa-upload me-2"></i>
+        {{ justifLoading()
+           ? 'Envoi en cours...'
+           : (modeJustif() === 'depot' ? 'Déposer' : 'Remplacer') }}
+      </button>
+    </div>
 
   </div>
 </div>
 
-<!-- ===== MODAL FORMULAIRE NOUVELLE DEMANDE ===== -->
+<!-- ============================================================
+     MODAL NOUVELLE DEMANDE
+     ============================================================ -->
 <div *ngIf="modalOuvert()" class="modal-overlay" (click)="fermerModal()">
-  <div class="modal-card" style="max-width: 700px; max-height: 90vh; overflow-y: auto;" (click)="$event.stopPropagation()">
+  <div class="modal-card"
+       style="max-width:700px; max-height:90vh; overflow-y:auto"
+       (click)="$event.stopPropagation()">
 
-    <!-- En-tête modal -->
     <div class="d-flex align-items-center justify-content-between mb-4">
       <h5 class="fw-bold mb-0">
-        <i class="fas fa-file-alt text-primary me-2"></i>
-        Nouvelle demande
+        <i class="fas fa-file-alt text-primary me-2"></i>Nouvelle demande
       </h5>
       <button class="btn-close-modal" (click)="fermerModal()">
         <i class="fas fa-times"></i>
       </button>
     </div>
 
-    <!-- Erreur globale -->
     <div *ngIf="formErreur()"
-         class="alert alert-danger py-2 mb-3"
-         style="font-size:0.85rem">
+         class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
       <i class="fas fa-exclamation-circle me-2"></i>{{ formErreur() }}
     </div>
 
-    <!-- ÉTAPE 1 : Type de demande -->
+    <!-- Type -->
     <div class="mb-4">
       <label class="form-label fw-semibold" style="font-size:0.88rem">
-        Type de demande <span class="text-danger">*</span>
+        Type <span class="text-danger">*</span>
       </label>
       <div class="row g-3">
-        <div
-          class="col-md-4"
-          *ngFor="let type of types"
-        >
-          <div
-            class="type-card"
-            [class.selected]="formData().type === type.value"
-            (click)="updateField('type', type.value)"
-            style="cursor: pointer; padding: 15px; border: 2px solid #e3e6f0; border-radius: 8px; text-align: center; transition: all 0.3s;"
-          >
+        <div class="col-md-6" *ngFor="let type of types">
+          <div class="role-card"
+               [class.selected]="formData().type === type.value"
+               (click)="updateField('type', type.value)">
             <i class="fas {{ type.icone }} fa-2x {{ type.couleur }} mb-2"></i>
-            <div class="fw-semibold" style="font-size: 0.88rem;">
-              {{ type.label }}
-            </div>
+            <div class="fw-semibold" style="font-size:0.88rem">{{ type.label }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ÉTAPE 2 : Dates -->
+    <!-- Dates -->
     <div class="row g-3 mb-3">
       <div class="col-md-6">
         <label class="form-label fw-semibold" style="font-size:0.88rem">
-          Date de début <span class="text-danger">*</span>
+          Date début <span class="text-danger">*</span>
         </label>
-        <input
-          type="date"
-          class="form-control"
-          [min]="dateMin"
-          [ngModel]="formData().dateDebut"
-          (ngModelChange)="updateField('dateDebut', $event)"
-          name="dateDebut"
-        />
+        <input type="date" class="form-control"
+               [min]="dateMin"
+               [ngModel]="formData().dateDebut"
+               (ngModelChange)="updateField('dateDebut', $event)" />
       </div>
       <div class="col-md-6">
         <label class="form-label fw-semibold" style="font-size:0.88rem">
-          Date de fin <span class="text-danger">*</span>
+          Date fin <span class="text-danger">*</span>
         </label>
-        <input
-          type="date"
-          class="form-control"
-          [min]="formData().dateDebut || dateMin"
-          [ngModel]="formData().dateFin"
-          (ngModelChange)="updateField('dateFin', $event)"
-          name="dateFin"
-        />
+        <input type="date" class="form-control"
+               [min]="formData().dateDebut || dateMin"
+               [ngModel]="formData().dateFin"
+               (ngModelChange)="updateField('dateFin', $event)" />
       </div>
     </div>
 
-    <!-- Résumé jours calculés -->
-    <div
-      class="alert alert-info py-2 mb-3"
-      *ngIf="nombreJours() > 0"
-      style="font-size: 0.85rem;"
-    >
-      <i class="fas fa-calendar-check me-2 text-primary"></i>
-      <strong>{{ nombreJours() }}</strong> jour(s) de
-      {{ formData().type === 'permission' ? 'permission' : 'congé' }}
+    <div class="alert alert-info py-2 mb-3" *ngIf="nombreJours() > 0" style="font-size:0.85rem">
+      <i class="fas fa-calendar-check me-2"></i>
+      <strong>{{ nombreJours() }}</strong> jour(s)
     </div>
 
-    <!-- ÉTAPE 3 : Motif -->
-    <div class="mb-3">
+    <!-- Motif -->
+    <div class="mb-4">
       <label class="form-label fw-semibold" style="font-size:0.88rem">
         Motif <span class="text-danger">*</span>
       </label>
-      <textarea
-        class="form-control"
-        rows="3"
-        placeholder="Décrivez brièvement le motif de votre demande..."
-        [ngModel]="formData().motif"
-        (ngModelChange)="updateField('motif', $event)"
-        name="motif"
-        maxlength="500"
-      ></textarea>
-      <div class="text-muted text-end mt-1" style="font-size: 0.78rem;">
+      <textarea class="form-control" rows="3"
+                placeholder="Décrivez le motif..."
+                [ngModel]="formData().motif"
+                (ngModelChange)="updateField('motif', $event)"
+                maxlength="500"></textarea>
+      <div class="text-muted text-end mt-1" style="font-size:0.78rem">
         {{ formData().motif.length }}/500
       </div>
     </div>
 
-    <!-- Case urgence -->
-    <div class="mb-4">
-      <div class="form-check">
-        <input
-          type="checkbox"
-          class="form-check-input"
-          id="urgence"
-          [ngModel]="formData().urgence"
-          (ngModelChange)="updateField('urgence', $event)"
-          name="urgence"
-        />
-        <label class="form-check-label fw-semibold" for="urgence" style="font-size:0.88rem">
-          <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-          Demande urgente (traitement prioritaire)
-        </label>
-      </div>
-    </div>
-
-    <!-- Boutons -->
     <div class="d-flex gap-2 justify-content-end">
-      <button class="btn btn-outline-secondary"
-              (click)="fermerModal()"
-              [disabled]="formLoading()">
+      <button class="btn btn-outline-secondary" (click)="fermerModal()" [disabled]="formLoading()">
         Annuler
       </button>
-      <button class="btn btn-primary"
-              (click)="soumettre()"
-              [disabled]="formLoading()">
-        <span *ngIf="formLoading()"
-              class="spinner-border spinner-border-sm me-2">
-        </span>
+      <button class="btn btn-primary" (click)="soumettre()" [disabled]="formLoading()">
+        <span *ngIf="formLoading()" class="spinner-border spinner-border-sm me-2"></span>
         <i *ngIf="!formLoading()" class="fas fa-save me-2"></i>
         {{ formLoading() ? 'Enregistrement...' : 'Enregistrer' }}
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL MODIFICATION identique — inchangé -->
+<div *ngIf="modalModifOuvert()" class="modal-overlay" (click)="fermerModalModif()">
+  <div class="modal-card" style="max-width:700px; max-height:90vh; overflow-y:auto"
+       (click)="$event.stopPropagation()">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h5 class="fw-bold mb-0">
+        <i class="fas fa-pen text-warning me-2"></i>Modifier la demande
+      </h5>
+      <button class="btn-close-modal" (click)="fermerModalModif()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="alert alert-warning py-2 mb-4" style="font-size:0.83rem">
+      <i class="fas fa-info-circle me-2"></i>
+      La demande modifiée sera renvoyée au Responsable pour validation.
+    </div>
+
+    <div *ngIf="modifErreur()" class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ modifErreur() }}
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Type <span class="text-danger">*</span>
+      </label>
+      <div class="row g-3">
+        <div class="col-md-6" *ngFor="let type of types">
+          <div class="role-card"
+               [class.selected]="modifData().typeDemande === type.value"
+               (click)="updateModifField('typeDemande', type.value)">
+            <i class="fas {{ type.icone }} fa-2x {{ type.couleur }} mb-2"></i>
+            <div class="fw-semibold" style="font-size:0.88rem">{{ type.label }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date début <span class="text-danger">*</span>
+        </label>
+        <input type="date" class="form-control" [min]="dateMin"
+               [ngModel]="modifData().dateDebut"
+               (ngModelChange)="updateModifField('dateDebut', $event)" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date fin <span class="text-danger">*</span>
+        </label>
+        <input type="date" class="form-control" [min]="modifData().dateDebut || dateMin"
+               [ngModel]="modifData().dateFin"
+               (ngModelChange)="updateModifField('dateFin', $event)" />
+      </div>
+    </div>
+
+    <div class="alert alert-info py-2 mb-3" *ngIf="nombreJoursModif() > 0" style="font-size:0.85rem">
+      <i class="fas fa-calendar-check me-2"></i>
+      <strong>{{ nombreJoursModif() }}</strong> jour(s)
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Motif <span class="text-danger">*</span>
+      </label>
+      <textarea class="form-control" rows="3"
+                [ngModel]="modifData().motif"
+                (ngModelChange)="updateModifField('motif', $event)"
+                maxlength="500"></textarea>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-outline-secondary" (click)="fermerModalModif()" [disabled]="modifLoading()">
+        Annuler
+      </button>
+      <button class="btn btn-warning text-white" (click)="soumettreModification()" [disabled]="modifLoading()">
+        <span *ngIf="modifLoading()" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!modifLoading()" class="fas fa-save me-2"></i>
+        {{ modifLoading() ? 'Modification...' : 'Enregistrer' }}
+      </button>
+    </div>
   </div>
 </div>

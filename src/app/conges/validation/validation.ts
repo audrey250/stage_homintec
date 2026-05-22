@@ -102,6 +102,10 @@ export class ValidationComponent implements OnInit {
   peutAgir(d: Demande): boolean {
     return this.demandeService.peutDecider(d, this.monRole);
   }
+  // Le RH peut-il télécharger le justificatif ?
+    peutTelechargerJustificatif(d: Demande): boolean {
+      return d.statut === 'APPROUVEE_RH' && !!d.justificatifPath;
+    }
 
   // ---- Raison du blocage ----
   raisonBlocage(d: Demande): string {
@@ -169,7 +173,7 @@ export class ValidationComponent implements OnInit {
       return;
     }
 
-    if (role === 'RESPONSABLE' || role === 'MANAGER') {
+    if (role === 'RESPONSABLE' ) {
       request$ = this.demandeService.validerParResponsable(demande.id, decision);
     } else if (role === 'CHEF DEPARTEMENT') {
       request$ = this.demandeService.validerParChefDepartement(demande.id, decision);
@@ -187,6 +191,16 @@ export class ValidationComponent implements OnInit {
         this.fermerModal();
         // Recharge pour avoir l'état à jour
         this.demandeService.chargerEnAttente();
+        if (role === 'RH' && decision.statut === 'APPROUVE') {
+  this.demandeService.telechargerPdf(demande.id).subscribe(blob => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `demande-${demande.id}.pdf`;
+    a.click();
+  });
+  
+}
       },
       error: (err: HttpErrorResponse) => {
         this.traitement.set(false);
@@ -261,7 +275,7 @@ export class ValidationComponent implements OnInit {
   const map: Record<string, string> = {
 
     'RESPONSABLE': 'RESPONSABLE',
-    'CHEF DÉPARTEMENT': 'CHEF DÉPARTEMENT',
+    'CHEF DEPARTEMENT': 'CHEF DEPARTEMENT',
     'RH': 'RH'
 
   };

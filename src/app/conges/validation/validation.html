@@ -117,6 +117,7 @@
                   <th>Période</th>
                   <th>Étape actuelle</th>
                   <th>Motif</th>
+
                   <th class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -144,9 +145,7 @@
                        [ngClass]="{
                          'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
                          'fa-clock text-warning':          d.typeDemande === 'permission',
-                         'fa-heartbeat text-danger':       d.typeDemande === 'conge_maladie',
-                         'fa-baby text-info':              d.typeDemande === 'conge_maternite',
-                         'fa-file text-secondary':         d.typeDemande === 'autre'
+                
                        }">
                     </i>
                     {{ demandeService.libelleType(d.typeDemande) }}
@@ -236,7 +235,10 @@
                       {{ d.motif }}
                     </span>
                   </td>
+                  <td>
+                
 
+                
                   <!-- Actions -->
                   <td class="text-center">
                     <ng-container *ngIf="peutAgir(d)">
