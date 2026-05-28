@@ -425,47 +425,53 @@
 
     <!-- Type -->
     <div class="mb-4">
-      <label class="form-label fw-semibold" style="font-size:0.88rem">
-        Type <span class="text-danger">*</span>
-      </label>
-      <div class="row g-3">
-        <div class="col-md-6" *ngFor="let type of types">
-          <div class="role-card"
-               [class.selected]="formData().type === type.value"
-               (click)="updateField('type', type.value)">
-            <i class="fas {{ type.icone }} fa-2x {{ type.couleur }} mb-2"></i>
-            <div class="fw-semibold" style="font-size:0.88rem">{{ type.label }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <label class="form-label fw-semibold" style="font-size:0.88rem">
+    Type <span class="text-danger">*</span>
+  </label>
+  <select
+    class="form-select"
+    [ngModel]="formData().type"
+    (ngModelChange)="updateField('type', $event)">
+        <option value="" disabled selected>Choisir un type</option>
+    <option *ngFor="let type of types" [value]="type.value">{{ type.label }}</option>
+
+  </select>
+</div>
 
     <!-- Dates -->
     <div class="row g-3 mb-3">
-      <div class="col-md-6">
-        <label class="form-label fw-semibold" style="font-size:0.88rem">
-          Date début <span class="text-danger">*</span>
-        </label>
-        <input type="date" class="form-control"
-               [min]="dateMin"
-               [ngModel]="formData().dateDebut"
-               (ngModelChange)="updateField('dateDebut', $event)" />
-      </div>
-      <div class="col-md-6">
-        <label class="form-label fw-semibold" style="font-size:0.88rem">
-          Date fin <span class="text-danger">*</span>
-        </label>
-        <input type="date" class="form-control"
-               [min]="formData().dateDebut || dateMin"
-               [ngModel]="formData().dateFin"
-               (ngModelChange)="updateField('dateFin', $event)" />
-      </div>
-    </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold" style="font-size:0.88rem">
+      Date début <span class="text-danger">*</span>
+    </label>
+    <input
+      type="datetime-local"
+      class="form-control"
+      [min]="dateMin"
+      [ngModel]="formData().dateDebut"
+      (ngModelChange)="updateField('dateDebut', $event)" />
+  </div>
 
-    <div class="alert alert-info py-2 mb-3" *ngIf="nombreJours() > 0" style="font-size:0.85rem">
-      <i class="fas fa-calendar-check me-2"></i>
-      <strong>{{ nombreJours() }}</strong> jour(s)
-    </div>
+  <div class="col-md-6">
+    <label class="form-label fw-semibold" style="font-size:0.88rem">
+      Date fin <span class="text-danger">*</span>
+    </label>
+    <input
+      type="datetime-local"
+      class="form-control"
+      [min]="formData().dateDebut || dateMin"
+      [ngModel]="formData().dateFin"
+      (ngModelChange)="updateField('dateFin', $event)" />
+  </div>
+</div>
+
+<div
+  class="alert alert-info py-2 mb-3"
+  *ngIf="nombreJours() > 0"
+  style="font-size:0.85rem">
+  <i class="fas fa-calendar-check me-2"></i>
+  <strong>{{ nombreJours() }}</strong> jour(s)
+</div>
 
     <!-- Motif -->
     <div class="mb-4">
@@ -540,7 +546,7 @@
         <label class="form-label fw-semibold" style="font-size:0.88rem">
           Date début <span class="text-danger">*</span>
         </label>
-        <input type="date" class="form-control" [min]="dateMin"
+        <input type="datetime" class="form-control" [min]="dateMin"
                [ngModel]="modifData().dateDebut"
                (ngModelChange)="updateModifField('dateDebut', $event)" />
       </div>
@@ -548,7 +554,7 @@
         <label class="form-label fw-semibold" style="font-size:0.88rem">
           Date fin <span class="text-danger">*</span>
         </label>
-        <input type="date" class="form-control" [min]="modifData().dateDebut || dateMin"
+        <input type="datetime" class="form-control" [min]="modifData().dateDebut || dateMin"
                [ngModel]="modifData().dateFin"
                (ngModelChange)="updateModifField('dateFin', $event)" />
       </div>

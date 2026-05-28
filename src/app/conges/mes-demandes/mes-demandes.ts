@@ -60,7 +60,9 @@ export class MesDemandesComponent implements OnInit {
     { value: 'PERMISSION', label: 'Permission',  icone: 'fa-clock',          couleur: 'text-warning' },
   ];
 
-  dateMin = new Date().toISOString().split('T')[0];
+  dateMin = new Date(
+  Date.now() - new Date().getTimezoneOffset() * 60000
+).toISOString().slice(0, 16);
 
   nombreJours = computed(() => {
     const { dateDebut, dateFin } = this.formData();
