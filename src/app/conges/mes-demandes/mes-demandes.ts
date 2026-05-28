@@ -396,4 +396,5 @@ export class MesDemandesComponent implements OnInit {
     const n = this.nomEmploye(d)    || 'N';
     return (p.charAt(0) + n.charAt(0)).toUpperCase();
   }
+ 
 }

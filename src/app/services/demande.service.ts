@@ -2,7 +2,7 @@
 // FICHIER : src/app/services/demande.service.ts
 // ============================================================
 
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -33,12 +33,12 @@ export interface Demande {
   nom?: string;
   prenom?: string;
   // ---- Justificatif ----
-  justificatifPath?:        string;   // URL fichier sur le serveur
-  justificatifNom?:         string;   // Nom original du fichier
-  justificatifType?:        string;   // "PDF" | "IMAGE"
-  justificatifDateDepot?:   string;   // Date de dépôt ISO
-  justificatifTelecharge?:  boolean;  // true = RH a téléchargé
-  dateRetour?:              string;   // Date de retour réelle
+  justificatifPath?:        string;
+  justificatifNom?:         string;
+  justificatifType?:        string;
+  justificatifDateDepot?:   string;
+  justificatifTelecharge?:  boolean;
+  dateRetour?:              string;
 }
 
 export interface DecisionDemande {
@@ -62,6 +62,9 @@ export interface ModificationDemandePayload {
   motif: string;
 }
 
+// Solde initial par défaut (peut être surchargé par l'API)
+const SOLDE_INITIAL = 30;
+
 @Injectable({ providedIn: 'root' })
 export class DemandeService {
 
@@ -74,7 +77,65 @@ export class DemandeService {
   private _erreur = signal('');
   erreur = this._erreur.asReadonly();
 
+  // ============================================================
+  // SOLDE CONGÉS — calculé automatiquement depuis les demandes
+  // ============================================================
+
+  /**
+   * Nombre de jours consommés = somme des jours de toutes les
+   * demandes de type CONGE avec statut APPROUVEE_RH.
+   */
+  joursConsommes = computed(() => {
+    return this._demandes()
+      .filter(d =>
+        (d.typeDemande === 'CONGE' || d.typeDemande === 'CONGE_ANNUEL') &&
+        d.statut === 'APPROUVEE_RH'
+      )
+      .reduce((total, d) => total + this.calculerJours(d.dateDebut, d.dateFin), 0);
+  });
+
+  /** Solde restant = 30 - jours consommés (jamais négatif) */
+  soldeConges = computed(() =>
+    Math.max(0, SOLDE_INITIAL - this.joursConsommes())
+  );
+
+  /** Nombre de demandes entièrement approuvées (APPROUVEE_RH) */
+  congesApprouves = computed(() =>
+    this._demandes().filter(d => d.statut === 'APPROUVEE_RH').length
+  );
+
+  /** Demandes en attente (tous statuts intermédiaires) */
+  demandesEnAttente = computed(() =>
+    this._demandes().filter(d =>
+      d.statut === 'EN_ATTENTE' ||
+      d.statut === 'APPROUVEE_RESPONSABLE' ||
+      d.statut === 'APPROUVEE_CHEF_DEPARTEMENT'
+    ).length
+  );
+
   constructor(private http: HttpClient) {}
+
+  // ============================================================
+  // HELPERS CALCUL DE JOURS
+  // ============================================================
+
+  /**
+   * Calcule le nombre de jours entre deux dates (inclusif).
+   * Supporte les formats date ("2024-06-01") et
+   * datetime ("2024-06-01T08:00").
+   */
+  calculerJours(dateDebut: string, dateFin: string): number {
+    if (!dateDebut || !dateFin) return 0;
+    const d1 = new Date(dateDebut);
+    const d2 = new Date(dateFin);
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return 0;
+    // Normaliser à minuit pour éviter les décalages horaires
+    d1.setHours(0, 0, 0, 0);
+    d2.setHours(0, 0, 0, 0);
+    const diff = d2.getTime() - d1.getTime();
+    if (diff < 0) return 0;
+    return Math.round(diff / (1000 * 60 * 60 * 24)) + 1;
+  }
 
   // ============================================================
   // CRÉER UNE DEMANDE
@@ -200,13 +261,10 @@ export class DemandeService {
   }
 
   // ============================================================
-  // PDF DE LA DEMANDE (généré par Spring Boot)
-  // GET /api/demandes/:id/pdf
+  // PDF DE LA DEMANDE
   // ============================================================
   telechargerPdf(id: string): Observable<Blob> {
-    return this.http.get(`${API_URL}/demandes/${id}/pdf`, {
-      responseType: 'blob'
-    });
+    return this.http.get(`${API_URL}/demandes/${id}/pdf`, { responseType: 'blob' });
   }
 
   downloadPdf(id: string): void {
@@ -221,61 +279,40 @@ export class DemandeService {
   }
 
   // ============================================================
-  // DÉPOSER UN JUSTIFICATIF (employé après retour)
-  // POST /api/demandes/:id/justificatif
-  // Accepte : PDF ou image (jpg, png)
+  // DÉPOSER UN JUSTIFICATIF
   // ============================================================
   deposerJustificatif(id: string, fichier: File): Observable<Demande> {
     const formData = new FormData();
-    // "fichier" doit correspondre au @RequestParam("fichier") dans Spring Boot
     formData.append('fichier', fichier, fichier.name);
-
-    return this.http.post<Demande>(
-      `${API_URL}/justificatifs`,
-      formData
-    ).pipe(
+    return this.http.post<Demande>(`${API_URL}/justificatifs`, formData).pipe(
       tap(updated => {
-        // Mettre à jour la demande dans le cache avec les infos du justificatif
-        this._demandes.update(list =>
-          list.map(d => d.id === id ? updated : d)
-        );
+        this._demandes.update(list => list.map(d => d.id === id ? updated : d));
       }),
       catchError((err: HttpErrorResponse) => throwError(() => err))
     );
   }
 
   // ============================================================
-  // MODIFIER UN JUSTIFICATIF (employé — tant que RH n'a pas téléchargé)
-  // PUT /api/demandes/:id/justificatif
+  // MODIFIER UN JUSTIFICATIF
   // ============================================================
   modifierJustificatif(id: string, fichier: File): Observable<Demande> {
     const formData = new FormData();
     formData.append('fichier', fichier, fichier.name);
-
-    return this.http.put<Demande>(
-      `${API_URL}/justificatifs/${id}`,
-      formData
-    ).pipe(
+    return this.http.put<Demande>(`${API_URL}/justificatifs/${id}`, formData).pipe(
       tap(updated => {
-        this._demandes.update(list =>
-          list.map(d => d.id === id ? updated : d)
-        );
+        this._demandes.update(list => list.map(d => d.id === id ? updated : d));
       }),
       catchError((err: HttpErrorResponse) => throwError(() => err))
     );
   }
 
   // ============================================================
-  // TÉLÉCHARGER LE JUSTIFICATIF (RH ou employé)
-  // GET /api/demandes/:id/justificatif
+  // TÉLÉCHARGER LE JUSTIFICATIF
   // ============================================================
   telechargerJustificatif(id: string): Observable<Blob> {
-    return this.http.get(`${API_URL}/demandes/${id}/justificatif`, {
-      responseType: 'blob'
-    });
+    return this.http.get(`${API_URL}/demandes/${id}/justificatif`, { responseType: 'blob' });
   }
 
-  // Téléchargement direct avec création du lien
   downloadJustificatif(id: string, nomFichier: string): void {
     this.telechargerJustificatif(id).subscribe({
       next: (blob: Blob) => {
@@ -285,30 +322,20 @@ export class DemandeService {
         a.download = nomFichier || `justificatif-${id}`;
         a.click();
         window.URL.revokeObjectURL(url);
-
-        // Marquer comme téléchargé dans le cache local
         this._demandes.update(list =>
-          list.map(d => d.id === id
-            ? { ...d, justificatifTelecharge: true }
-            : d
-          )
+          list.map(d => d.id === id ? { ...d, justificatifTelecharge: true } : d)
         );
       }
     });
   }
 
   // ============================================================
-  // SUPPRIMER UN JUSTIFICATIF (employé — tant que RH n'a pas téléchargé)
-  // DELETE /api/demandes/:id/justificatif
+  // SUPPRIMER UN JUSTIFICATIF
   // ============================================================
   supprimerJustificatif(id: string): Observable<Demande> {
-    return this.http.delete<Demande>(
-      `${API_URL}/demandes/${id}/justificatif`
-    ).pipe(
+    return this.http.delete<Demande>(`${API_URL}/demandes/${id}/justificatif`).pipe(
       tap(updated => {
-        this._demandes.update(list =>
-          list.map(d => d.id === id ? updated : d)
-        );
+        this._demandes.update(list => list.map(d => d.id === id ? updated : d));
       }),
       catchError((err: HttpErrorResponse) => throwError(() => err))
     );
@@ -342,8 +369,6 @@ export class DemandeService {
     return '';
   }
 
-  // L'employé peut-il déposer/modifier son justificatif ?
-  // Règle : demande APPROUVEE_RH + date de fin dépassée + RH n'a pas encore téléchargé
   peutGererJustificatif(d: Demande): boolean {
     if (d.statut !== 'APPROUVEE_RH') return false;
     const dateFin = new Date(d.dateFin);
@@ -351,7 +376,6 @@ export class DemandeService {
     return dateFin < aujourd;
   }
 
-  // Le RH peut-il télécharger le justificatif ?
   peutTelechargerJustificatif(d: Demande): boolean {
     return d.statut === 'APPROUVEE_RH' && !!d.justificatifPath;
   }

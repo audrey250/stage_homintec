@@ -1,4 +1,6 @@
-/* Avatar initiales */
+/* ============================================================
+   AVATAR
+   ============================================================ */
 .avatar-sm {
   width: 36px;
   height: 36px;
@@ -13,12 +15,18 @@
   flex-shrink: 0;
 }
 
+/* ============================================================
+   CARD PRINCIPALE
+   ============================================================ */
 .demandes-card {
   border: 1px solid #e6eaf2;
   border-radius: 14px;
   overflow: hidden;
 }
 
+/* ============================================================
+   FILTRES
+   ============================================================ */
 .filters-list {
   list-style: none;
   display: flex;
@@ -43,6 +51,8 @@
   display: inline-flex;
   align-items: center;
   transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
 }
 
 .filter-pill:hover {
@@ -74,7 +84,9 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive tables */
+/* ============================================================
+   TABLE
+   ============================================================ */
 .table-responsive {
   border-radius: 10px;
   overflow: hidden;
@@ -109,6 +121,10 @@
   vertical-align: middle;
 }
 
+.demandes-table tbody tr {
+  transition: background 0.15s ease;
+}
+
 .demandes-table tbody tr:hover {
   background: #fcfdff;
 }
@@ -122,6 +138,9 @@
   max-width: 230px;
 }
 
+/* ============================================================
+   BADGES
+   ============================================================ */
 .statut-badge {
   font-weight: 700;
   font-size: 0.72rem;
@@ -129,12 +148,35 @@
   padding: 0.35rem 0.6rem;
 }
 
-.btn-annuler {
-  padding: 0.18rem 0.52rem;
-  line-height: 1;
+/* ============================================================
+   ACTION BUTTONS (CARD STYLE)
+   ============================================================ */
+.btn-action-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Card styles for mobile */
+.btn-action {
+  border: 1px solid #e4e7ec;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   MOBILE CARD
+   ============================================================ */
 .card {
   border-radius: 8px;
 }
@@ -164,13 +206,13 @@
 }
 
 /* ============================================================
-   MODAL STYLES
+   MODAL
    ============================================================ */
-
 .modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -184,6 +226,7 @@
   border-radius: 16px;
   padding: 32px;
   width: 100%;
+  max-width: 600px;
   animation: slideUp 0.2s ease;
 }
 
@@ -205,7 +248,9 @@
   background: #e9ecef;
 }
 
-/* Type cards for demand form */
+/* ============================================================
+   TYPE CARDS
+   ============================================================ */
 .type-card {
   padding: 15px;
   border: 2px solid #e3e6f0;
@@ -227,14 +272,12 @@
   box-shadow: 0 4px 12px rgba(18, 71, 29, 0.15);
 }
 
-/* Animations */
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -246,4 +289,21 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+   .action-btn-group {
+  gap: 50px;
+}
+
+.action-btn-group .btn {
+  
+  padding: 6px 12px;
+
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: 0.2s;
+}
+
+.action-btn-group .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
