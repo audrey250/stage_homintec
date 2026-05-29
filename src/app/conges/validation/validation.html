@@ -1,6 +1,7 @@
 <!-- ============================================================
      validation.html
      Workflow : Responsable → Chef Département → RH
+     + Modal Vérifications RH (après APPROUVEE_RH)
      ============================================================ -->
 
 <div class="page-wrapper">
@@ -23,7 +24,7 @@
     </span>
   </div>
 
-  <!-- ===== RÈGLE DU WORKFLOW ===== -->
+  <!-- ===== WORKFLOW BANNER ===== -->
   <div class="alert workflow-banner d-flex align-items-center gap-3 py-2 mb-4"
        style="font-size:0.82rem;">
     <i class="fas fa-info-circle fa-lg workflow-icon flex-shrink-0"></i>
@@ -31,8 +32,8 @@
       <strong>Workflow :</strong>
       <strong>Responsable</strong> →
       <strong>Chef Département</strong> →
-      <strong>RH</strong>.
-      Chaque étape est bloquée jusqu'à la validation précédente.
+      <strong>RH</strong> →
+      <strong class="text-success">Vérifications RH + PDF</strong>.
     </div>
   </div>
 
@@ -47,9 +48,7 @@
   <!-- ===== SPINNER ===== -->
   <div *ngIf="demandeService.loading()" class="text-center py-5">
     <div class="spinner-border text-primary mb-2"></div>
-    <p class="text-muted mb-0" style="font-size:0.85rem">
-      Chargement des demandes...
-    </p>
+    <p class="text-muted mb-0" style="font-size:0.85rem">Chargement...</p>
   </div>
 
   <ng-container *ngIf="!demandeService.loading()">
@@ -58,31 +57,24 @@
     <div class="card border-0 shadow-sm mb-3 filters-card">
       <div class="card-header bg-white border-0 p-3">
         <ul class="filters-list mb-0">
-
           <li class="filter-item">
             <button class="filter-pill"
                     [class.active]="filtreActif() === 'en_attente'"
                     (click)="filtreActif.set('en_attente')">
               <i class="fas fa-clock me-1 text-warning"></i>
               En attente
-              <span class="filter-count ms-1">
-                {{ demandesEnAttente().length }}
-              </span>
+              <span class="filter-count ms-1">{{ demandesEnAttente().length }}</span>
             </button>
           </li>
-
           <li class="filter-item">
             <button class="filter-pill"
                     [class.active]="filtreActif() === 'traite'"
                     (click)="filtreActif.set('traite')">
               <i class="fas fa-history me-1 text-muted"></i>
               Historique
-              <span class="filter-count ms-1">
-                {{ demandesTraitees().length }}
-              </span>
+              <span class="filter-count ms-1">{{ demandesTraitees().length }}</span>
             </button>
           </li>
-
         </ul>
       </div>
     </div>
@@ -92,49 +84,37 @@
          =========================== -->
     <ng-container *ngIf="filtreActif() === 'en_attente'">
 
-      <!-- Aucune demande -->
       <div *ngIf="demandesEnAttente().length === 0"
            class="card border-0 shadow-sm">
         <div class="card-body text-center py-5 text-muted">
           <i class="fas fa-check-circle fa-3x text-success mb-3 d-block"></i>
-          <p class="fw-semibold mb-0">
-            Toutes les demandes ont été traitées !
-          </p>
+          <p class="fw-semibold mb-0">Toutes les demandes ont été traitées !</p>
         </div>
       </div>
 
-      <!-- Tableau -->
       <div *ngIf="demandesEnAttente().length > 0"
            class="card border-0 shadow-sm validation-card">
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 validation-table">
-
               <thead>
                 <tr>
                   <th>Employé</th>
                   <th>Type</th>
                   <th>Période</th>
                   <th>Étape actuelle</th>
-                 
-
                   <th class="text-center">Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 <tr *ngFor="let d of demandesEnAttente()">
 
                   <!-- Employé -->
                   <td>
                     <div class="d-flex align-items-center gap-2">
-                      <div class="avatar-sm">
-                        {{ initiales(d) }} 
-                      </div>
-                      <div>
-                        <div class="fw-semibold" style="font-size:0.85rem">
-                          {{ nomCompletEmploye(d) }}
-                        </div>
+                      <div class="avatar-sm">{{ initiales(d) }}</div>
+                      <div class="fw-semibold" style="font-size:0.85rem">
+                        {{ nomCompletEmploye(d) }}
                       </div>
                     </div>
                   </td>
@@ -143,22 +123,19 @@
                   <td style="font-size:0.83rem">
                     <i class="fas fa-fw me-1"
                        [ngClass]="{
-                         'fa-umbrella-beach text-primary': d.typeDemande === 'conge_annuel',
-                         'fa-clock text-warning':          d.typeDemande === 'permission',
-                
+                         'fa-umbrella-beach text-primary': d.typeDemande === 'CONGE' || d.typeDemande === 'conge_annuel',
+                         'fa-clock text-warning':          d.typeDemande === 'PERMISSION' || d.typeDemande === 'permission'
                        }">
                     </i>
                     {{ demandeService.libelleType(d.typeDemande) }}
                   </td>
 
                   <!-- Dates -->
-                  <td>
-                    <div style="font-size:0.82rem">
-                      {{ d.dateDebut }} → {{ d.dateFin }}
-                    </div>
+                  <td style="font-size:0.82rem">
+                    {{ d.dateDebut }} → {{ d.dateFin }}
                   </td>
 
-                  <!-- Étape actuelle avec workflow visuel -->
+                  <!-- Étape + workflow visuel -->
                   <td>
                     <div class="d-flex align-items-center gap-1 flex-wrap">
 
@@ -175,8 +152,7 @@
                         <span>Resp.</span>
                       </div>
 
-                      <i class="fas fa-chevron-right text-muted"
-                         style="font-size:0.6rem"></i>
+                      <i class="fas fa-chevron-right text-muted" style="font-size:0.6rem"></i>
 
                       <!-- Étape 2 : Chef Département -->
                       <div class="etape-badge"
@@ -190,11 +166,10 @@
                            [class.fa-clock]="d.statut === 'APPROUVEE_RESPONSABLE'"
                            [class.fa-minus]="d.statut === 'EN_ATTENTE'">
                         </i>
-                        <span>Chef Dept</span>
+                        <span>Chef</span>
                       </div>
 
-                      <i class="fas fa-chevron-right text-muted"
-                         style="font-size:0.6rem"></i>
+                      <i class="fas fa-chevron-right text-muted" style="font-size:0.6rem"></i>
 
                       <!-- Étape 3 : RH -->
                       <div class="etape-badge"
@@ -213,32 +188,25 @@
 
                     </div>
 
-                    <!-- Étape courante lisible -->
                     <div class="text-muted mt-1" style="font-size:0.72rem">
                       {{ etapeCourante(d) }}
                     </div>
-
-                    <!-- Blocage -->
                     <div *ngIf="!peutAgir(d)"
                          class="text-muted mt-1"
                          style="font-size:0.72rem; font-style:italic">
-                      <i class="fas fa-lock me-1"></i>
-                      {{ raisonBlocage(d) }}
+                      <i class="fas fa-lock me-1"></i>{{ raisonBlocage(d) }}
                     </div>
                   </td>
-                
 
-                
                   <!-- Actions -->
                   <td class="text-center">
                     <ng-container *ngIf="peutAgir(d)">
-                      <div class="d-flex justify-content-center action-buttons">
-                        <button class="btn btn-success btn-sm btn-approve btn-action"
+                      <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-success btn-sm btn-action"
                                 (click)="ouvrirAction(d, 'valide')">
                           <i class="fas fa-check me-1"></i>
                         </button>
-                        <br> <br>
-                        <button class="btn btn-danger btn-sm btn-reject btn-action"
+                        <button class="btn btn-danger btn-sm btn-action"
                                 (click)="ouvrirAction(d, 'refuse')">
                           <i class="fas fa-times me-1"></i>
                         </button>
@@ -280,7 +248,6 @@
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 validation-table">
-
               <thead>
                 <tr>
                   <th>Employé</th>
@@ -288,15 +255,18 @@
                   <th>Période</th>
                   <th>Statut final</th>
                   <th>Commentaire</th>
+                  <th *ngIf="estRH" class="text-center">Vérifications</th>
                 </tr>
               </thead>
-
               <tbody>
                 <tr *ngFor="let d of demandesTraitees()">
 
                   <td>
-                    <div class="fw-semibold" style="font-size:0.85rem">
-                      {{ nomCompletEmploye(d) }}
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-sm">{{ initiales(d) }}</div>
+                      <div class="fw-semibold" style="font-size:0.85rem">
+                        {{ nomCompletEmploye(d) }}
+                      </div>
                     </div>
                   </td>
 
@@ -318,6 +288,17 @@
                     {{ dernierCommentaire(d) }}
                   </td>
 
+                  <td *ngIf="estRH" class="text-center">
+                    <button *ngIf="peutFaireVerificationsRH(d)"
+                            class="btn btn-sm btn-verif-rh"
+                            (click)="ouvrirVerificationsRH(d)"
+                            title="Ouvrir les vérifications RH">
+                      <i class="fas fa-eye me-1"></i>
+
+                    </button>
+                    <span *ngIf="!peutFaireVerificationsRH(d)" class="text-muted small">—</span>
+                  </td>
+
                 </tr>
               </tbody>
             </table>
@@ -331,14 +312,15 @@
 
 </div>
 
-<!-- ===== MODAL CONFIRMATION ===== -->
+<!-- ============================================================
+     MODAL WORKFLOW (approuver / rejeter)
+     ============================================================ -->
 <div *ngIf="demandeSelectionnee()"
      class="modal-overlay"
      (click)="fermerModal()">
 
   <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <!-- En-tête -->
     <div class="modal-card-header"
          [class.header-success]="modeAction() === 'valide'"
          [class.header-danger]="modeAction() === 'refuse'">
@@ -353,7 +335,6 @@
 
     <div class="modal-card-body">
 
-      <!-- Résumé -->
       <div class="bg-light rounded p-3 mb-3">
         <div class="fw-semibold mb-1">
           {{ demandeSelectionnee()?.utilisateur?.prenom ?? demandeSelectionnee()?.prenom }}
@@ -361,46 +342,38 @@
         </div>
         <div class="text-muted" style="font-size:0.83rem">
           {{ demandeService.libelleType(demandeSelectionnee()?.typeDemande ?? '') }}
-          · {{ demandeSelectionnee()?.dateDebut }}
-          → {{ demandeSelectionnee()?.dateFin }}
+          · {{ demandeSelectionnee()?.dateDebut }} → {{ demandeSelectionnee()?.dateFin }}
         </div>
         <div class="text-muted mt-1" style="font-size:0.8rem; font-style:italic">
           "{{ demandeSelectionnee()?.motif }}"
         </div>
       </div>
 
-      <!-- Erreur -->
       <div *ngIf="erreurAction()"
            class="alert alert-danger py-2 mb-3"
            style="font-size:0.85rem">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        {{ erreurAction() }}
+        <i class="fas fa-exclamation-circle me-2"></i>{{ erreurAction() }}
       </div>
 
-      <!-- Commentaire -->
       <div class="mb-3">
         <label class="form-label fw-semibold" style="font-size:0.88rem">
           Commentaire
           <span *ngIf="modeAction() === 'refuse'" class="text-danger">*</span>
           <span *ngIf="modeAction() === 'valide'"
-                class="text-muted fw-normal"
-                style="font-size:0.78rem">
+                class="text-muted fw-normal" style="font-size:0.78rem">
             (optionnel)
           </span>
         </label>
-        <textarea
-          class="form-control"
-          rows="3"
-          [placeholder]="modeAction() === 'valide'
-            ? 'Commentaire optionnel...'
-            : 'Raison du rejet (obligatoire)...'"
-          [ngModel]="commentaireAction()"
-          (ngModelChange)="commentaireAction.set($event)"
-          name="commentaire">
+        <textarea class="form-control" rows="3"
+                  [placeholder]="modeAction() === 'valide'
+                    ? 'Commentaire optionnel...'
+                    : 'Raison du rejet (obligatoire)...'"
+                  [ngModel]="commentaireAction()"
+                  (ngModelChange)="commentaireAction.set($event)"
+                  name="commentaire">
         </textarea>
       </div>
 
-      <!-- Boutons -->
       <div class="d-flex gap-2 justify-content-end">
         <button class="btn btn-outline-secondary"
                 (click)="fermerModal()"
@@ -412,18 +385,277 @@
                 [class.btn-danger]="modeAction() === 'refuse'"
                 (click)="confirmerAction()"
                 [disabled]="traitement()">
-          <span *ngIf="traitement()"
-                class="spinner-border spinner-border-sm me-2">
-          </span>
+          <span *ngIf="traitement()" class="spinner-border spinner-border-sm me-2"></span>
           <i *ngIf="!traitement()" class="fas me-2"
              [class.fa-check]="modeAction() === 'valide'"
              [class.fa-times]="modeAction() === 'refuse'">
           </i>
           {{ traitement()
              ? 'En cours...'
-             : (modeAction() === 'valide'
-                ? 'Confirmer l\'approbation'
-                : 'Confirmer le rejet') }}
+             : (modeAction() === 'valide' ? 'Confirmer l\'approbation' : 'Confirmer le rejet') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL VÉRIFICATIONS RH
+     Affiché après APPROUVEE_RH, uniquement pour le rôle RH
+     ============================================================ -->
+<div *ngIf="modalVerifOuvert()"
+     class="modal-overlay"
+     (click)="fermerVerificationsRH()">
+
+  <div class="modal-card modal-verif-rh"
+       style="max-width:900px; max-height:94vh; overflow-y:auto"
+       (click)="$event.stopPropagation()">
+
+    <!-- ── En-tête vert ── -->
+    <div class="verif-header">
+      <div class="d-flex align-items-center gap-3">
+        <div class="verif-header-icon">
+          <i class="fas fa-clipboard-check fa-lg"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0">Validation Et Actions</h5>
+          <p class="text-muted mb-0" style="font-size:0.82rem">
+            Vérifications RH avant génération du document final
+          </p>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="fermerVerificationsRH()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="verif-body">
+
+      <!-- Validateur -->
+      <div class="verif-validateur mb-3">
+        <i class="fas fa-user-tie me-2 text-muted"></i>
+        <span class="text-muted" style="font-size:0.88rem">Validé par :</span>
+        <strong class="ms-2">{{ nomValidateur() }}</strong>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           BLOC DEMANDE — LECTURE SEULE
+           ══════════════════════════════════════════ -->
+      <div class="demande-readonly-card mb-4" *ngIf="demandeVerif() as d">
+
+        <!-- Titre du bloc -->
+        <div class="demande-readonly-header">
+          <i class="fas fa-file-alt me-2"></i>
+          <span>Détail de la demande</span>
+          <span class="badge badge-success ms-auto">APPROUVÉE RH ✅</span>
+        </div>
+
+        <!-- Ligne 1 : Employé / Type / Durée -->
+        <div class="demande-readonly-grid">
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Employé</div>
+            <div class="readonly-value d-flex align-items-center gap-2">
+              <div class="avatar-sm">{{ initiales(d) }}</div>
+              {{ nomCompletEmploye(d) }}
+            </div>
+          </div>
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Type de demande</div>
+            <div class="readonly-value">
+              <i class="fas fa-fw me-1"
+                 [ngClass]="{
+                   'fa-umbrella-beach text-primary': d.typeDemande === 'CONGE' || d.typeDemande === 'conge_annuel',
+                   'fa-clock text-warning':          d.typeDemande === 'PERMISSION' || d.typeDemande === 'permission'
+                 }"></i>
+              {{ demandeService.libelleType(d.typeDemande) }}
+            </div>
+          </div>
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Durée</div>
+            <div class="readonly-value">
+              <i class="fas fa-calendar-alt me-1 text-muted"></i>
+              <strong>{{ demandeService.calculerJours(d.dateDebut, d.dateFin) }} jour(s)</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Ligne 2 : Date début / Date fin -->
+        <div class="demande-readonly-grid demande-readonly-grid--2col">
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Date de début</div>
+            <div class="readonly-value">{{ d.dateDebut }}</div>
+          </div>
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Date de fin</div>
+            <div class="readonly-value">{{ d.dateFin }}</div>
+          </div>
+
+        </div>
+
+        <!-- Ligne 3 : Motif / Poste -->
+        <div class="demande-readonly-grid demande-readonly-grid--2col">
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Motif</div>
+            <div class="readonly-value fst-italic">"{{ d.motif || '—' }}"</div>
+          </div>
+
+          <div class="demande-readonly-field">
+            <div class="readonly-label">Poste / Service</div>
+            <!-- ✅ CORRIGÉ : on utilise uniquement les champs définis dans l'interface Demande -->
+            <div class="readonly-value">
+              {{ d.utilisateur?.email || '—' }}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <!-- /BLOC DEMANDE -->
+
+      <!-- Erreur -->
+      <div *ngIf="verifErreur()"
+           class="alert alert-danger py-2 mb-4"
+           style="font-size:0.85rem">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ verifErreur() }}
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           SECTION VÉRIFICATIONS RH (fond vert)
+           ══════════════════════════════════════════ -->
+      <div class="verif-section mb-4">
+
+        <div class="verif-section-header">
+         <i class="fas fa-eye me-2"></i>
+                 Informations RH
+</div>
+
+        <div class="verif-section-body">
+          <div class="row g-4">
+
+            <!-- Colonne gauche : vérifications obligatoires -->
+            <div class="col-md-6">
+              <h6 class="verif-col-title">Vérifications obligatoires</h6>
+
+              <div class="mb-3">
+                <label class="form-label verif-label">
+                  Nom du remplaçant <span class="text-muted fw-normal">(optionnel)</span>
+                </label>
+                <input type="text"
+                       class="form-control verif-input"
+                       placeholder="Saisissez le nom du remplaçant..."
+                       [ngModel]="verifData().nomRemplacant"
+                       (ngModelChange)="updateVerif('nomRemplacant', $event)" />
+              </div>
+
+              <div class="verif-checks">
+                <div class="form-check verif-check-item mb-2">
+                  <input class="form-check-input" type="checkbox" id="absenceDroitConges"
+                         [ngModel]="verifData().absenceDroitConges"
+                         (ngModelChange)="updateVerif('absenceDroitConges', $event)" />
+                  <label class="form-check-label verif-check-label" for="absenceDroitConges">
+                    Absence à déduire du droit aux congés
+                  </label>
+                </div>
+                <div class="form-check verif-check-item mb-2">
+                  <input class="form-check-input" type="checkbox" id="absenceDeduitePaie"
+                         [ngModel]="verifData().absenceDeduitePaie"
+                         (ngModelChange)="updateVerif('absenceDeduitePaie', $event)" />
+                  <label class="form-check-label verif-check-label" for="absenceDeduitePaie">
+                    Absence à déduire de la paie
+                  </label>
+                </div>
+                <div class="form-check verif-check-item">
+                  <input class="form-check-input" type="checkbox" id="demandeReglementaire"
+                         [ngModel]="verifData().demandeReglementaire"
+                         (ngModelChange)="updateVerif('demandeReglementaire', $event)" />
+                  <label class="form-check-label verif-check-label" for="demandeReglementaire">
+                    Demande réglementaire
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Colonne droite : informations complémentaires -->
+            <div class="col-md-6">
+              <h6 class="verif-col-title">Informations complémentaires</h6>
+
+              <div class="mb-3">
+                <label class="form-label verif-label">
+                  Début de collaboration <span class="text-muted fw-normal">(optionnel)</span>
+                </label>
+                <input type="date" class="form-control verif-input"
+                       [ngModel]="verifData().debutCollaboration"
+                       (ngModelChange)="updateVerif('debutCollaboration', $event)" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label verif-label">
+                  Nombre de jours consommés <span class="text-muted fw-normal">(optionnel)</span>
+                </label>
+                <input type="number" class="form-control verif-input" min="0" placeholder="Ex : 5"
+                       [ngModel]="verifData().nombreJoursConsommes"
+                       (ngModelChange)="updateVerif('nombreJoursConsommes', $event)" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label verif-label">
+                  Date des derniers congés <span class="text-muted fw-normal">(optionnel)</span>
+                </label>
+                <input type="date" class="form-control verif-input"
+                       [ngModel]="verifData().dateDerniersConges"
+                       (ngModelChange)="updateVerif('dateDerniersConges', $event)" />
+              </div>
+              <div class="mb-0">
+                <label class="form-label verif-label">
+                  Nombre de jours disponibles <span class="text-muted fw-normal">(optionnel)</span>
+                </label>
+                <input type="number" class="form-control verif-input" min="0" placeholder="Ex : 25"
+                       [ngModel]="verifData().nombreJoursDisponibles"
+                       (ngModelChange)="updateVerif('nombreJoursDisponibles', $event)" />
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Observation pleine largeur -->
+          <div class="mt-4">
+            <label class="form-label verif-label">
+              Observation <span class="text-muted fw-normal">(optionnelle)</span>
+            </label>
+            <textarea class="form-control verif-input" rows="3"
+                      placeholder="Remarques ou informations complémentaires..."
+                      [ngModel]="verifData().observation"
+                      (ngModelChange)="updateVerif('observation', $event)">
+            </textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Boutons finaux ── -->
+      <div class="d-flex gap-3 align-items-center">
+        <button class="btn btn-verif-valider"
+                (click)="validerEtGenererPDF()"
+                [disabled]="verifLoading()">
+          <span *ngIf="verifLoading()" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!verifLoading()" class="fas fa-file-pdf me-2"></i>
+          {{ verifLoading() ? 'Génération en cours...' : 'Valider et Générer PDF' }}
+        </button>
+        <button class="btn btn-verif-rejeter"
+                (click)="rejeterDepuisVerif()"
+                [disabled]="verifLoading()">
+          <i class="fas fa-times me-2"></i>Rejeter
+        </button>
+        <button class="btn btn-outline-secondary ms-auto"
+                (click)="fermerVerificationsRH()"
+                [disabled]="verifLoading()">
+          Annuler
         </button>
       </div>
 

@@ -1,6 +1,6 @@
 // ============================================================
 // src/app/messagerie/messagerie.ts
-// VERSION SPRING BOOT
+// VERSION SPRING BOOT — avec entité Conversation
 // ============================================================
 
 import {
@@ -13,7 +13,8 @@ import { AuthService } from '../services/auth.service';
 import {
   MessagerieService,
   Conversation,
-  NouveauMessage
+  NouveauMessage,
+  UtilisateurSimple
 } from '../services/messagerie.service';
 
 @Component({
@@ -27,30 +28,37 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
-  conversationActive = signal<Conversation | null>(null);
-  nouveauMessage     = '';
-  erreurEnvoi        = signal('');
-  chargementEnvoi    = signal(false);
+  conversationActive   = signal<Conversation | null>(null);
+  nouveauMessage       = '';
+  erreurEnvoi          = signal('');
+  chargementEnvoi      = signal(false);
+
+  // ---- Modal nouvelle conversation ----
+  modalNouvelleConvOuvert = signal(false);
+  chargementUtilisateurs  = signal(false);
+  erreurNouvelleConv      = signal('');
+  chargementCreation      = signal(false);
+  utilisateurRecherche    = signal('');
+  utilisateurSelectionne  = signal<UtilisateurSimple | null>(null);
+
+  // ---- Suppression ----
+  suppressionEnCours = signal(false);
 
   private doitScroller = false;
 
   constructor(
-    public authService:      AuthService,
+    public authService:       AuthService,
     public messagerieService: MessagerieService
   ) {}
 
-  // ---- Au chargement : récupère les conversations depuis Spring Boot ----
   ngOnInit(): void {
     this.messagerieService.chargerConversations().subscribe({
       next: (convs) => {
-        // Si une seule conversation → l'ouvrir automatiquement
         if (convs.length === 1) {
           this.ouvrirConversation(convs[0]);
         }
       },
-      error: (err) => {
-        console.error('Erreur chargement conversations', err);
-      }
+      error: (err) => console.error('Erreur chargement conversations', err)
     });
   }
 
@@ -61,38 +69,34 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  // ---- Ouvrir une conversation ----
+  // ============================================================
+  // OUVRIR UNE CONVERSATION EXISTANTE
+  // ============================================================
   ouvrirConversation(conv: Conversation): void {
-    // Afficher immédiatement la conversation dans l'interface
     this.conversationActive.set(conv);
     this.erreurEnvoi.set('');
 
-    // Charger les messages depuis Spring Boot
-    this.messagerieService
-      .chargerMessages(conv.interlocuteurId)
-      .subscribe({
-        next: () => {
-          // Récupérer la conversation mise à jour depuis le cache
-          const updated = this.messagerieService
-            .conversations()
-            .find(c => c.interlocuteurId === conv.interlocuteurId);
+    this.messagerieService.chargerMessages(conv.idConversation).subscribe({
+      next: () => {
+        // Récupérer la conversation mise à jour depuis le cache
+        const updated = this.messagerieService
+          .conversations()
+          .find(c => c.idConversation === conv.idConversation);
 
-          if (updated) this.conversationActive.set(updated);
+        if (updated) this.conversationActive.set(updated);
 
-          // Marquer les messages comme lus
-          this.messagerieService
-            .marquerLus(conv.interlocuteurId)
-            .subscribe();
+        // Marquer comme lus
+        this.messagerieService.marquerLus(conv.idConversation).subscribe();
 
-          this.doitScroller = true;
-        },
-        error: (err) => {
-          console.error('Erreur chargement messages', err);
-        }
-      });
+        this.doitScroller = true;
+      },
+      error: (err) => console.error('Erreur chargement messages', err)
+    });
   }
 
-  // ---- Envoyer un message ----
+  // ============================================================
+  // ENVOYER UN MESSAGE DANS LA CONVERSATION ACTIVE
+  // ============================================================
   envoyer(): void {
     const conv = this.conversationActive();
     const user = this.authService.currentUser();
@@ -102,22 +106,20 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.chargementEnvoi.set(true);
     this.erreurEnvoi.set('');
 
-    // Prépare le corps de la requête POST
     const payload: NouveauMessage = {
+      conversationId: conv.idConversation,
       destinataireId: conv.interlocuteurId,
       contenu:        this.nouveauMessage.trim()
     };
 
     this.messagerieService.envoyer(payload).subscribe({
       next: () => {
-        // Vide le champ après envoi réussi
         this.nouveauMessage = '';
         this.chargementEnvoi.set(false);
 
-        // Met à jour la conversation affichée avec le nouveau message
         const updated = this.messagerieService
           .conversations()
-          .find(c => c.interlocuteurId === conv.interlocuteurId);
+          .find(c => c.idConversation === conv.idConversation);
 
         if (updated) this.conversationActive.set(updated);
 
@@ -131,7 +133,120 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  // ---- Scroll automatique en bas ----
+  // ============================================================
+  // MODAL NOUVELLE CONVERSATION
+  // ============================================================
+  ouvrirModalNouvelleConv(): void {
+    this.utilisateurRecherche.set('');
+    this.utilisateurSelectionne.set(null);
+    this.erreurNouvelleConv.set('');
+    this.modalNouvelleConvOuvert.set(true);
+    this.chargementUtilisateurs.set(true);
+
+    // Charger la liste des utilisateurs disponibles
+    this.messagerieService.chargerUtilisateurs().subscribe({
+      next: () => this.chargementUtilisateurs.set(false),
+      error: () => {
+        this.chargementUtilisateurs.set(false);
+        this.erreurNouvelleConv.set('Impossible de charger les utilisateurs.');
+      }
+    });
+  }
+
+  fermerModalNouvelleConv(): void {
+    this.modalNouvelleConvOuvert.set(false);
+    this.utilisateurSelectionne.set(null);
+    this.erreurNouvelleConv.set('');
+  }
+
+  selectionnerUtilisateur(u: UtilisateurSimple): void {
+    this.utilisateurSelectionne.set(u);
+    this.erreurNouvelleConv.set('');
+  }
+
+  // Crée la conversation via Spring Boot puis l'ouvre
+  creerConversation(): void {
+    const destinataire = this.utilisateurSelectionne();
+    if (!destinataire) {
+      this.erreurNouvelleConv.set('Veuillez sélectionner un destinataire.');
+      return;
+    }
+
+    // Vérifier si une conversation avec cet utilisateur existe déjà
+    const existante = this.messagerieService
+      .conversations()
+      .find(c => c.interlocuteurId === destinataire.id);
+
+    if (existante) {
+      // Ouvrir la conversation existante directement
+      this.fermerModalNouvelleConv();
+      this.ouvrirConversation(existante);
+      return;
+    }
+
+    this.chargementCreation.set(true);
+    this.erreurNouvelleConv.set('');
+
+    this.messagerieService
+      .creerConversation({ interlocuteurId: destinataire.id })
+      .subscribe({
+        next: (conv) => {
+          this.chargementCreation.set(false);
+          this.fermerModalNouvelleConv();
+          // Ouvrir immédiatement la nouvelle conversation
+          this.ouvrirConversation(conv);
+        },
+        error: (err) => {
+          this.chargementCreation.set(false);
+          this.erreurNouvelleConv.set(
+            err.error?.message || 'Impossible de créer la conversation.'
+          );
+        }
+      });
+  }
+
+  // ============================================================
+  // SUPPRIMER LA CONVERSATION ACTIVE
+  // ============================================================
+  supprimerConversation(conv: Conversation): void {
+    if (!confirm(`Supprimer la conversation avec ${conv.interlocuteurPrenom} ${conv.interlocuteurNom} ?`))
+      return;
+
+    this.suppressionEnCours.set(true);
+
+    this.messagerieService
+      .supprimerConversation(conv.idConversation)
+      .subscribe({
+        next: () => {
+          this.suppressionEnCours.set(false);
+          // Si c'était la conversation active, la fermer
+          if (this.conversationActive()?.idConversation === conv.idConversation) {
+            this.conversationActive.set(null);
+          }
+        },
+        error: (err) => {
+          this.suppressionEnCours.set(false);
+          console.error('Erreur suppression conversation', err);
+        }
+      });
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  // Filtrer les utilisateurs selon la recherche
+  utilisateursFiltres(): UtilisateurSimple[] {
+    const recherche = this.utilisateurRecherche().toLowerCase().trim();
+    const moi = this.authService.currentUser()?.id;
+    return this.messagerieService.utilisateurs().filter(u => {
+      if (u.id === moi) return false; // exclure soi-même
+      if (!recherche) return true;
+      const nomComplet = `${u.prenom} ${u.nom}`.toLowerCase();
+      return nomComplet.includes(recherche);
+    });
+  }
+
   private scrollerEnBas(): void {
     try {
       const el = this.messagesContainer?.nativeElement;
@@ -139,23 +254,30 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     } catch {}
   }
 
-  // ---- Formater la date ISO en HH:MM ----
   formaterDate(date: string): string {
     try {
       return new Date(date).toLocaleTimeString('fr-FR', {
         hour: '2-digit', minute: '2-digit'
       });
-    } catch {
-      return date;
-    }
+    } catch { return date; }
   }
 
-  // ---- Initiales pour l'avatar ----
+  formaterDateConv(date: string): string {
+    if (!date) return '';
+    try {
+      const d = new Date(date);
+      const auj = new Date();
+      if (d.toDateString() === auj.toDateString()) {
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    } catch { return date; }
+  }
+
   initiales(nom: string, prenom: string): string {
     return `${prenom?.charAt(0) ?? ''}${nom?.charAt(0) ?? ''}`.toUpperCase();
   }
 
-  // ---- Est-ce un message envoyé par moi ? ----
   estMonMessage(expediteurId: number): boolean {
     return expediteurId === this.authService.currentUser()?.id;
   }
