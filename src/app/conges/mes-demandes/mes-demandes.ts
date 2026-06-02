@@ -57,7 +57,7 @@ export class MesDemandesComponent implements OnInit {
 
  types = [
   { value: 'PERMISSION',    label: 'Permission',      icon: '🕐' },
-  { value: 'CONGE_MALADIE', label: 'Congé maladie',  icon: '❤️' },
+  { value: 'CONGE_MALADIE', label: 'Congé ',  icon: '' },
 ];
 
   dateMin = new Date(
