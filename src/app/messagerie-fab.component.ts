@@ -1,4 +1,9 @@
-// messagerie-fab.component.ts
+// src/app/messagerie-fab.component.ts
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { MessagerieService } from './services/messagerie.service';
+
 @Component({
   selector: 'app-messagerie-fab',
   standalone: true,
@@ -30,10 +35,14 @@
       text-decoration: none;
       transition: transform .15s, box-shadow .15s;
     }
-    .fab-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(78,115,223,.55); }
+    .fab-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 20px rgba(78,115,223,.55);
+    }
     .fab-badge {
       position: absolute;
-      top: -4px; right: -4px;
+      top: -4px;
+      right: -4px;
       background: #e74c3c;
       color: white;
       border-radius: 10px;
