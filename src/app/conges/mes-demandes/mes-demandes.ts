@@ -55,10 +55,10 @@ export class MesDemandesComponent implements OnInit {
   // Mode : 'depot' (premier dépôt) ou 'remplacement' (modifier)
   modeJustif = signal<'depot' | 'remplacement'>('depot');
 
-  types = [
-    { value: 'CONGE',      label: 'Congé',      icone: 'fa-umbrella-beach', couleur: 'text-primary' },
-    { value: 'PERMISSION', label: 'Permission',  icone: 'fa-clock',          couleur: 'text-warning' },
-  ];
+ types = [
+  { value: 'PERMISSION',    label: 'Permission',      icon: '🕐' },
+  { value: 'CONGE_MALADIE', label: 'Congé maladie',  icon: '❤️' },
+];
 
   dateMin = new Date(
   Date.now() - new Date().getTimezoneOffset() * 60000

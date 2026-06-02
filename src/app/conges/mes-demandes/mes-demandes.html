@@ -403,93 +403,116 @@
        style="max-width:700px; max-height:90vh; overflow-y:auto"
        (click)="$event.stopPropagation()">
 
+    <!-- En-tête -->
     <div class="d-flex align-items-center justify-content-between mb-4">
       <h5 class="fw-bold mb-0">
-        <i class="fas fa-file-alt text-primary me-2"></i>Nouvelle demande
+        <i class="fas fa-file-alt me-2" style="color:#12471d"></i>Nouvelle demande
       </h5>
       <button class="btn-close-modal" (click)="fermerModal()">
         <i class="fas fa-times"></i>
       </button>
     </div>
 
+    <!-- Erreur -->
     <div *ngIf="formErreur()"
          class="alert alert-danger py-2 mb-3" style="font-size:0.85rem">
       <i class="fas fa-exclamation-circle me-2"></i>{{ formErreur() }}
     </div>
 
-    <!-- Type -->
+    <!-- Type de demande -->
     <div class="mb-4">
-  <label class="form-label fw-semibold" style="font-size:0.88rem">
-    Type <span class="text-danger">*</span>
-  </label>
-  <select
-    class="form-select"
-    [ngModel]="formData().type"
-    (ngModelChange)="updateField('type', $event)">
-        <option value="" disabled selected>Choisir un type</option>
-    <option *ngFor="let type of types" [value]="type.value">{{ type.label }}</option>
+      <label class="form-label fw-semibold" style="font-size:0.88rem">
+        Type de demande <span class="text-danger">*</span>
+      </label>
+      <div class="type-cards-grid">
+        <label
+          *ngFor="let type of types"
+          [for]="'type-' + type.value"
+          class="type-card"
+          [class.selected]="modifData().typeDemande === type.value">
 
-  </select>
-</div>
+          <input
+            type="radio"
+            [id]="'type-' + type.value"
+            [value]="type.value"
+            [ngModel]="modifData().typeDemande"
+            (ngModelChange)="updateModifField('typeDemande', $event)"
+            name="typeDemande"
+            hidden>
+
+          <span class="type-icon">{{ type.icon }}</span>
+          <span class="type-label">{{ type.label }}</span>
+        </label>
+      </div>
+    </div>
 
     <!-- Dates -->
     <div class="row g-3 mb-3">
-  <div class="col-md-6">
-    <label class="form-label fw-semibold" style="font-size:0.88rem">
-      Date début <span class="text-danger">*</span>
-    </label>
-    <input
-      type="datetime-local"
-      class="form-control"
-      [min]="dateMin"
-      [ngModel]="formData().dateDebut"
-      (ngModelChange)="updateField('dateDebut', $event)" />
-  </div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date de début <span class="text-danger">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-control"
+          [min]="dateMin"
+          [ngModel]="formData().dateDebut"
+          (ngModelChange)="updateField('dateDebut', $event)" />
+      </div>
 
-  <div class="col-md-6">
-    <label class="form-label fw-semibold" style="font-size:0.88rem">
-      Date fin <span class="text-danger">*</span>
-    </label>
-    <input
-      type="datetime-local"
-      class="form-control"
-      [min]="formData().dateDebut || dateMin"
-      [ngModel]="formData().dateFin"
-      (ngModelChange)="updateField('dateFin', $event)" />
-  </div>
-</div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold" style="font-size:0.88rem">
+          Date de fin <span class="text-danger">*</span>
+        </label>
+        <input
+          type="date"
+          class="form-control"
+          [min]="formData().dateDebut || dateMin"
+          [ngModel]="formData().dateFin"
+          (ngModelChange)="updateField('dateFin', $event)" />
+      </div>
+    </div>
 
-<div
-  class="alert alert-info py-2 mb-3"
-  *ngIf="nombreJours() > 0"
-  style="font-size:0.85rem">
-  <i class="fas fa-calendar-check me-2"></i>
-  <strong>{{ nombreJours() }}</strong> jour(s)
-</div>
+    <!-- Durée calculée -->
+    <div class="alert alert-info py-2 mb-3"
+         *ngIf="nombreJours() > 0"
+         style="font-size:0.85rem">
+      <i class="fas fa-calendar-check me-2"></i>
+      Durée : <strong>{{ nombreJours() }}</strong> jour(s)
+    </div>
 
     <!-- Motif -->
     <div class="mb-4">
       <label class="form-label fw-semibold" style="font-size:0.88rem">
         Motif <span class="text-danger">*</span>
       </label>
-      <textarea class="form-control" rows="3"
-                placeholder="Décrivez le motif..."
-                [ngModel]="formData().motif"
-                (ngModelChange)="updateField('motif', $event)"
-                maxlength="500"></textarea>
+      <textarea
+        class="form-control"
+        rows="3"
+        placeholder="Décrivez brièvement le motif de votre demande..."
+        [ngModel]="formData().motif"
+        (ngModelChange)="updateField('motif', $event)"
+        maxlength="500">
+      </textarea>
       <div class="text-muted text-end mt-1" style="font-size:0.78rem">
         {{ formData().motif.length }}/500
       </div>
     </div>
 
+    <!-- Actions -->
     <div class="d-flex gap-2 justify-content-end">
-      <button class="btn btn-outline-secondary" (click)="fermerModal()" [disabled]="formLoading()">
-        Annuler
+      <button class="btn btn-outline-secondary"
+              (click)="fermerModal()"
+              [disabled]="formLoading()">
+        <i class="fas fa-rotate-left me-1"></i> Réinitialiser
       </button>
-      <button class="btn btn-primary" (click)="soumettre()" [disabled]="formLoading()">
+      <button class="btn btn-primary"
+              (click)="soumettre()"
+              [disabled]="formLoading()"
+              style="background:#12471d; border-color:#12471d">
         <span *ngIf="formLoading()" class="spinner-border spinner-border-sm me-2"></span>
-        <i *ngIf="!formLoading()" class="fas fa-save me-2"></i>
-        {{ formLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+        <i *ngIf="!formLoading()" class="fas fa-paper-plane me-2"></i>
+        {{ formLoading() ? 'Envoi...' : 'Envoyer la demande' }}
       </button>
     </div>
 
@@ -524,18 +547,26 @@
     Type <span class="text-danger">*</span>
   </label>
 
-  <select
-    class="form-select"
-    [ngModel]="modifData().typeDemande"
-    (ngModelChange)="updateModifField('typeDemande', $event)">
+  <div class="d-flex flex-wrap gap-3">
+  <div 
+    *ngFor="let type of types"
+    class="form-check">
+    
+    <input
+      class="form-check-input"
+      type="radio"
+      [id]="'type-' + type.value"
+      [value]="type.value"
+      [ngModel]="modifData().typeDemande"
+      (ngModelChange)="updateModifField('typeDemande', $event)"
+      name="typeDemande">
 
-    <option value="" disabled>Choisir un type</option>
-
-    <option *ngFor="let type of types" [value]="type.value">
+    <label class="form-check-label" [for]="'type-' + type.value">
       {{ type.label }}
-    </option>
+    </label>
 
-  </select>
+  </div>
+</div>
 </div>
 
     <div class="row g-3 mb-3">

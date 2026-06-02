@@ -73,7 +73,7 @@ export class LoginComponent {
 
         if (err.status === 0) {
           this.errorMessage.set(
-            'Serveur inaccessible. Vérifiez que le backend est démarré.'
+            'Service indisponible.'
           );
 
         } else if (err.status === 401) {
@@ -82,7 +82,7 @@ export class LoginComponent {
         } else if (err.status === 403) {
           this.errorMessage.set(
             err.error?.message ||
-            'Accès refusé. Vérifiez la configuration API ou vos droits.'
+            'Accès refusé!!'
           );
 
         } else {

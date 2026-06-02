@@ -249,29 +249,56 @@
 }
 
 /* ============================================================
-   TYPE CARDS
+   TYPE CARDS — GRILLE
    ============================================================ */
+.type-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
 .type-card {
-  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 12px;
   border: 2px solid #e3e6f0;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
+  background: #fff;
+  min-height: 100px;
 }
 
 .type-card:hover {
   border-color: #12471d;
-  box-shadow: 0 2px 8px rgba(18, 71, 29, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(18, 71, 29, 0.12);
+  transform: translateY(-3px);
 }
 
 .type-card.selected {
   border-color: #12471d;
   background: rgba(18, 71, 29, 0.05);
-  box-shadow: 0 4px 12px rgba(18, 71, 29, 0.15);
+  box-shadow: 0 4px 16px rgba(18, 71, 29, 0.18);
 }
 
+.type-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.type-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #344054;
+}
+
+.type-card.selected .type-label {
+  color: #12471d;
+}
 /* ============================================================
    ANIMATIONS
    ============================================================ */

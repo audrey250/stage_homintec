@@ -65,7 +65,7 @@
              (click)="ouvrirConversation(conv)">
 
           <div class="conv-avatar">
-            {{ initiales(conv.interlocuteurNom, conv.interlocuteurPrenom) }}
+            {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
             <span *ngIf="conv.nonLus > 0" class="unread-badge">
               {{ conv.nonLus }}
             </span>
@@ -74,16 +74,16 @@
           <div class="conv-info">
             <div class="d-flex justify-content-between align-items-start">
               <div class="conv-name">
-                {{ conv.interlocuteurPrenom }} {{ conv.interlocuteurNom }}
+                {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
               </div>
               <div class="text-muted" style="font-size:.72rem; white-space:nowrap">
-                {{ formaterDateConv(conv.date) }}
+                {{ formaterDateConv(conv.dateCreation) }}
               </div>
             </div>
             <div class="conv-role text-muted">
-              {{ conv.interlocuteurRole }}
-              <span *ngIf="conv.interlocuteurDept">
-                · {{ conv.interlocuteurDept }}
+              {{ conv.destinataireRole }}
+              <span *ngIf="conv.destinataireDept">
+                · {{ conv.destinataireDept }}
               </span>
             </div>
             <div class="conv-preview text-muted">
@@ -130,16 +130,16 @@
                     d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-3">
             <div class="conv-avatar sm">
-              {{ initiales(conv.interlocuteurNom, conv.interlocuteurPrenom) }}
+              {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
             </div>
             <div>
               <div class="fw-semibold">
-                {{ conv.interlocuteurPrenom }} {{ conv.interlocuteurNom }}
+                {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
               </div>
               <div class="text-muted" style="font-size:.78rem">
-                {{ conv.interlocuteurRole }}
-                <span *ngIf="conv.interlocuteurDept">
-                  · {{ conv.interlocuteurDept }}
+                {{ conv.destinataireRole }}
+                <span *ngIf="conv.destinataireDept">
+                  · {{ conv.destinataireDept }}
                 </span>
                 <!-- Badge statut conversation -->
                 <span class="badge ms-2"
@@ -194,7 +194,7 @@
             <div class="message-bubble">
               <div class="message-text">{{ msg.contenu }}</div>
               <div class="message-time">
-                {{ formaterDate(msg.date) }}
+                {{ formaterDate(msg.dateCreation) }}
                 <i *ngIf="estMonMessage(msg.expediteurId)"
                    class="fas fa-check ms-1"
                    [class.text-primary]="msg.lu"

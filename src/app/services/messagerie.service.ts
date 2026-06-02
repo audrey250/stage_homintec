@@ -20,36 +20,33 @@ export interface Message {
   expediteurPrenom: string;
   destinataireId:   number;
   contenu:          string;
-  date:             string;   // ISO : "2024-01-20T09:00:00"
+  dateCreation:             string;   // ISO : "2024-01-20T09:00:00"
   lu:               boolean;
 }
 
-// Entité Conversation telle que définie dans le diagramme de classe
 export interface Conversation {
-  idConversation:      number;          // PK Spring Boot
-  statut:              StatutConversation;
-  lastMessage:         string;          // last_message dans le diagramme
-  date:                string;
+  idConversation:  number;
+  statut:          StatutConversation;
+  lastMessage:     string;
+  dateCreation:    string;
 
-  // Infos sur l'interlocuteur (enrichies par le backend)
-  interlocuteurId:     number;
-  interlocuteurNom:    string;
-  interlocuteurPrenom: string;
-  interlocuteurRole:   string;
-  interlocuteurDept:   string;
+  // ✅ Remplace interlocuteurXxx par destinataireXxx (ou contactXxx)
+  destinataireId:     number;
+  destinataireNom:    string;
+  destinatairePrenom: string;
+  destinataireRole:   string;
+  destinataireDept:   string;
 
-  nonLus:              number;
-  messages:            Message[];
+  nonLus:   number;
+  messages: Message[];
 }
-
 // Payload pour créer une nouvelle conversation (POST /api/conversations)
 export interface NouvelleConversation {
-  interlocuteurId: number;
+  destinataireId: number;
 }
 
 export interface NouveauMessage {
   conversationId: number;   // on lie le message à la conversation
-  destinataireId: number;
   contenu:        string;
 }
 
@@ -106,7 +103,7 @@ export class MessagerieService {
   // ============================================================
   // CRÉER UNE NOUVELLE CONVERSATION
   // POST /api/conversations
-  // Body : { interlocuteurId }
+  // Body : { destinataireId }
   // Retourne la Conversation créée (statut = 'active')
   // ============================================================
   creerConversation(payload: NouvelleConversation): Observable<Conversation> {
@@ -117,7 +114,7 @@ export class MessagerieService {
           // Éviter les doublons si la conversation existait déjà
           this._conversations.update(convs => {
             const existe = convs.find(
-              c => c.interlocuteurId === nouvelle.interlocuteurId
+              c => c.destinataireId === nouvelle.destinataireId
             );
             if (existe) return convs;
             return [nouvelle, ...convs];
@@ -162,7 +159,7 @@ export class MessagerieService {
     return this.http
       .post<Message>(
         `${API_URL}/conversations/${msg.conversationId}/messages`,
-        { destinataireId: msg.destinataireId, contenu: msg.contenu }
+        {  contenu: msg.contenu }
       )
       .pipe(
         tap((nouveau) => {
@@ -173,7 +170,7 @@ export class MessagerieService {
                     ...c,
                     messages:    [...(c.messages ?? []), nouveau],
                     lastMessage: msg.contenu,
-                    date:        nouveau.date
+                    dateCreation:        nouveau.dateCreation
                   }
                 : c
             )

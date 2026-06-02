@@ -108,7 +108,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
 
     const payload: NouveauMessage = {
       conversationId: conv.idConversation,
-      destinataireId: conv.interlocuteurId,
       contenu:        this.nouveauMessage.trim()
     };
 
@@ -175,7 +174,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     // Vérifier si une conversation avec cet utilisateur existe déjà
     const existante = this.messagerieService
       .conversations()
-      .find(c => c.interlocuteurId === destinataire.id);
+      .find(c => c.destinataireId === destinataire.id);
 
     if (existante) {
       // Ouvrir la conversation existante directement
@@ -188,7 +187,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.erreurNouvelleConv.set('');
 
     this.messagerieService
-      .creerConversation({ interlocuteurId: destinataire.id })
+      .creerConversation({ destinataireId: destinataire.id })
       .subscribe({
         next: (conv) => {
           this.chargementCreation.set(false);
@@ -209,7 +208,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   // SUPPRIMER LA CONVERSATION ACTIVE
   // ============================================================
   supprimerConversation(conv: Conversation): void {
-    if (!confirm(`Supprimer la conversation avec ${conv.interlocuteurPrenom} ${conv.interlocuteurNom} ?`))
+    if (!confirm(`Supprimer la conversation avec ${conv.destinatairePrenom} ${conv.destinataireNom} ?`))
       return;
 
     this.suppressionEnCours.set(true);

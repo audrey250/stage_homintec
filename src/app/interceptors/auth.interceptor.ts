@@ -27,6 +27,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       } else if (!isAuthEndpoint && err.status === 403) {
         console.error('❌ Erreur 403 - Accès refusé:', err.url);
         console.error('   Vérifier les permissions utilisateur pour cette action');
+        console.log('Token =', token);
+console.log('Authorization =', reqAvecToken.headers.get('Authorization'));
       }
       return throwError(() => err);
     })
