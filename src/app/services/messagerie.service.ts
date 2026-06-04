@@ -12,23 +12,24 @@ const API_URL = environment.apiUrl;
 
 export type StatutConversation = 'active' | 'bloquee' | 'supprimee' | 'envoyee' | 'fermee';
 
+// ✅ Tous les IDs en string (UUID)
 export interface Message {
-  id:               number;
-  expediteurId:     number;
+  id:               string;
+  expediteurId:     string;
   expediteurNom:    string;
   expediteurPrenom: string;
-  destinataireId:   number;
+  conversationId:   string;
   contenu:          string;
-  dateEnvoi:     string;
+  dateEnvoi:        string;
   lu:               boolean;
 }
 
 export interface Conversation {
-  id:     number;
+  id:                 string;
   statut:             StatutConversation;
   lastMessage:        string;
   dateCreation:       string;
-  destinataireId:     number;
+  destinataireId:     string;
   destinataireNom:    string;
   destinatairePrenom: string;
   destinataireRole:   string;
@@ -38,17 +39,16 @@ export interface Conversation {
 }
 
 export interface NouvelleConversation {
-  destinataireId: number;
+  destinataireId: string;
 }
 
 export interface NouveauMessage {
-  conversationId: number;
-
+  conversationId: string;
   contenu:        string;
 }
 
 export interface UtilisateurSimple {
-  id:              number;
+  id:              string;
   nom:             string;
   prenom:          string;
   poste?:          string;
@@ -79,7 +79,7 @@ export class MessagerieService {
   // CHARGER TOUTES LES CONVERSATIONS
   // GET /api/conversations/utilisateur/:userId
   // ============================================================
-  chargerConversations(userId: number): Observable<Conversation[]> {
+  chargerConversations(userId: string): Observable<Conversation[]> {
     this._loading.set(true);
     this._erreur.set('');
     return this.http
@@ -107,7 +107,6 @@ export class MessagerieService {
     if (!expediteurId) {
       return throwError(() => new Error('Utilisateur non authentifié. Veuillez vous reconnecter.'));
     }
-
     return this.http
       .post<Conversation>(`${API_URL}/conversations`, {
         expediteurId,
@@ -127,12 +126,12 @@ export class MessagerieService {
 
   // ============================================================
   // CHARGER LES MESSAGES D'UNE CONVERSATION
-  // GET /api/conversations/:idConversation/messages
+  // ✅ GET /api/messages/conversation/:id
   // ============================================================
-  chargerMessages(id: number): Observable<Message[]> {
+  chargerMessages(id: string): Observable<Message[]> {
     this._loading.set(true);
     return this.http
-      .get<Message[]>(`${API_URL}/conversations/${id}/messages`)
+      .get<Message[]>(`${API_URL}/messages/conversation/${id}`)
       .pipe(
         tap((messages) => {
           this._loading.set(false);
@@ -153,14 +152,17 @@ export class MessagerieService {
 
   // ============================================================
   // ENVOYER UN MESSAGE
-  // POST /api/conversations/:idConversation/messages
+  // ✅ POST /api/messages
+  // Body : { conversationId, contenu, expediteurId }
   // ============================================================
   envoyer(msg: NouveauMessage): Observable<Message> {
+    const expediteurId = this.authService.currentUser()?.id;
     return this.http
-      .post<Message>(
-        `${API_URL}/messages`,
-        { contenu: msg.contenu }
-      )
+      .post<Message>(`${API_URL}/messages`, {
+        conversationId: msg.conversationId,
+        contenu:        msg.contenu,
+        expediteurId:   expediteurId
+      })
       .pipe(
         tap((nouveau) => {
           this._conversations.update(convs =>
@@ -168,9 +170,9 @@ export class MessagerieService {
               c.id === msg.conversationId
                 ? {
                     ...c,
-                    messages:     [...(c.messages ?? []), nouveau],
-                    lastMessage:  msg.contenu,
-                    dateEnvoi: nouveau.dateEnvoi
+                    messages:    [...(c.messages ?? []), nouveau],
+                    lastMessage: msg.contenu,
+                    dateEnvoi:   nouveau.dateEnvoi
                   }
                 : c
             )
@@ -182,18 +184,20 @@ export class MessagerieService {
 
   // ============================================================
   // MARQUER LES MESSAGES COMME LUS
-  // PUT /api/conversations/:idConversation/lus
+  // ✅ PATCH /api/messages/conversation/:id/lu?userId=...
   // ============================================================
-  marquerLus(id: number): Observable<void> {
+  marquerLus(id: string): Observable<void> {
+    const userId = this.authService.currentUser()?.id;
     return this.http
-      .put<void>(`${API_URL}/conversations/${id}/lus`, {})
+      .patch<void>(
+        `${API_URL}/messages/conversation/${id}/lu?userId=${userId}`,
+        {}
+      )
       .pipe(
         tap(() => {
           this._conversations.update(convs =>
             convs.map(c =>
-              c.id === id
-                ? { ...c, nonLus: 0 }
-                : c
+              c.id === id ? { ...c, nonLus: 0 } : c
             )
           );
         }),
@@ -203,9 +207,9 @@ export class MessagerieService {
 
   // ============================================================
   // SUPPRIMER UNE CONVERSATION
-  // DELETE /api/conversations/:idConversation
+  // DELETE /api/conversations/:id
   // ============================================================
-  supprimerConversation(id: number): Observable<void> {
+  supprimerConversation(id: string): Observable<void> {
     return this.http
       .delete<void>(`${API_URL}/conversations/${id}`)
       .pipe(

@@ -1,5 +1,5 @@
 <!-- ============================================================
-     messagerie.html — avec entité Conversation (diagramme de classe)
+     messagerie.html
      ============================================================ -->
 
 <div class="messagerie-container">
@@ -15,8 +15,6 @@
         Communication sécurisée entre équipes
       </p>
     </div>
-
-    <!-- Bouton nouvelle conversation -->
     <button class="btn btn-primary btn-sm"
             (click)="ouvrirModalNouvelleConv()">
       <i class="fas fa-plus me-1"></i>
@@ -58,7 +56,6 @@
 
       <div class="conv-items">
 
-        <!-- Item conversation -->
         <div *ngFor="let conv of messagerieService.conversations()"
              class="conv-item"
              [class.active]="conversationActive()?.id === conv.id"
@@ -82,9 +79,7 @@
             </div>
             <div class="conv-role text-muted">
               {{ conv.destinataireRole }}
-              <span *ngIf="conv.destinataireDept">
-                · {{ conv.destinataireDept }}
-              </span>
+              <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
             </div>
             <div class="conv-preview text-muted">
               {{ conv.lastMessage || 'Aucun message' }}
@@ -92,7 +87,6 @@
           </div>
         </div>
 
-        <!-- Aucune conversation -->
         <div *ngIf="messagerieService.conversations().length === 0"
              class="text-center p-4 text-muted">
           <i class="fas fa-comments fa-2x mb-2 d-block opacity-25"></i>
@@ -109,7 +103,6 @@
     <!-- ========== COLONNE DROITE : zone de chat ========== -->
     <div class="chat-zone">
 
-      <!-- Aucune conversation sélectionnée -->
       <div *ngIf="!conversationActive()"
            class="no-conv d-flex flex-column
                   align-items-center justify-content-center
@@ -122,7 +115,6 @@
         </button>
       </div>
 
-      <!-- Conversation ouverte -->
       <ng-container *ngIf="conversationActive() as conv">
 
         <!-- En-tête chat -->
@@ -138,10 +130,7 @@
               </div>
               <div class="text-muted" style="font-size:.78rem">
                 {{ conv.destinataireRole }}
-                <span *ngIf="conv.destinataireDept">
-                  · {{ conv.destinataireDept }}
-                </span>
-                <!-- Badge statut conversation -->
+                <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
                 <span class="badge ms-2"
                       [class.bg-success]="conv.statut === 'active'"
                       [class.bg-secondary]="conv.statut === 'fermee'"
@@ -153,7 +142,6 @@
             </div>
           </div>
 
-          <!-- Action supprimer conversation -->
           <button class="btn btn-outline-danger btn-sm"
                   (click)="supprimerConversation(conv)"
                   [disabled]="suppressionEnCours()"
@@ -172,20 +160,18 @@
             <div class="spinner-border spinner-border-sm text-primary"></div>
           </div>
 
-          <!-- Vide -->
           <div *ngIf="!conv.messages || conv.messages.length === 0"
                class="text-center py-5 text-muted">
             <i class="fas fa-comment-slash fa-2x mb-2 d-block opacity-25"></i>
             <p style="font-size:.85rem">Aucun message. Dites bonjour 👋</p>
           </div>
 
-          <!-- Bulles de messages -->
+          <!-- ✅ expediteurId passé en string -->
           <div *ngFor="let msg of conv.messages"
                class="message-row"
                [class.sent]="estMonMessage(msg.expediteurId)"
                [class.received]="!estMonMessage(msg.expediteurId)">
 
-            <!-- Avatar de l'interlocuteur -->
             <div *ngIf="!estMonMessage(msg.expediteurId)"
                  class="conv-avatar xs me-2">
               {{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}
@@ -214,7 +200,7 @@
           {{ erreurEnvoi() }}
         </div>
 
-        <!-- Zone de saisie — désactivée si conversation non active -->
+        <!-- Zone de saisie -->
         <div class="chat-input border-top p-3 d-flex gap-2">
           <input type="text"
                  class="form-control"
@@ -231,7 +217,6 @@
           </button>
         </div>
 
-        <!-- Avertissement si conversation non active -->
         <div *ngIf="conv.statut !== 'active'"
              class="alert alert-warning m-2 py-2"
              style="font-size:.82rem">
@@ -256,7 +241,6 @@
        style="max-width:480px"
        (click)="$event.stopPropagation()">
 
-    <!-- En-tête -->
     <div class="d-flex align-items-center justify-content-between mb-4">
       <h5 class="fw-bold mb-0">
         <i class="fas fa-plus-circle text-primary me-2"></i>
@@ -267,7 +251,6 @@
       </button>
     </div>
 
-    <!-- Erreur -->
     <div *ngIf="erreurNouvelleConv()"
          class="alert alert-danger py-2 mb-3"
          style="font-size:.85rem">
@@ -275,7 +258,6 @@
       {{ erreurNouvelleConv() }}
     </div>
 
-    <!-- Recherche d'utilisateur -->
     <div class="mb-3">
       <label class="form-label fw-semibold" style="font-size:.88rem">
         Destinataire <span class="text-danger">*</span>
@@ -292,14 +274,12 @@
       </div>
     </div>
 
-    <!-- Spinner chargement utilisateurs -->
     <div *ngIf="chargementUtilisateurs()"
          class="text-center py-4 text-muted">
       <div class="spinner-border spinner-border-sm text-primary"></div>
       <span class="ms-2" style="font-size:.85rem">Chargement...</span>
     </div>
 
-    <!-- Liste des utilisateurs -->
     <div *ngIf="!chargementUtilisateurs()"
          class="utilisateurs-liste mb-4"
          style="max-height:260px; overflow-y:auto; border:1px solid #e9ecef; border-radius:8px">
@@ -317,13 +297,12 @@
            (click)="selectionnerUtilisateur(u)"
            style="cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background .15s">
 
-        <!-- Avatar -->
         <div class="avatar-sm flex-shrink-0"
              [style.background]="utilisateurSelectionne()?.id === u.id ? '#4e73df' : '#e9ecef'"
              [style.color]="utilisateurSelectionne()?.id === u.id ? '#fff' : '#6c757d'">
-          {{ u.prenom.charAt(0) + u.nom.charAt(0) | uppercase }}        </div>
+          {{ (u.prenom.charAt(0) + u.nom.charAt(0)) | uppercase }}
+        </div>
 
-        <!-- Infos -->
         <div style="flex:1; min-width:0">
           <div class="fw-semibold" style="font-size:.88rem">
             {{ u.prenom }} {{ u.nom }}
@@ -334,14 +313,12 @@
           </div>
         </div>
 
-        <!-- Icône sélection -->
         <i *ngIf="utilisateurSelectionne()?.id === u.id"
            class="fas fa-check-circle text-primary"></i>
       </div>
 
     </div>
 
-    <!-- Utilisateur sélectionné -->
     <div *ngIf="utilisateurSelectionne() as u"
          class="alert alert-primary py-2 mb-3"
          style="font-size:.85rem">
@@ -349,7 +326,6 @@
       Conversation avec <strong>{{ u.prenom }} {{ u.nom }}</strong>
     </div>
 
-    <!-- Boutons -->
     <div class="d-flex gap-2 justify-content-end">
       <button class="btn btn-outline-secondary"
               (click)="fermerModalNouvelleConv()"

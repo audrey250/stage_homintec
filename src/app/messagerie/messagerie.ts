@@ -1,6 +1,5 @@
 // ============================================================
 // src/app/messagerie/messagerie.ts
-// VERSION SPRING BOOT — avec entité Conversation
 // ============================================================
 
 import {
@@ -41,14 +40,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   utilisateurRecherche    = signal('');
   utilisateurSelectionne  = signal<UtilisateurSimple | null>(null);
 
-  // ---- Modal nouvelle demande ----
-    modalOuvert = signal(false);
-    formLoading = signal(false);
-    formErreur  = signal('');
-    formData = signal({
-     
-    });
-  
   // ---- Suppression ----
   suppressionEnCours = signal(false);
 
@@ -60,6 +51,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
+    // ✅ userId est string (UUID)
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
@@ -87,16 +79,15 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.conversationActive.set(conv);
     this.erreurEnvoi.set('');
 
+    // ✅ conv.id est string (UUID)
     this.messagerieService.chargerMessages(conv.id).subscribe({
       next: () => {
-        // Récupérer la conversation mise à jour depuis le cache
         const updated = this.messagerieService
           .conversations()
           .find(c => c.id === conv.id);
 
         if (updated) this.conversationActive.set(updated);
 
-        // Marquer comme lus
         this.messagerieService.marquerLus(conv.id).subscribe();
 
         this.doitScroller = true;
@@ -117,6 +108,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.chargementEnvoi.set(true);
     this.erreurEnvoi.set('');
 
+    // ✅ conversationId est string (UUID)
     const payload: NouveauMessage = {
       conversationId: conv.id,
       contenu:        this.nouveauMessage.trim()
@@ -153,7 +145,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.modalNouvelleConvOuvert.set(true);
     this.chargementUtilisateurs.set(true);
 
-    // Charger la liste des utilisateurs disponibles
     this.messagerieService.chargerUtilisateurs().subscribe({
       next: () => this.chargementUtilisateurs.set(false),
       error: () => {
@@ -174,7 +165,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.erreurNouvelleConv.set('');
   }
 
-  // Crée la conversation via Spring Boot puis l'ouvre
   creerConversation(): void {
     const destinataire = this.utilisateurSelectionne();
     if (!destinataire) {
@@ -182,13 +172,12 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
       return;
     }
 
-    // Vérifier si une conversation avec cet utilisateur existe déjà
+    // ✅ Comparaison string === string
     const existante = this.messagerieService
       .conversations()
       .find(c => c.destinataireId === destinataire.id);
 
     if (existante) {
-      // Ouvrir la conversation existante directement
       this.fermerModalNouvelleConv();
       this.ouvrirConversation(existante);
       return;
@@ -203,7 +192,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
         next: (conv) => {
           this.chargementCreation.set(false);
           this.fermerModalNouvelleConv();
-          // Ouvrir immédiatement la nouvelle conversation
           this.ouvrirConversation(conv);
         },
         error: (err) => {
@@ -229,7 +217,6 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
       .subscribe({
         next: () => {
           this.suppressionEnCours.set(false);
-          // Si c'était la conversation active, la fermer
           if (this.conversationActive()?.id === conv.id) {
             this.conversationActive.set(null);
           }
@@ -245,12 +232,11 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   // HELPERS
   // ============================================================
 
-  // Filtrer les utilisateurs selon la recherche
   utilisateursFiltres(): UtilisateurSimple[] {
     const recherche = this.utilisateurRecherche().toLowerCase().trim();
     const moi = this.authService.currentUser()?.id;
     return this.messagerieService.utilisateurs().filter(u => {
-      if (u.id === moi) return false; // exclure soi-même
+      if (u.id === moi) return false; // ✅ string === string
       if (!recherche) return true;
       const nomComplet = `${u.prenom} ${u.nom}`.toLowerCase();
       return nomComplet.includes(recherche);
@@ -288,7 +274,8 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     return `${prenom?.charAt(0) ?? ''}${nom?.charAt(0) ?? ''}`.toUpperCase();
   }
 
-  estMonMessage(expediteurId: number): boolean {
+  // ✅ expediteurId est maintenant string (UUID)
+  estMonMessage(expediteurId: string): boolean {
     return expediteurId === this.authService.currentUser()?.id;
   }
 }

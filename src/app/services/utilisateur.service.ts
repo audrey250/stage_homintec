@@ -76,11 +76,11 @@ export class UtilisateurService {
   }
 
   // ---- DELETE /api/utilisateurs/:id ----
-  supprimer(id: number): Observable<void> {
+  supprimer(id: string | number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/utilisateurs/${id}`).pipe(
       tap(() => {
         this._utilisateurs.update(liste =>
-          liste.filter((u: User) => u.id !== id)
+          liste.filter((u: User) => String(u.id) !== String(id))
         );
       }),
       catchError((err) => throwError(() => err))
@@ -89,7 +89,7 @@ export class UtilisateurService {
 
   // ---- GET /api/utilisateurs/:id ----
   // Récupère un utilisateur par son ID (utile pour enrichir les demandes)
-  getParId(id: number): Observable<User> {
+  getParId(id: string | number): Observable<User> {
     return this.http.get<User>(`${API_URL}/utilisateurs/${id}`).pipe(
       catchError((err) => {
         console.error(`Impossible de récupérer l'utilisateur ${id}:`, err);
