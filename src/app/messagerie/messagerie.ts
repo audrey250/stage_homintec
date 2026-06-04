@@ -87,17 +87,17 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.conversationActive.set(conv);
     this.erreurEnvoi.set('');
 
-    this.messagerieService.chargerMessages(conv.idConversation).subscribe({
+    this.messagerieService.chargerMessages(conv.id).subscribe({
       next: () => {
         // Récupérer la conversation mise à jour depuis le cache
         const updated = this.messagerieService
           .conversations()
-          .find(c => c.idConversation === conv.idConversation);
+          .find(c => c.id === conv.id);
 
         if (updated) this.conversationActive.set(updated);
 
         // Marquer comme lus
-        this.messagerieService.marquerLus(conv.idConversation).subscribe();
+        this.messagerieService.marquerLus(conv.id).subscribe();
 
         this.doitScroller = true;
       },
@@ -118,7 +118,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.erreurEnvoi.set('');
 
     const payload: NouveauMessage = {
-      conversationId: conv.idConversation,
+      conversationId: conv.id,
       contenu:        this.nouveauMessage.trim()
     };
 
@@ -129,7 +129,7 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
 
         const updated = this.messagerieService
           .conversations()
-          .find(c => c.idConversation === conv.idConversation);
+          .find(c => c.id === conv.id);
 
         if (updated) this.conversationActive.set(updated);
 
@@ -225,12 +225,12 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
     this.suppressionEnCours.set(true);
 
     this.messagerieService
-      .supprimerConversation(conv.idConversation)
+      .supprimerConversation(conv.id)
       .subscribe({
         next: () => {
           this.suppressionEnCours.set(false);
           // Si c'était la conversation active, la fermer
-          if (this.conversationActive()?.idConversation === conv.idConversation) {
+          if (this.conversationActive()?.id === conv.id) {
             this.conversationActive.set(null);
           }
         },

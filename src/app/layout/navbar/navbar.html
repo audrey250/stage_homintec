@@ -24,14 +24,14 @@
 
         <!-- Nom + badge rôle (visible en desktop) -->
         <div class="user-info d-none d-lg-flex flex-column align-items-end">
-          <div class="user-name fw-semibold">
+          <div class="user-name fw-semibold" m-5>
             {{ authService.currentUser()?.prenom }}
             {{ authService.currentUser()?.nom }}
           </div>
           <span class="user-role badge"
             [ngClass]="{
               'bg-secondary': authService.currentUser()?.Poste === 'employe',
-              'bg-info':      authService.currentUser()?.Poste === 'manager',
+              'bg-info':      authService.currentUser()?.Poste === 'responsable',
               'bg-success':   authService.currentUser()?.Poste === 'rh',
               'bg-danger':    authService.currentUser()?.Poste === 'admin'
             }">
@@ -63,7 +63,7 @@
                 <span class="badge"
                   [ngClass]="{
                     'bg-secondary': authService.currentUser()?.Poste === 'employe',
-                    'bg-info':      authService.currentUser()?.Poste === 'manager',
+                    'bg-info':      authService.currentUser()?.Poste === 'responsable',
                     'bg-success':   authService.currentUser()?.Poste === 'rh',
                     'bg-danger':    authService.currentUser()?.Poste === 'admin'
                   }">
@@ -79,12 +79,6 @@
            (click)="dropdownOpen = false">
           <i class="fas fa-user fa-fw me-2 text-primary"></i>
           Mon profil
-        </a>
-
-        <a class="dropdown-item" routerLink="/messagerie"
-           (click)="dropdownOpen = false">
-          <i class="fas fa-envelope fa-fw me-2 text-primary"></i>
-          Messagerie
         </a>
 
         <div class="dropdown-divider"></div>

@@ -173,7 +173,7 @@
           </div>
 
           <!-- Vide -->
-          <div *ngIf="!messagerieService.loading() && conv.messages.length === 0"
+          <div *ngIf="!conv.messages || conv.messages.length === 0"
                class="text-center py-5 text-muted">
             <i class="fas fa-comment-slash fa-2x mb-2 d-block opacity-25"></i>
             <p style="font-size:.85rem">Aucun message. Dites bonjour 👋</p>

@@ -19,12 +19,12 @@ export interface Message {
   expediteurPrenom: string;
   destinataireId:   number;
   contenu:          string;
-  dateCreation:     string;
+  dateEnvoi:     string;
   lu:               boolean;
 }
 
 export interface Conversation {
-  idConversation:     number;
+  id:     number;
   statut:             StatutConversation;
   lastMessage:        string;
   dateCreation:       string;
@@ -129,16 +129,16 @@ export class MessagerieService {
   // CHARGER LES MESSAGES D'UNE CONVERSATION
   // GET /api/conversations/:idConversation/messages
   // ============================================================
-  chargerMessages(idConversation: number): Observable<Message[]> {
+  chargerMessages(id: number): Observable<Message[]> {
     this._loading.set(true);
     return this.http
-      .get<Message[]>(`${API_URL}/conversations/${idConversation}/messages`)
+      .get<Message[]>(`${API_URL}/conversations/${id}/messages`)
       .pipe(
         tap((messages) => {
           this._loading.set(false);
           this._conversations.update(convs =>
             convs.map(c =>
-              c.idConversation === idConversation
+              c.id === id
                 ? { ...c, messages, nonLus: 0 }
                 : c
             )
@@ -158,19 +158,19 @@ export class MessagerieService {
   envoyer(msg: NouveauMessage): Observable<Message> {
     return this.http
       .post<Message>(
-        `${API_URL}/conversations/${msg.conversationId}/messages`,
+        `${API_URL}/messages`,
         { contenu: msg.contenu }
       )
       .pipe(
         tap((nouveau) => {
           this._conversations.update(convs =>
             convs.map(c =>
-              c.idConversation === msg.conversationId
+              c.id === msg.conversationId
                 ? {
                     ...c,
                     messages:     [...(c.messages ?? []), nouveau],
                     lastMessage:  msg.contenu,
-                    dateCreation: nouveau.dateCreation
+                    dateEnvoi: nouveau.dateEnvoi
                   }
                 : c
             )
@@ -184,14 +184,14 @@ export class MessagerieService {
   // MARQUER LES MESSAGES COMME LUS
   // PUT /api/conversations/:idConversation/lus
   // ============================================================
-  marquerLus(idConversation: number): Observable<void> {
+  marquerLus(id: number): Observable<void> {
     return this.http
-      .put<void>(`${API_URL}/conversations/${idConversation}/lus`, {})
+      .put<void>(`${API_URL}/conversations/${id}/lus`, {})
       .pipe(
         tap(() => {
           this._conversations.update(convs =>
             convs.map(c =>
-              c.idConversation === idConversation
+              c.id === id
                 ? { ...c, nonLus: 0 }
                 : c
             )
@@ -205,13 +205,13 @@ export class MessagerieService {
   // SUPPRIMER UNE CONVERSATION
   // DELETE /api/conversations/:idConversation
   // ============================================================
-  supprimerConversation(idConversation: number): Observable<void> {
+  supprimerConversation(id: number): Observable<void> {
     return this.http
-      .delete<void>(`${API_URL}/conversations/${idConversation}`)
+      .delete<void>(`${API_URL}/conversations/${id}`)
       .pipe(
         tap(() => {
           this._conversations.update(convs =>
-            convs.filter(c => c.idConversation !== idConversation)
+            convs.filter(c => c.id !== id)
           );
         }),
         catchError((err) => throwError(() => err))

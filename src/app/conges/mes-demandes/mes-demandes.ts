@@ -50,19 +50,36 @@ export class MesDemandesComponent implements OnInit {
   justifErreur        = signal('');
   justifSucces        = signal('');
   demandeJustif       = signal<Demande | null>(null);
-  // Fichier sélectionné par l'utilisateur
   fichierSelectionne: File | null = null;
-  // Mode : 'depot' (premier dépôt) ou 'remplacement' (modifier)
   modeJustif = signal<'depot' | 'remplacement'>('depot');
 
- types = [
-  { value: 'PERMISSION',    label: 'Permission',      icon: '🕐' },
-  { value: 'CONGE_MALADIE', label: 'Congé ',  icon: '🏝' },
-];
+  types = [
+    { value: 'PERMISSION',    label: 'Permission', icon: '🕐' },
+    { value: 'CONGE_MALADIE', label: 'Congé',      icon: '🏝' },
+  ];
 
-  dateMin = new Date(
-  Date.now() - new Date().getTimezoneOffset() * 60000
-).toISOString().slice(0, 16);
+  // ✅ dateMinDatetime : pour les inputs datetime-local (PERMISSION)
+  dateMinDatetime = new Date(
+    Date.now() - new Date().getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 16);
+
+  // ✅ dateMinDate : pour les inputs date (CONGE_MALADIE)
+  dateMinDate = new Date(
+    Date.now() - new Date().getTimezoneOffset() * 60000
+  ).toISOString().slice(0, 10);
+
+  // Alias utilisé dans le template (s'adapte au type sélectionné)
+  get dateMin(): string {
+    return this.formData().type === 'PERMISSION'
+      ? this.dateMinDatetime
+      : this.dateMinDate;
+  }
+
+  get dateMinModif(): string {
+    return this.modifData().typeDemande === 'PERMISSION'
+      ? this.dateMinDatetime
+      : this.dateMinDate;
+  }
 
   nombreJours = computed(() => {
     const { dateDebut, dateFin } = this.formData();
@@ -125,6 +142,7 @@ export class MesDemandesComponent implements OnInit {
   // MODAL NOUVELLE DEMANDE
   // ============================================================
   ouvrirModal(): void {
+    // Réinitialise proprement tout le formulaire
     this.formData.set({ type: '', dateDebut: '', dateFin: '', motif: '' });
     this.formErreur.set('');
     this.modalOuvert.set(true);
@@ -136,7 +154,12 @@ export class MesDemandesComponent implements OnInit {
   }
 
   updateField(field: string, value: any): void {
-    this.formData.update(f => ({ ...f, [field]: value }));
+    // ✅ Si on change le type, on remet les dates à vide (format change)
+    if (field === 'type') {
+      this.formData.update(f => ({ ...f, type: value, dateDebut: '', dateFin: '' }));
+    } else {
+      this.formData.update(f => ({ ...f, [field]: value }));
+    }
     this.formErreur.set('');
   }
 
@@ -186,7 +209,12 @@ export class MesDemandesComponent implements OnInit {
   }
 
   updateModifField(field: string, value: any): void {
-    this.modifData.update(f => ({ ...f, [field]: value }));
+    // ✅ Si on change le type, on remet les dates à vide
+    if (field === 'typeDemande') {
+      this.modifData.update(f => ({ ...f, typeDemande: value, dateDebut: '', dateFin: '' }));
+    } else {
+      this.modifData.update(f => ({ ...f, [field]: value }));
+    }
     this.modifErreur.set('');
   }
 
@@ -242,14 +270,11 @@ export class MesDemandesComponent implements OnInit {
   // ============================================================
   // MODAL JUSTIFICATIF
   // ============================================================
-
-  // Ouvrir le modal pour déposer ou remplacer un justificatif
   ouvrirModalJustif(d: Demande): void {
     this.demandeJustif.set(d);
     this.fichierSelectionne = null;
     this.justifErreur.set('');
     this.justifSucces.set('');
-    // Si un justificatif existe déjà → mode remplacement
     this.modeJustif.set(d.justificatifPath ? 'remplacement' : 'depot');
     this.modalJustifOuvert.set(true);
   }
@@ -262,7 +287,6 @@ export class MesDemandesComponent implements OnInit {
     this.justifSucces.set('');
   }
 
-  // Appelé quand l'utilisateur sélectionne un fichier
   onFichierSelectionne(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -270,7 +294,6 @@ export class MesDemandesComponent implements OnInit {
     const fichier = input.files[0];
     this.justifErreur.set('');
 
-    // Vérification du type : PDF ou image seulement
     const typesAcceptes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!typesAcceptes.includes(fichier.type)) {
       this.justifErreur.set('Format non accepté. Utilisez PDF, JPG ou PNG.');
@@ -278,7 +301,6 @@ export class MesDemandesComponent implements OnInit {
       return;
     }
 
-    // Vérification de la taille : max 10 Mo
     const tailleMo = fichier.size / (1024 * 1024);
     if (tailleMo > 10) {
       this.justifErreur.set('Fichier trop volumineux. Maximum 10 Mo.');
@@ -289,7 +311,6 @@ export class MesDemandesComponent implements OnInit {
     this.fichierSelectionne = fichier;
   }
 
-  // Déposer ou remplacer le justificatif
   soumettreJustificatif(): void {
     const demande = this.demandeJustif();
     if (!demande || !this.fichierSelectionne) {
@@ -300,13 +321,12 @@ export class MesDemandesComponent implements OnInit {
     this.justifLoading.set(true);
     this.justifErreur.set('');
 
-    // Choisir la bonne méthode selon le mode
     const operation$ = this.modeJustif() === 'depot'
       ? this.congeService.deposerJustificatif(demande.id, this.fichierSelectionne)
       : this.congeService.modifierJustificatif(demande.id, this.fichierSelectionne);
 
     operation$.subscribe({
-      next: (updated) => {
+      next: () => {
         this.justifLoading.set(false);
         this.justifSucces.set(
           this.modeJustif() === 'depot'
@@ -314,15 +334,12 @@ export class MesDemandesComponent implements OnInit {
             : 'Justificatif remplacé avec succès !'
         );
         this.fichierSelectionne = null;
-        // Fermer automatiquement après 2 secondes
         setTimeout(() => this.fermerModalJustif(), 2000);
       },
       error: (err: HttpErrorResponse) => {
         this.justifLoading.set(false);
         if (err.status === 403) {
-          this.justifErreur.set(
-            'Modification impossible : le RH a déjà téléchargé ce justificatif.'
-          );
+          this.justifErreur.set('Modification impossible : le RH a déjà téléchargé ce justificatif.');
         } else {
           this.justifErreur.set(err.error?.message || 'Erreur lors de l\'envoi.');
         }
@@ -330,7 +347,6 @@ export class MesDemandesComponent implements OnInit {
     });
   }
 
-  // Télécharger son propre justificatif déposé
   voirJustificatif(d: Demande): void {
     if (!d.justificatifPath) return;
     this.congeService.downloadJustificatif(d.id, d.justificatifNom ?? `justificatif-${d.id}`);
@@ -347,24 +363,20 @@ export class MesDemandesComponent implements OnInit {
     return String(d.statut) === 'EN_ATTENTE';
   }
 
-  // Peut déposer un justificatif : APPROUVEE_RH + date passée
   peutDeposerJustificatif(d: Demande): boolean {
     return this.congeService.peutGererJustificatif(d) && !d.justificatifTelecharge;
   }
 
-  // Peut remplacer son justificatif : a déposé + RH n'a pas encore téléchargé
   peutRemplacerJustificatif(d: Demande): boolean {
     return this.congeService.peutGererJustificatif(d)
       && !!d.justificatifPath
       && !d.justificatifTelecharge;
   }
 
-  // Le justificatif a été téléchargé par le RH → plus modifiable
   justificatifVerrouille(d: Demande): boolean {
     return !!d.justificatifTelecharge;
   }
 
-  // Libellé du fichier pour l'aperçu
   libelleFichier(fichier: File): string {
     const tailleMo = (fichier.size / (1024 * 1024)).toFixed(2);
     return `${fichier.name} (${tailleMo} Mo)`;
@@ -396,5 +408,4 @@ export class MesDemandesComponent implements OnInit {
     const n = this.nomEmploye(d)    || 'N';
     return (p.charAt(0) + n.charAt(0)).toUpperCase();
   }
- 
 }

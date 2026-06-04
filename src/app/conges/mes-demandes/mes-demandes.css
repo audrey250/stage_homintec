@@ -299,6 +299,73 @@
 .type-card.selected .type-label {
   color: #12471d;
 }
+
+/* ============================================================
+   BOUTONS ACTIONS TABLE
+   ============================================================ */
+.action-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn-group .btn {
+  padding: 6px 12px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: 0.2s;
+}
+
+.action-btn-group .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* ============================================================
+   ✅ BOUTONS MODAL — espace entre Réinitialiser et Envoyer
+   ============================================================ */
+.modal-footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  gap: 16px;
+}
+
+.modal-footer-actions .btn {
+  min-width: 140px;
+}
+
+/* ============================================================
+   ZONE UPLOAD JUSTIFICATIF
+   ============================================================ */
+.justif-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 28px 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  background: #f8fafc;
+  min-height: 130px;
+}
+
+.justif-upload-zone:hover {
+  border-color: #12471d;
+  background: rgba(18, 71, 29, 0.03);
+}
+
+.justif-upload-zone.fichier-selectionne {
+  border-color: #12471d;
+  background: rgba(18, 71, 29, 0.04);
+}
+
 /* ============================================================
    ANIMATIONS
    ============================================================ */
@@ -316,21 +383,4 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
-   .action-btn-group {
-  gap: 50px;
-}
-
-.action-btn-group .btn {
-  
-  padding: 6px 12px;
-
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  transition: 0.2s;
-}
-
-.action-btn-group .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
