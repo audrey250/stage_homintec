@@ -1,16 +1,15 @@
 // ============================================================
 // src/app/services/messagerie.service.ts
-// VERSION SPRING BOOT — avec entité Conversation
 // ============================================================
 
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, throwError, switchMap } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 const API_URL = environment.apiUrl;
 
-// Statuts de conversation (selon diagramme de classe)
 export type StatutConversation = 'active' | 'bloquee' | 'supprimee' | 'envoyee' | 'fermee';
 
 export interface Message {
@@ -20,42 +19,39 @@ export interface Message {
   expediteurPrenom: string;
   destinataireId:   number;
   contenu:          string;
-  dateCreation:             string;   // ISO : "2024-01-20T09:00:00"
+  dateCreation:     string;
   lu:               boolean;
 }
 
 export interface Conversation {
-  idConversation:  number;
-  statut:          StatutConversation;
-  lastMessage:     string;
-  dateCreation:    string;
-
-  // ✅ Remplace interlocuteurXxx par destinataireXxx (ou contactXxx)
+  idConversation:     number;
+  statut:             StatutConversation;
+  lastMessage:        string;
+  dateCreation:       string;
   destinataireId:     number;
   destinataireNom:    string;
   destinatairePrenom: string;
   destinataireRole:   string;
   destinataireDept:   string;
-
-  nonLus:   number;
-  messages: Message[];
+  nonLus:             number;
+  messages:           Message[];
 }
-// Payload pour créer une nouvelle conversation (POST /api/conversations)
+
 export interface NouvelleConversation {
   destinataireId: number;
 }
 
 export interface NouveauMessage {
-  conversationId: number;   // on lie le message à la conversation
+  conversationId: number;
+
   contenu:        string;
 }
 
-// Utilisateur minimal pour la liste de destinataires
 export interface UtilisateurSimple {
-  id:      number;
-  nom:     string;
-  prenom:  string;
-  poste?:  string;
+  id:              number;
+  nom:             string;
+  prenom:          string;
+  poste?:          string;
   departementNom?: string;
 }
 
@@ -71,22 +67,23 @@ export class MessagerieService {
   private _erreur = signal('');
   erreur          = this._erreur.asReadonly();
 
-  // Liste des utilisateurs disponibles pour démarrer une conversation
   private _utilisateurs = signal<UtilisateurSimple[]>([]);
   utilisateurs          = this._utilisateurs.asReadonly();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http:        HttpClient,
+    private authService: AuthService
+  ) {}
 
   // ============================================================
-  // CHARGER TOUTES LES CONVERSATIONS DE L'UTILISATEUR CONNECTÉ
-  // GET /api/conversations
-  // Spring Boot renvoie : Conversation[] avec infos interlocuteur
+  // CHARGER TOUTES LES CONVERSATIONS
+  // GET /api/conversations/utilisateur/:userId
   // ============================================================
-  chargerConversations(): Observable<Conversation[]> {
+  chargerConversations(userId: number): Observable<Conversation[]> {
     this._loading.set(true);
     this._erreur.set('');
     return this.http
-      .get<Conversation[]>(`${API_URL}/conversations`)
+      .get<Conversation[]>(`${API_URL}/conversations/utilisateur/${userId}`)
       .pipe(
         tap((data) => {
           this._conversations.set(data);
@@ -103,19 +100,23 @@ export class MessagerieService {
   // ============================================================
   // CRÉER UNE NOUVELLE CONVERSATION
   // POST /api/conversations
-  // Body : { destinataireId }
-  // Retourne la Conversation créée (statut = 'active')
+  // Body : { expediteurId, destinataireId }
   // ============================================================
   creerConversation(payload: NouvelleConversation): Observable<Conversation> {
+    const expediteurId = this.authService.currentUser()?.id;
+    if (!expediteurId) {
+      return throwError(() => new Error('Utilisateur non authentifié. Veuillez vous reconnecter.'));
+    }
+
     return this.http
-      .post<Conversation>(`${API_URL}/conversations`, payload)
+      .post<Conversation>(`${API_URL}/conversations`, {
+        expediteurId,
+        destinataireId: payload.destinataireId
+      })
       .pipe(
         tap((nouvelle) => {
-          // Éviter les doublons si la conversation existait déjà
           this._conversations.update(convs => {
-            const existe = convs.find(
-              c => c.destinataireId === nouvelle.destinataireId
-            );
+            const existe = convs.find(c => c.destinataireId === nouvelle.destinataireId);
             if (existe) return convs;
             return [nouvelle, ...convs];
           });
@@ -151,15 +152,14 @@ export class MessagerieService {
   }
 
   // ============================================================
-  // ENVOYER UN MESSAGE DANS UNE CONVERSATION
+  // ENVOYER UN MESSAGE
   // POST /api/conversations/:idConversation/messages
-  // Body : { destinataireId, contenu }
   // ============================================================
   envoyer(msg: NouveauMessage): Observable<Message> {
     return this.http
       .post<Message>(
         `${API_URL}/conversations/${msg.conversationId}/messages`,
-        {  contenu: msg.contenu }
+        { contenu: msg.contenu }
       )
       .pipe(
         tap((nouveau) => {
@@ -168,9 +168,9 @@ export class MessagerieService {
               c.idConversation === msg.conversationId
                 ? {
                     ...c,
-                    messages:    [...(c.messages ?? []), nouveau],
-                    lastMessage: msg.contenu,
-                    dateCreation:        nouveau.dateCreation
+                    messages:     [...(c.messages ?? []), nouveau],
+                    lastMessage:  msg.contenu,
+                    dateCreation: nouveau.dateCreation
                   }
                 : c
             )
@@ -181,7 +181,7 @@ export class MessagerieService {
   }
 
   // ============================================================
-  // MARQUER LES MESSAGES D'UNE CONVERSATION COMME LUS
+  // MARQUER LES MESSAGES COMME LUS
   // PUT /api/conversations/:idConversation/lus
   // ============================================================
   marquerLus(idConversation: number): Observable<void> {
@@ -202,7 +202,7 @@ export class MessagerieService {
   }
 
   // ============================================================
-  // SUPPRIMER UNE CONVERSATION (statut = 'supprimee')
+  // SUPPRIMER UNE CONVERSATION
   // DELETE /api/conversations/:idConversation
   // ============================================================
   supprimerConversation(idConversation: number): Observable<void> {
@@ -219,7 +219,7 @@ export class MessagerieService {
   }
 
   // ============================================================
-  // CHARGER LA LISTE DES UTILISATEURS (pour nouvelle conversation)
+  // CHARGER LA LISTE DES UTILISATEURS
   // GET /api/utilisateurs
   // ============================================================
   chargerUtilisateurs(): Observable<UtilisateurSimple[]> {

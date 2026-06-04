@@ -3,6 +3,7 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 import { firstLoginGuard } from './guards/first-login.guard';
 
+
 export const routes: Routes = [
 
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -12,6 +13,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./auth/login/login').then(m => m.LoginComponent)
   },
+  
   {
     path: 'mot-de-passe-oublie',
     loadComponent: () =>

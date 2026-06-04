@@ -22,7 +22,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './messagerie.html',
-  styleUrl: './messagerie.css'
+  styleUrls: ['./messagerie.css']
 })
 export class MessagerieComponent implements OnInit, AfterViewChecked {
 
@@ -41,6 +41,14 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   utilisateurRecherche    = signal('');
   utilisateurSelectionne  = signal<UtilisateurSimple | null>(null);
 
+  // ---- Modal nouvelle demande ----
+    modalOuvert = signal(false);
+    formLoading = signal(false);
+    formErreur  = signal('');
+    formData = signal({
+     
+    });
+  
   // ---- Suppression ----
   suppressionEnCours = signal(false);
 
@@ -52,7 +60,10 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   ) {}
 
   ngOnInit(): void {
-    this.messagerieService.chargerConversations().subscribe({
+    const userId = this.authService.currentUser()?.id;
+    if (!userId) return;
+
+    this.messagerieService.chargerConversations(userId).subscribe({
       next: (convs) => {
         if (convs.length === 1) {
           this.ouvrirConversation(convs[0]);

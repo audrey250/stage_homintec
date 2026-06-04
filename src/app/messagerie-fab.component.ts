@@ -1,3 +1,4 @@
+
 // src/app/messagerie-fab.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -16,47 +17,50 @@ import { MessagerieService } from './services/messagerie.service';
       </span>
     </a>
   `,
-  styles: [`
-    .fab-btn {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #4e73df;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 4px 16px rgba(78,115,223,.45);
-      z-index: 1050;
-      text-decoration: none;
-      transition: transform .15s, box-shadow .15s;
-    }
-    .fab-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 20px rgba(78,115,223,.55);
-    }
-    .fab-badge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      background: #e74c3c;
-      color: white;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  `]
+ styles: [`
+  .fab-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #28a745;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 16px rgba(40, 167, 69, .45);
+    z-index: 1050;
+    text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  .fab-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, .55);
+  }
+
+  .fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+`]
 })
-export class MessagérieFabComponent {
+export class MessagerieFabComponent {
   constructor(public messagerieService: MessagerieService) {}
-}
+} 
+

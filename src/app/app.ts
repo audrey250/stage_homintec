@@ -1,15 +1,30 @@
-import { Component } from '@angular/core';
-// RouterOutlet = l'endroit où Angular affiche
-// le composant correspondant à la route active
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { MessagerieFabComponent } from './messagerie-fab.component';
+import { AuthService } from './services/auth.service';
+import { MessagerieService } from './services/messagerie.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  // Template minimal : juste le router-outlet
-  // Angular remplacera cette balise par le bon composant
-  // selon l'URL : /login → LoginComponent, /dashboard → DashboardComponent...
-  template: `<router-outlet />`
+  imports: [CommonModule, RouterOutlet, MessagerieFabComponent],
+  template: `
+    <router-outlet></router-outlet>
+    <app-messagerie-fab *ngIf="authService.isLoggedIn()"></app-messagerie-fab>
+  `
 })
-export class App {}
+export class AppComponent implements OnInit {
+  constructor(
+    public authService: AuthService,
+    private messagerieService: MessagerieService
+  ) {}
+
+  ngOnInit(): void {
+    const userId = this.authService.currentUser()?.id;
+    if (userId) {
+      this.messagerieService.chargerConversations(userId)
+        .subscribe({ error: () => {} });
+    }
+  }
+}

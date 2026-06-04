@@ -1,245 +1,465 @@
 /* ============================================================
-   STYLES À AJOUTER dans validation.scss
-   Section : Modal Vérifications RH
+   validation.css
    ============================================================ */
 
-/* ---- Bouton déclencheur dans le tableau ---- */
-.btn-verif-rh {
-  background-color: #1a5c2a;
-  color:            #fff;
-  border:           none;
-  border-radius:    20px;
-  padding:          5px 14px;
-  font-size:        0.78rem;
-  font-weight:      600;
-  letter-spacing:   0.02em;
-  transition:       background 0.2s, box-shadow 0.2s;
-  white-space:      nowrap;
-}
-.btn-verif-rh:hover:not(:disabled) {
-  background-color: #144a21;
-  box-shadow:       0 2px 8px rgba(26, 92, 42, 0.25);
-  color:            #fff;
+/* ── Page wrapper ── */
+.page-wrapper {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* ---- Carte modale élargie ---- */
-.modal-verif-rh {
-  width: 100%;
-}
-
-/* ---- En-tête du modal ---- */
-.verif-header {
-  display:          flex;
-  align-items:      center;
-  justify-content:  space-between;
-  padding:          20px 24px 16px;
-  border-bottom:    1px solid #e9ecef;
-}
-
-.verif-header-icon {
-  width:            44px;
-  height:           44px;
-  border-radius:    50%;
-  background:       #e8f5e9;
-  color:            #1a5c2a;
-  display:          flex;
-  align-items:      center;
-  justify-content:  center;
-  flex-shrink:      0;
-}
-
-/* ---- Corps du modal ---- */
-.verif-body {
-  padding: 24px;
-}
-
-/* ---- Ligne "Validé par" ---- */
-.verif-validateur {
-  display:          flex;
-  align-items:      center;
-  padding:          10px 14px;
-  background:       #f8f9fa;
-  border-radius:    8px;
-  border-left:      3px solid #1a5c2a;
-}
-
-/* ---- Section avec bandeau vert foncé ---- */
-.verif-section {
-  border:        1px solid #dee2e6;
-  border-radius: 10px;
-  overflow:      hidden;
-}
-
-.verif-section-header {
-  background:    #1a5c2a;
-  color:         #fff;
-  font-weight:   700;
-  font-size:     0.92rem;
-  padding:       12px 20px;
-  display:       flex;
-  align-items:   center;
-}
-
-.verif-section-body {
-  padding: 24px;
-  background: #fff;
-}
-
-/* ---- Titre de colonne dans la section ---- */
-.verif-col-title {
-  font-size:     0.82rem;
-  font-weight:   700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color:         #495057;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom:  2px solid #e9ecef;
-}
-
-/* ---- Labels et inputs ---- */
-.verif-label {
-  font-size:   0.85rem;
+/* ── Role badge ── */
+.role-badge {
+  background: linear-gradient(135deg, #4e73df, #224abe);
+  color: #fff;
+  border-radius: 20px;
   font-weight: 600;
-  color:       #343a40;
-  margin-bottom: 6px;
 }
 
-.verif-input {
-  font-size:    0.88rem;
-  border-color: #ced4da;
-  border-radius: 6px;
-  padding:      8px 12px;
-  transition:   border-color 0.15s, box-shadow 0.15s;
+/* ── Workflow banner ── */
+.workflow-banner {
+  background: #e8f4fd;
+  border: 1px solid #bee3f8;
+  border-radius: 10px;
+  color: #2c5282;
 }
-.verif-input:focus {
-  border-color: #1a5c2a;
-  box-shadow:   0 0 0 0.2rem rgba(26, 92, 42, 0.15);
-}
-
-/* ---- Checkboxes ---- */
-.verif-check-item {
-  padding:       10px 12px;
-  border-radius: 6px;
-  background:    #f8f9fa;
-  border:        1px solid #e9ecef;
+.workflow-icon {
+  color: #3182ce;
 }
 
-.verif-check-item:hover {
-  background: #edf7ee;
+/* ── Filters card ── */
+.filters-card {
+  border-radius: 12px;
+}
+.filters-list {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  flex-wrap: wrap;
+}
+.filter-item {
+  display: flex;
+}
+.filter-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+  background: #f8f9fa;
+  color: #6c757d;
+  font-size: 0.83rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-pill:hover {
+  border-color: #4e73df;
+  color: #4e73df;
+  background: #eef2ff;
+}
+.filter-pill.active {
+  background: #4e73df;
+  color: #fff;
+  border-color: #4e73df;
+}
+.filter-count {
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 0.75rem;
+}
+.filter-pill:not(.active) .filter-count {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* ── Validation table card ── */
+.validation-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.validation-table thead th {
+  background: #f8f9fc;
+  color: #5a5c69;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #e3e6f0;
+  padding: 12px 16px;
+  white-space: nowrap;
+}
+.validation-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+.validation-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.validation-table tbody tr:hover {
+  background: #f8f9ff;
+}
+
+/* ── Avatar ── */
+.avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #4e73df;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Étape badges (workflow visuel) ── */
+.etape-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.etape-valide {
+  background: #d4edda;
+  color: #155724;
   border-color: #c3e6cb;
 }
-
-.form-check-input:checked {
-  background-color: #1a5c2a;
-  border-color:     #1a5c2a;
+.etape-refuse {
+  background: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+.etape-attente {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffeeba;
+}
+.etape-inactive {
+  background: #f0f0f0;
+  color: #aaa;
+  border-color: #e0e0e0;
 }
 
-.verif-check-label {
-  font-size:   0.85rem;
-  color:       #343a40;
-  cursor:      pointer;
-  user-select: none;
+/* ── Action buttons ── */
+.btn-action {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.8rem;
 }
 
-/* ---- Boutons finaux ---- */
-.btn-verif-valider {
-  background:    #1a5c2a;
-  color:         #fff;
-  border:        2px solid #1a5c2a;
-  border-radius: 20px;
-  padding:       8px 20px;
-  font-size:     0.88rem;
-  font-weight:   600;
-  transition:    background 0.2s, box-shadow 0.2s;
+/* ── Statut badges (historique) ── */
+.badge-approuvee-rh    { background: #28a745; color: #fff; }
+.badge-approuvee-chef  { background: #17a2b8; color: #fff; }
+.badge-approuvee-resp  { background: #6f42c1; color: #fff; }
+.badge-refusee         { background: #dc3545; color: #fff; }
+.badge-en-attente      { background: #ffc107; color: #212529; }
+
+/* ── Bouton vérif RH ── */
+.btn-verif-rh {
+  background: #e8f4fd;
+  color: #2c5282;
+  border: 1px solid #bee3f8;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+  transition: all 0.15s;
 }
-.btn-verif-valider:hover:not(:disabled) {
-  background:  #144a21;
-  box-shadow:  0 3px 10px rgba(26, 92, 42, 0.3);
-  color:       #fff;
-}
-.btn-verif-valider:disabled {
-  opacity: 0.7;
-  cursor:  not-allowed;
+.btn-verif-rh:hover {
+  background: #4e73df;
+  color: #fff;
+  border-color: #4e73df;
 }
 
-.btn-verif-rejeter {
-  background:    transparent;
-  color:         #dc3545;
-  border:        2px solid #dc3545;
-  border-radius: 20px;
-  padding:       8px 20px;
-  font-size:     0.88rem;
-  font-weight:   600;
-  transition:    background 0.2s, color 0.2s;
+/* ============================================================
+   MODAL WORKFLOW (approuver / rejeter)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
 }
-.btn-verif-rejeter:hover:not(:disabled) {
-  background: #dc3545;
-  color:      #fff;
-}
-
-/* ---- Responsive ---- */
-@media (max-width: 768px) {
-  .verif-body {
-    padding: 16px;
-  }
-  .verif-section-body {
-    padding: 16px;
-  }
-  .modal-verif-rh {
-    max-width: 98vw !important;
-  }
-}
-/* ── Bloc demande lecture seule ── */
-.demande-readonly-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+.modal-card {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  background: #f8fafc;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
+.modal-card-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  color: #fff;
+}
+.header-success { background: linear-gradient(135deg, #28a745, #1e7e34); }
+.header-danger  { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+
+.modal-card-body {
+  padding: 24px;
+}
+
+.btn-close-modal {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 1rem;
+  opacity: 0.7;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: opacity 0.15s;
+}
+.btn-close-modal:hover { opacity: 1; }
+
+/* ============================================================
+   MODAL VÉRIFICATIONS RH
+   ============================================================ */
+.modal-verif-rh {
+  max-width: 900px !important;
+}
+
+/* En-tête vert */
+.verif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  background: linear-gradient(135deg, #1cc88a, #13855c);
+  color: #fff;
+}
+.verif-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verif-body {
+  padding: 28px;
+}
+
+.verif-validateur {
+  background: #f8f9fc;
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Bloc demande lecture seule */
+.demande-readonly-card {
+  border: 1px solid #e3e6f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
 .demande-readonly-header {
+  background: #f8f9fc;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #5a5c69;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: #f1f5f9;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e3e6f0;
 }
-
+.badge-success {
+  background: #d4edda;
+  color: #155724;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+}
 .demande-readonly-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-
-  &--2col {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  gap: 0;
+  padding: 0;
 }
-
+.demande-readonly-grid--2col {
+  grid-template-columns: repeat(2, 1fr);
+}
 .demande-readonly-field {
-  padding: 12px 16px;
-  border-right: 1px solid #e2e8f0;
-  border-top: 1px solid #e2e8f0;
-
-  &:last-child { border-right: none; }
+  padding: 14px 20px;
+  border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
 }
-
+.demande-readonly-field:last-child {
+  border-right: none;
+}
 .readonly-label {
   font-size: 0.72rem;
-  color: #94a3b8;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  color: #a0a0b0;
   margin-bottom: 4px;
-  font-weight: 500;
 }
-
 .readonly-value {
   font-size: 0.88rem;
-  color: #1e293b;
   font-weight: 500;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Section vérifications RH */
+.verif-section {
+  border: 1px solid #c3e6cb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.verif-section-header {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  padding: 12px 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #155724;
+  display: flex;
+  align-items: center;
+}
+.verif-section-body {
+  padding: 20px;
+  background: #f9fffe;
+}
+.verif-col-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c757d;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+}
+.verif-label {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 6px;
+}
+.verif-input {
+  font-size: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.verif-input:focus {
+  border-color: #1cc88a;
+  box-shadow: 0 0 0 3px rgba(28, 200, 138, 0.15);
+}
+.verif-check-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  transition: background 0.15s;
+}
+.verif-check-item:hover {
+  background: #f0fff8;
+  border-color: #c3e6cb;
+}
+.verif-check-label {
+  font-size: 0.83rem;
+  color: #495057;
+  cursor: pointer;
+}
+.form-check-input:checked {
+  background-color: #1cc88a;
+  border-color: #1cc88a;
+}
+
+/* Boutons finaux modal vérif */
+.btn-verif-valider {
+  background: linear-gradient(135deg, #1cc88a, #13855c);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn-verif-valider:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  color: #fff;
+}
+.btn-verif-valider:disabled {
+  opacity: 0.65;
+  color: #fff;
+}
+.btn-verif-rejeter {
+  background: #fff;
+  color: #dc3545;
+  border: 2px solid #dc3545;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all 0.15s;
+}
+.btn-verif-rejeter:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-verif-rejeter:disabled {
+  opacity: 0.65;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 1rem;
+  }
+  .demande-readonly-grid {
+    grid-template-columns: 1fr;
+  }
+  .demande-readonly-grid--2col {
+    grid-template-columns: 1fr;
+  }
+  .demande-readonly-field {
+    border-right: none;
+  }
+  .modal-card {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+  .verif-body {
+    padding: 16px;
+  }
 }

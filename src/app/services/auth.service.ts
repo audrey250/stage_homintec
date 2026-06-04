@@ -196,7 +196,7 @@ export class AuthService {
   // ---- GET /api/notifications ----
   chargerNotifications(): Observable<Notification[]> {
     return this.http
-      .get<Notification[]>(`${API_URL}/notifications`)
+      .get<Notification[]>(`${API_URL}/notifications/${this._currentUser()?.id}/non-lues`)
       .pipe(
         tap((data) => {
           this._notifications.set(data);
@@ -208,7 +208,7 @@ export class AuthService {
 
   // ---- PUT /api/notifications/:id/lu ----
   marquerLu(id: number): void {
-    this.http.put(`${API_URL}/notifications/${id}/lu`, {}).subscribe(() => {
+    this.http.patch(`${API_URL}/notifications/${id}/lu`, {}).subscribe(() => {
       this._notifications.update(liste =>
         liste.map(n => n.id === id ? { ...n, lu: true } : n)
       );
@@ -218,7 +218,7 @@ export class AuthService {
 
   // ---- PUT /api/notifications/tout-lire ----
   toutMarquerLu(): void {
-    this.http.put(`${API_URL}/notifications/tout-lire`, {}).subscribe(() => {
+    this.http.patch(`${API_URL}/notifications/toutes-lues`, {}).subscribe(() => {
       this._notifications.update(liste =>
         liste.map(n => ({ ...n, lu: true }))
       );
