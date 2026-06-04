@@ -117,7 +117,7 @@ export class ListeUtilisateursComponent implements OnInit {
     return service?.nom ?? '-';
   }
 
-  getDepartementNom(departementId: number): string {
+  getDepartementNom(departementId: string): string {
     const dept = this.departementService.departements().find(d => String(d.id) === String(departementId));
     return dept?.nom ?? '-';
   }

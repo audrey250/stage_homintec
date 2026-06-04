@@ -94,6 +94,11 @@
       </div>
     </div>
 
+    <!-- Bouton + flottant -->
+    <button class="wa-fab" (click)="ouvrirModalNouvelleConv()" title="Nouvelle conversation">
+      <i class="fas fa-plus"></i>
+    </button>
+
   </aside>
 
   <!-- ════════════════════════════════════════════
@@ -220,26 +225,27 @@
 
       <!-- ── Zone de saisie ── -->
       <div class="wa-input-bar" *ngIf="conv.statut === 'active'">
-        <button class="wa-icon-btn lg" title="Emoji">
-          <i class="far fa-face-smile"></i>
-        </button>
-        <button class="wa-icon-btn lg" title="Pièce jointe">
-          <i class="fas fa-paperclip"></i>
+
+        <!-- Bouton pièce jointe rond bleu -->
+        <button class="wa-attach-btn" title="Pièce jointe">
+          <i class="fas fa-arrow-up"></i>
         </button>
 
+        <!-- Champ texte -->
         <input type="text"
                class="wa-text-input"
-               placeholder="Tapez un message"
+               placeholder="Tapez un message..."
                [(ngModel)]="nouveauMessage"
                (keyup.enter)="envoyer()"
                [disabled]="chargementEnvoi()" />
 
-        <button class="wa-send-btn"
-                (click)="envoyer()"
-                [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
-          <span *ngIf="chargementEnvoi()" class="wa-spinner-sm white"></span>
+
+        <!-- Bouton envoi rond bleu -->
+        <button class="wa-send-btn"  (click)="envoyer()" [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
+          <span *ngIf="chargementEnvoi()" class="wa-spinner-sm"></span>
           <i *ngIf="!chargementEnvoi()" class="fas fa-paper-plane"></i>
         </button>
+
       </div>
 
     </ng-container>
