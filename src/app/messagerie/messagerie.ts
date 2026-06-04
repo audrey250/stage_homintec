@@ -33,6 +33,10 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   nouveauMessage       = '';
   erreurEnvoi          = signal('');
   chargementEnvoi      = signal(false);
+  
+  messageSelectionne = signal<Message | null>(null);
+messageEdition = signal<Message | null>(null);
+texteEdition = '';
 
   // ---- Modal nouvelle conversation ----
   modalNouvelleConvOuvert = signal(false);
@@ -135,8 +139,67 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
         console.error('Erreur envoi message', err);
       }
     });
+
+  }
+  selectionnerMessage(msg: Message): void {
+  if (this.messageSelectionne()?.id === msg.id) {
+    this.messageSelectionne.set(null);
+  } else {
+    this.messageSelectionne.set(msg);
+  }
+}
+  //modifier un message
+  modifierMessage(msg: Message): void {
+
+  const nouveauTexte = prompt(
+    'Modifier le message :',
+    msg.contenu
+  );
+
+  if (!nouveauTexte || nouveauTexte.trim() === msg.contenu) {
+    return;
   }
 
+  this.messagerieService
+      .modifierMessage(msg.id, nouveauTexte.trim())
+      .subscribe({
+        next: () => {
+          msg.contenu = nouveauTexte.trim();
+          this.messageSelectionne.set(null);
+        },
+        error: err => console.error(err)
+      });
+}
+
+  //supprimer un mesage
+ supprimerMessage(msg: Message): void {
+
+  if (!confirm('Supprimer ce message ?')) {
+    return;
+  }
+
+  this.messagerieService
+      .supprimerMessage(msg.id)
+      .subscribe({
+        next: () => {
+
+          const conv = this.conversationActive();
+
+          if (!conv) return;
+
+          conv.messages = conv.messages.filter(
+            m => m.id !== msg.id
+          );
+
+          this.conversationActive.set({
+            ...conv
+          });
+
+          this.messageSelectionne.set(null);
+        },
+        error: err => console.error(err)
+      });
+}
   // ============================================================
   // MODAL NOUVELLE CONVERSATION
   // ============================================================

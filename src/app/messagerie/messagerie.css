@@ -124,7 +124,7 @@
   box-shadow: inset 0 0 0 1px rgba(59,130,246,.08);
 }
 .wa-bubble.sent{
-  background:#2563eb !important;
+  background:#155724 !important;
   color:white !important;
 }
 
@@ -132,13 +132,54 @@
   background:white !important;
 }
 .wa-send-btn i{
-  color: blue !important;
+  color: #155724!important;
   font-size: 18px;
 }
 .wa-avatar span{
   color:green !important;
   font-weight:bold;
   font-size:16px;
+}
+.wa-msg-actions{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+
+.wa-action-btn{
+  border:none;
+  border-radius:6px;
+  padding:5px 10px;
+  cursor:pointer;
+  background:#f0f2f5;
+}
+
+.wa-action-btn.danger{
+  background:#dc3545;
+  color:white;
+}
+
+.wa-messages{
+  background: #efeae2;
+  background-image:
+    radial-gradient(rgba(255,255,255,.35) 1px, transparent 1px);
+  background-size: 24px 24px;
+
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.wa-msg-row{
+  display: flex;
+  margin: 6px 12px;
+}
+
+.wa-msg-row.sent{
+  justify-content: flex-end;
+}
+
+.wa-msg-row.recv{
+  justify-content: flex-start;
 }
 
 .wa-avatar {

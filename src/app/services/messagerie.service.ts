@@ -234,6 +234,18 @@ export class MessagerieService {
         catchError((err) => throwError(() => err))
       );
   }
+  modifierMessage(id: string, contenu: string) {
+  return this.http
+  .put(`${API_URL}/messages/${id}`,
+    { contenu }
+  );
+}
+
+supprimerMessage(id: string) {
+  return this.http.delete(
+    `${API_URL  }/messages/${id}`
+  );
+}
 
   // ============================================================
   // TOTAL MESSAGES NON LUS (badge sidebar)

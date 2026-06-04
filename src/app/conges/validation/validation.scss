@@ -11,7 +11,7 @@
 
 /* ── Role badge ── */
 .role-badge {
-  background: linear-gradient(135deg, #4e73df, #224abe);
+  background: linear-gradient(135deg, #155724, #085b1b);
   color: #fff;
   border-radius: 20px;
   font-weight: 600;
@@ -22,10 +22,10 @@
   background: #e8f4fd;
   border: 1px solid #bee3f8;
   border-radius: 10px;
-  color: #2c5282;
+  color: #155724;
 }
 .workflow-icon {
-  color: #3182ce;
+  color: #155724;
 }
 
 /* ── Filters card ── */
@@ -62,9 +62,9 @@
   background: #eef2ff;
 }
 .filter-pill.active {
-  background: #4e73df;
+  background: #155724;
   color: #fff;
-  border-color: #4e73df;
+  border-color: #155724;
 }
 .filter-count {
   background: rgba(255,255,255,0.25);
@@ -110,7 +110,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #4e73df;
+  background: #0a683e;
   color: #fff;
   display: flex;
   align-items: center;
@@ -182,9 +182,9 @@
   transition: all 0.15s;
 }
 .btn-verif-rh:hover {
-  background: #4e73df;
+  background: #155724;
   color: #fff;
-  border-color: #4e73df;
+  border-color: #155724;
 }
 
 /* ============================================================
