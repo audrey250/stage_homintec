@@ -1,275 +1,341 @@
-<!-- messagerie.html -->
-<div class="msg-app">
+<!-- ============================================================
+     messagerie.html  –  Style WhatsApp Web
+     ============================================================ -->
 
-  <!-- ===== SIDEBAR ===== -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <span class="sidebar-title">Messages</span>
-      <div class="d-flex gap-2">
-        <button class="icon-btn" title="Options">
-          <i class="ti ti-dots"></i>
+<div class="wa-shell">
+
+  <!-- ════════════════════════════════════════════
+       PANNEAU GAUCHE
+  ════════════════════════════════════════════ -->
+  <aside class="wa-sidebar">
+
+    <!-- Header sidebar -->
+    <div class="wa-sidebar-header">
+      <div class="wa-my-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="wa-sidebar-actions">
+        <button class="wa-icon-btn" title="Statut">
+          <i class="fas fa-circle-dot"></i>
         </button>
-        <button class="icon-btn" title="Nouvelle conversation"
+        <button class="wa-icon-btn" title="Nouvelle conversation"
                 (click)="ouvrirModalNouvelleConv()">
-          <i class="ti ti-edit"></i>
+          <i class="fas fa-pen-to-square"></i>
+        </button>
+        <button class="wa-icon-btn" title="Menu">
+          <i class="fas fa-ellipsis-vertical"></i>
         </button>
       </div>
     </div>
 
-    <div class="search-box">
-      <i class="ti ti-search"></i>
-      <input type="text" placeholder="Rechercher dans Messagerie..." />
+    <!-- Barre de recherche -->
+    <div class="wa-search-bar">
+      <div class="wa-search-inner">
+        <i class="fas fa-magnifying-glass wa-search-icon"></i>
+        <input type="text"
+               placeholder="Rechercher ou démarrer une discussion"
+               class="wa-search-input" />
+      </div>
     </div>
 
-    <div class="conv-list">
+    <!-- Spinner chargement initial -->
+    <div *ngIf="messagerieService.loading() && messagerieService.conversations().length === 0"
+         class="wa-loading">
+      <div class="wa-spinner"></div>
+    </div>
 
-      <div *ngIf="messagerieService.loading() && messagerieService.conversations().length === 0"
-           class="text-center py-4">
-        <div class="spinner-border spinner-border-sm text-primary"></div>
+    <!-- Erreur -->
+    <div *ngIf="messagerieService.erreur()" class="wa-error-banner">
+      <i class="fas fa-triangle-exclamation"></i>
+      {{ messagerieService.erreur() }}
+    </div>
+
+    <!-- Liste conversations -->
+    <div class="wa-conv-list">
+
+      <div *ngIf="messagerieService.conversations().length === 0 && !messagerieService.loading()"
+           class="wa-empty-list">
+        <i class="fas fa-comments"></i>
+        <p>Aucune conversation</p>
+        <button class="wa-btn-primary" (click)="ouvrirModalNouvelleConv()">
+          <i class="fas fa-plus"></i> Démarrer
+        </button>
       </div>
 
       <div *ngFor="let conv of messagerieService.conversations()"
-           class="conv-item"
+           class="wa-conv-item"
            [class.active]="conversationActive()?.id === conv.id"
            (click)="ouvrirConversation(conv)">
 
-        <div class="avatar" [ngClass]="getAvatarColor(conv.destinataireId)">
-          {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
-          <span class="online-dot"></span>
+        <!-- Avatar -->
+        <div class="wa-avatar">
+          <span>{{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}</span>
         </div>
 
-        <div class="conv-body">
-          <div class="conv-top">
-            <span class="conv-name">
+        <!-- Infos -->
+        <div class="wa-conv-body">
+          <div class="wa-conv-top">
+            <span class="wa-conv-name">
               {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
             </span>
-            <span class="conv-time">{{ formaterDateConv(conv.dateCreation) }}</span>
+            <span class="wa-conv-time">{{ formaterDateConv(conv.dateCreation) }}</span>
           </div>
-          <div class="conv-preview" [class.unread]="conv.nonLus > 0">
-            {{ conv.lastMessage || 'Aucun message' }}
+          <div class="wa-conv-bottom">
+            <span class="wa-conv-preview"
+                  [class.unread]="conv.nonLus > 0">
+              {{ conv.lastMessage || 'Aucun message' }}
+            </span>
+            <span *ngIf="conv.nonLus > 0" class="wa-unread-badge">
+              {{ conv.nonLus }}
+            </span>
           </div>
         </div>
 
-        <div *ngIf="conv.nonLus > 0" class="unread-dot"></div>
       </div>
+    </div>
 
-      <div *ngIf="messagerieService.conversations().length === 0 && !messagerieService.loading()"
-           class="empty-convs">
-        <i class="ti ti-messages"></i>
-        <p>Aucune conversation</p>
-        <button class="btn-start" (click)="ouvrirModalNouvelleConv()">
-          <i class="ti ti-plus"></i> Démarrer
+  </aside>
+
+  <!-- ════════════════════════════════════════════
+       ZONE CHAT
+  ════════════════════════════════════════════ -->
+  <main class="wa-chat">
+
+    <!-- État vide -->
+    <div *ngIf="!conversationActive()" class="wa-no-conv">
+      <div class="wa-no-conv-inner">
+        <div class="wa-logo-icon">
+          <i class="fab fa-whatsapp"></i>
+        </div>
+        <h2>Messagerie interne</h2>
+        <p>
+          Sélectionnez une conversation ou démarrez-en une nouvelle.<br>
+          Communication sécurisée entre équipes.
+        </p>
+        <button class="wa-btn-primary" (click)="ouvrirModalNouvelleConv()">
+          <i class="fas fa-plus"></i>&nbsp; Nouvelle conversation
         </button>
       </div>
-
-    </div>
-  </div>
-
-  <!-- ===== ZONE CHAT ===== -->
-  <div class="chat-area">
-
-    <!-- Aucune conversation sélectionnée -->
-    <div *ngIf="!conversationActive()" class="no-conv">
-      <i class="ti ti-messages" style="font-size:48px;color:var(--color-text-secondary)"></i>
-      <p>Sélectionnez une conversation</p>
-      <button class="btn-start" (click)="ouvrirModalNouvelleConv()">
-        <i class="ti ti-plus"></i> Nouvelle conversation
-      </button>
+      <div class="wa-lock-hint">
+        <i class="fas fa-lock"></i>
+        Vos messages sont chiffrés de bout en bout
+      </div>
     </div>
 
     <ng-container *ngIf="conversationActive() as conv">
 
-      <!-- En-tête -->
-      <div class="chat-top">
-        <div class="avatar" [ngClass]="getAvatarColor(conv.destinataireId)">
-          {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
-          <span class="online-dot" style="width:9px;height:9px"></span>
-        </div>
-        <div class="chat-user-info">
-          <div class="chat-user-name">
-            {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
+      <!-- ── Topbar chat ── -->
+      <div class="wa-chat-header">
+        <div class="wa-chat-identity">
+          <div class="wa-avatar">
+            <span>{{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}</span>
           </div>
-          <div class="chat-status">
-            {{ conv.destinataireRole }}
-            <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
+          <div class="wa-chat-meta">
+            <span class="wa-chat-name">
+              {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
+            </span>
+            <span class="wa-chat-sub">
+              {{ conv.destinataireRole }}
+              <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
+              <span class="wa-status-pill"
+                    [class.active]="conv.statut === 'active'"
+                    [class.closed]="conv.statut === 'fermee'"
+                    [class.blocked]="conv.statut === 'bloquee'">
+                {{ conv.statut }}
+              </span>
+            </span>
           </div>
         </div>
-        <div class="top-actions">
-          <button class="action-btn" title="Appel audio">
-            <i class="ti ti-phone"></i>
+
+        <div class="wa-chat-actions">
+          <button class="wa-icon-btn" title="Rechercher">
+            <i class="fas fa-magnifying-glass"></i>
           </button>
-          <button class="action-btn" title="Appel vidéo">
-            <i class="ti ti-video"></i>
-          </button>
-          <button class="action-btn btn-danger-soft"
-                  title="Supprimer la conversation"
+          <button class="wa-icon-btn danger"
                   (click)="supprimerConversation(conv)"
-                  [disabled]="suppressionEnCours()">
-            <span *ngIf="suppressionEnCours()" class="spinner-border spinner-border-sm"></span>
-            <i *ngIf="!suppressionEnCours()" class="ti ti-trash"></i>
+                  [disabled]="suppressionEnCours()"
+                  title="Supprimer">
+            <span *ngIf="suppressionEnCours()" class="wa-spinner-sm"></span>
+            <i *ngIf="!suppressionEnCours()" class="fas fa-trash"></i>
+          </button>
+          <button class="wa-icon-btn" title="Plus">
+            <i class="fas fa-ellipsis-vertical"></i>
           </button>
         </div>
       </div>
 
-      <!-- Messages -->
-      <div class="messages-area" #messagesContainer>
+      <!-- ── Messages ── -->
+      <div class="wa-messages" #messagesContainer>
 
-        <div *ngIf="messagerieService.loading()" class="text-center py-3">
-          <div class="spinner-border spinner-border-sm text-primary"></div>
+        <div *ngIf="messagerieService.loading()" class="wa-loading">
+          <div class="wa-spinner"></div>
         </div>
 
         <div *ngIf="!conv.messages || conv.messages.length === 0"
-             class="no-messages">
-          <i class="ti ti-message-off"></i>
-          <p>Aucun message. Dites bonjour 👋</p>
+             class="wa-no-messages">
+          <div class="wa-no-msg-bubble">
+            <i class="fas fa-hand-wave"></i>
+            Aucun message – dites bonjour 👋
+          </div>
         </div>
 
-        <ng-container *ngFor="let msg of conv.messages; let i = index">
+        <div *ngFor="let msg of conv.messages"
+             class="wa-msg-row"
+             [class.sent]="estMonMessage(msg.expediteurId)"
+             [class.recv]="!estMonMessage(msg.expediteurId)">
 
-          <!-- Séparateur de date si premier message ou nouveau jour -->
-          <div *ngIf="isNewDay(conv.messages, i)" class="day-sep">
-            {{ formaterJour(msg.dateEnvoi) }}
+          <div *ngIf="!estMonMessage(msg.expediteurId)"
+               class="wa-avatar xs">
+            <span>{{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}</span>
           </div>
 
-          <div class="msg-row" [class.sent]="estMonMessage(msg.expediteurId)"
+          <div class="wa-bubble"
+               [class.sent]="estMonMessage(msg.expediteurId)"
                [class.recv]="!estMonMessage(msg.expediteurId)">
-
-            <div *ngIf="!estMonMessage(msg.expediteurId)"
-                 class="avatar msg-av"
-                 [ngClass]="getAvatarColor(msg.expediteurId)">
-              {{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}
-            </div>
-
-            <div class="bubble-wrap">
-              <div class="bubble">{{ msg.contenu }}</div>
-              <div class="msg-time-hint"
-                   [class.sent-time]="estMonMessage(msg.expediteurId)">
-                {{ formaterDate(msg.dateEnvoi) }}
-                <i *ngIf="estMonMessage(msg.expediteurId)"
-                   class="ti"
-                   [class.ti-checks]="msg.lu"
-                   [class.ti-check]="!msg.lu"
-                   [style.color]="msg.lu ? '#0866FF' : 'var(--color-text-secondary)'">
-                </i>
-              </div>
-            </div>
+            <p class="wa-bubble-text">{{ msg.contenu }}</p>
+            <span class="wa-bubble-meta">
+              {{ formaterDate(msg.dateEnvoi) }}
+              <span *ngIf="estMonMessage(msg.expediteurId)" class="wa-ticks">
+                <i class="fas fa-check-double"
+                   [class.seen]="msg.lu"></i>
+              </span>
+            </span>
           </div>
 
-        </ng-container>
+        </div>
 
       </div>
 
       <!-- Erreur envoi -->
-      <div *ngIf="erreurEnvoi()" class="send-error">
-        <i class="ti ti-alert-circle"></i> {{ erreurEnvoi() }}
+      <div *ngIf="erreurEnvoi()" class="wa-send-error">
+        <i class="fas fa-triangle-exclamation"></i>
+        {{ erreurEnvoi() }}
       </div>
 
-      <!-- Zone de saisie -->
-      <div class="input-area" *ngIf="conv.statut === 'active'; else convFermee">
-        <div class="input-actions">
-          <button class="inp-btn" title="Joindre un fichier">
-            <i class="ti ti-plus"></i>
-          </button>
-          <button class="inp-btn" title="Image">
-            <i class="ti ti-photo"></i>
-          </button>
-          <button class="inp-btn" title="Emoji">
-            <i class="ti ti-mood-smile"></i>
-          </button>
-        </div>
-        <textarea class="msg-input"
-                  rows="1"
-                  placeholder="Aa"
-                  [(ngModel)]="nouveauMessage"
-                  (keydown.enter)="onEnter($event)"
-                  [disabled]="chargementEnvoi()">
-        </textarea>
-        <button class="send-btn"
+      <!-- Bannière conv fermée -->
+      <div *ngIf="conv.statut !== 'active'" class="wa-closed-banner">
+        <i class="fas fa-ban"></i>
+        Cette conversation est <strong>{{ conv.statut }}</strong> — envoi désactivé.
+      </div>
+
+      <!-- ── Zone de saisie ── -->
+      <div class="wa-input-bar" *ngIf="conv.statut === 'active'">
+        <button class="wa-icon-btn lg" title="Emoji">
+          <i class="far fa-face-smile"></i>
+        </button>
+        <button class="wa-icon-btn lg" title="Pièce jointe">
+          <i class="fas fa-paperclip"></i>
+        </button>
+
+        <input type="text"
+               class="wa-text-input"
+               placeholder="Tapez un message"
+               [(ngModel)]="nouveauMessage"
+               (keyup.enter)="envoyer()"
+               [disabled]="chargementEnvoi()" />
+
+        <button class="wa-send-btn"
                 (click)="envoyer()"
                 [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
-          <span *ngIf="chargementEnvoi()" class="spinner-border spinner-border-sm"></span>
-          <i *ngIf="!chargementEnvoi()" class="ti ti-send"></i>
+          <span *ngIf="chargementEnvoi()" class="wa-spinner-sm white"></span>
+          <i *ngIf="!chargementEnvoi()" class="fas fa-paper-plane"></i>
         </button>
       </div>
 
-      <ng-template #convFermee>
-        <div class="conv-fermee-banner">
-          <i class="ti ti-lock"></i>
-          Cette conversation est <strong>{{ conv.statut }}</strong>
-        </div>
-      </ng-template>
-
     </ng-container>
-  </div>
+
+  </main>
+
 </div>
 
-<!-- ===== MODAL NOUVELLE CONVERSATION ===== -->
-<div *ngIf="modalNouvelleConvOuvert()" class="modal-overlay"
-     (click)="fermerModalNouvelleConv()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
 
-    <div class="modal-header">
-      <h5><i class="ti ti-plus-circle"></i> Nouvelle conversation</h5>
-      <button class="icon-btn" (click)="fermerModalNouvelleConv()">
-        <i class="ti ti-x"></i>
+<!-- ============================================================
+     MODAL NOUVELLE CONVERSATION
+     ============================================================ -->
+<div *ngIf="modalNouvelleConvOuvert()"
+     class="wa-modal-overlay"
+     (click)="fermerModalNouvelleConv()">
+
+  <div class="wa-modal"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header modal -->
+    <div class="wa-modal-header">
+      <h5><i class="fas fa-user-plus"></i> Nouvelle conversation</h5>
+      <button class="wa-icon-btn" (click)="fermerModalNouvelleConv()">
+        <i class="fas fa-xmark"></i>
       </button>
     </div>
 
-    <div *ngIf="erreurNouvelleConv()" class="alert-danger-soft">
-      <i class="ti ti-alert-circle"></i> {{ erreurNouvelleConv() }}
+    <!-- Erreur -->
+    <div *ngIf="erreurNouvelleConv()" class="wa-modal-error">
+      <i class="fas fa-triangle-exclamation"></i>
+      {{ erreurNouvelleConv() }}
     </div>
 
-    <div class="search-box" style="margin:0 0 12px">
-      <i class="ti ti-search"></i>
+    <!-- Recherche utilisateur -->
+    <div class="wa-modal-search">
+      <i class="fas fa-magnifying-glass"></i>
       <input type="text"
              placeholder="Rechercher un collaborateur..."
              [ngModel]="utilisateurRecherche()"
              (ngModelChange)="utilisateurRecherche.set($event)" />
     </div>
 
-    <div *ngIf="chargementUtilisateurs()" class="text-center py-4">
-      <div class="spinner-border spinner-border-sm text-primary"></div>
+    <!-- Spinner -->
+    <div *ngIf="chargementUtilisateurs()" class="wa-loading">
+      <div class="wa-spinner"></div>
     </div>
 
-    <div *ngIf="!chargementUtilisateurs()" class="users-list">
+    <!-- Liste utilisateurs -->
+    <div *ngIf="!chargementUtilisateurs()" class="wa-users-list">
 
-      <div *ngIf="utilisateursFiltres().length === 0"
-           class="empty-users">
-        <i class="ti ti-user-off"></i> Aucun utilisateur trouvé
+      <div *ngIf="utilisateursFiltres().length === 0" class="wa-empty-users">
+        <i class="fas fa-user-slash"></i>
+        <p>Aucun utilisateur trouvé</p>
       </div>
 
       <div *ngFor="let u of utilisateursFiltres()"
-           class="user-item"
+           class="wa-user-item"
            [class.selected]="utilisateurSelectionne()?.id === u.id"
            (click)="selectionnerUtilisateur(u)">
 
-        <div class="avatar" [ngClass]="getAvatarColor(u.id)">
-          {{ initiales(u.nom, u.prenom) }}
+        <div class="wa-avatar">
+          <span>{{ (u.prenom.charAt(0) + u.nom.charAt(0)) | uppercase }}</span>
         </div>
-        <div style="flex:1;min-width:0">
-          <div class="conv-name">{{ u.prenom }} {{ u.nom }}</div>
-          <div class="conv-time" style="font-size:12px">
+
+        <div class="wa-user-info">
+          <span class="wa-user-name">{{ u.prenom }} {{ u.nom }}</span>
+          <span class="wa-user-role">
             {{ u.poste ?? '' }}
             <span *ngIf="u.departementNom"> · {{ u.departementNom }}</span>
-          </div>
+          </span>
         </div>
+
         <i *ngIf="utilisateurSelectionne()?.id === u.id"
-           class="ti ti-circle-check" style="color:#0866FF;font-size:18px"></i>
+           class="fas fa-circle-check wa-check"></i>
       </div>
 
     </div>
 
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="fermerModalNouvelleConv()"
+    <!-- Sélection confirmée -->
+    <div *ngIf="utilisateurSelectionne() as u" class="wa-selected-hint">
+      <i class="fas fa-circle-check"></i>
+      <strong>{{ u.prenom }} {{ u.nom }}</strong> sélectionné(e)
+    </div>
+
+    <!-- Footer modal -->
+    <div class="wa-modal-footer">
+      <button class="wa-btn-ghost"
+              (click)="fermerModalNouvelleConv()"
               [disabled]="chargementCreation()">
         Annuler
       </button>
-      <button class="btn-primary-msg"
+      <button class="wa-btn-primary"
               (click)="creerConversation()"
               [disabled]="!utilisateurSelectionne() || chargementCreation()">
-        <span *ngIf="chargementCreation()"
-              class="spinner-border spinner-border-sm me-1"></span>
-        <i *ngIf="!chargementCreation()" class="ti ti-send"></i>
+        <span *ngIf="chargementCreation()" class="wa-spinner-sm white"></span>
+        <i *ngIf="!chargementCreation()" class="fas fa-comments"></i>
         {{ chargementCreation() ? 'Création...' : 'Démarrer' }}
       </button>
     </div>

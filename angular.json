@@ -33,7 +33,7 @@
 ],
     "styles": [
       "src/styles.scss",
-      "src/assets/css/sb-admin-2.min.css"
+      "src/assets/css/sb-admin-2.min.css",
       "node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css"
     ],
     "scripts": [
