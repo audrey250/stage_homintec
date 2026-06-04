@@ -13,9 +13,11 @@ import {
   MessagerieService,
   Conversation,
   NouveauMessage,
-  UtilisateurSimple
+  UtilisateurSimple,
+  Message          // ✅ ajouter ceci
 } from '../services/messagerie.service';
 
+ 
 @Component({
   selector: 'app-messagerie',
   standalone: true,
@@ -278,4 +280,35 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
   estMonMessage(expediteurId: string): boolean {
     return expediteurId === this.authService.currentUser()?.id;
   }
+
+
+  // Couleur d'avatar déterministe selon l'ID
+getAvatarColor(id: string): string {
+  const colors = ['av-blue','av-green','av-coral','av-purple','av-amber','av-teal'];
+  const index  = id ? id.charCodeAt(0) % colors.length : 0;
+  return colors[index];
+}
+
+// Séparateur de jour entre les messages
+isNewDay(messages: Message[], index: number): boolean {
+  if (index === 0) return true;
+  const curr = new Date(messages[index].dateEnvoi).toDateString();
+  const prev = new Date(messages[index - 1].dateEnvoi).toDateString();
+  return curr !== prev;
+}
+
+formaterJour(date: string): string {
+  const d   = new Date(date);
+  const auj = new Date();
+  if (d.toDateString() === auj.toDateString()) return "Aujourd'hui";
+  const hier = new Date(); hier.setDate(hier.getDate() - 1);
+  if (d.toDateString() === hier.toDateString()) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' });
+}
+
+// Empêche la soumission au Enter sans Shift
+onEnter(event: Event): void {
+  const e = event as KeyboardEvent;
+  if (!e.shiftKey) { e.preventDefault(); this.envoyer(); }
+}
 }

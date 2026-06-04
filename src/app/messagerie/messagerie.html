@@ -1,344 +1,275 @@
-<!-- ============================================================
-     messagerie.html
-     ============================================================ -->
+<!-- messagerie.html -->
+<div class="msg-app">
 
-<div class="messagerie-container">
-
-  <!-- EN-TÊTE -->
-  <div class="page-header mb-3 d-flex align-items-center justify-content-between">
-    <div>
-      <h4 class="fw-bold mb-0">
-        <i class="fas fa-comments text-primary me-2"></i>
-        Messagerie interne
-      </h4>
-      <p class="text-muted mb-0" style="font-size:.85rem">
-        Communication sécurisée entre équipes
-      </p>
-    </div>
-    <button class="btn btn-primary btn-sm"
-            (click)="ouvrirModalNouvelleConv()">
-      <i class="fas fa-plus me-1"></i>
-      Nouvelle conversation
-    </button>
-  </div>
-
-  <!-- Spinner chargement initial -->
-  <div *ngIf="messagerieService.loading() && messagerieService.conversations().length === 0"
-       class="text-center py-5 text-muted">
-    <div class="spinner-border text-primary mb-2"></div>
-    <p class="mb-0" style="font-size:.85rem">Chargement des conversations...</p>
-  </div>
-
-  <!-- Erreur chargement -->
-  <div *ngIf="messagerieService.erreur()"
-       class="alert alert-danger">
-    <i class="fas fa-exclamation-circle me-2"></i>
-    {{ messagerieService.erreur() }}
-  </div>
-
-  <!-- CORPS : liste + chat -->
-  <div class="chat-wrapper card shadow-sm border-0"
-       *ngIf="!messagerieService.loading() || messagerieService.conversations().length > 0">
-
-    <!-- ========== COLONNE GAUCHE : conversations ========== -->
-    <div class="conversations-list">
-
-      <div class="conv-search p-3 border-bottom">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-light border-end-0">
-            <i class="fas fa-search text-muted"></i>
-          </span>
-          <input type="text"
-                 class="form-control border-start-0"
-                 placeholder="Rechercher..." />
-        </div>
-      </div>
-
-      <div class="conv-items">
-
-        <div *ngFor="let conv of messagerieService.conversations()"
-             class="conv-item"
-             [class.active]="conversationActive()?.id === conv.id"
-             (click)="ouvrirConversation(conv)">
-
-          <div class="conv-avatar">
-            {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
-            <span *ngIf="conv.nonLus > 0" class="unread-badge">
-              {{ conv.nonLus }}
-            </span>
-          </div>
-
-          <div class="conv-info">
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="conv-name">
-                {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
-              </div>
-              <div class="text-muted" style="font-size:.72rem; white-space:nowrap">
-                {{ formaterDateConv(conv.dateCreation) }}
-              </div>
-            </div>
-            <div class="conv-role text-muted">
-              {{ conv.destinataireRole }}
-              <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
-            </div>
-            <div class="conv-preview text-muted">
-              {{ conv.lastMessage || 'Aucun message' }}
-            </div>
-          </div>
-        </div>
-
-        <div *ngIf="messagerieService.conversations().length === 0"
-             class="text-center p-4 text-muted">
-          <i class="fas fa-comments fa-2x mb-2 d-block opacity-25"></i>
-          <p class="mb-2" style="font-size:.85rem">Aucune conversation</p>
-          <button class="btn btn-primary btn-sm"
-                  (click)="ouvrirModalNouvelleConv()">
-            <i class="fas fa-plus me-1"></i> Démarrer
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ========== COLONNE DROITE : zone de chat ========== -->
-    <div class="chat-zone">
-
-      <div *ngIf="!conversationActive()"
-           class="no-conv d-flex flex-column
-                  align-items-center justify-content-center
-                  h-100 text-muted">
-        <i class="fas fa-comments fa-3x mb-3 opacity-25"></i>
-        <p class="mb-2">Sélectionnez une conversation</p>
-        <button class="btn btn-outline-primary btn-sm"
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Messages</span>
+      <div class="d-flex gap-2">
+        <button class="icon-btn" title="Options">
+          <i class="ti ti-dots"></i>
+        </button>
+        <button class="icon-btn" title="Nouvelle conversation"
                 (click)="ouvrirModalNouvelleConv()">
-          <i class="fas fa-plus me-1"></i> Nouvelle conversation
+          <i class="ti ti-edit"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <i class="ti ti-search"></i>
+      <input type="text" placeholder="Rechercher dans Messagerie..." />
+    </div>
+
+    <div class="conv-list">
+
+      <div *ngIf="messagerieService.loading() && messagerieService.conversations().length === 0"
+           class="text-center py-4">
+        <div class="spinner-border spinner-border-sm text-primary"></div>
+      </div>
+
+      <div *ngFor="let conv of messagerieService.conversations()"
+           class="conv-item"
+           [class.active]="conversationActive()?.id === conv.id"
+           (click)="ouvrirConversation(conv)">
+
+        <div class="avatar" [ngClass]="getAvatarColor(conv.destinataireId)">
+          {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
+          <span class="online-dot"></span>
+        </div>
+
+        <div class="conv-body">
+          <div class="conv-top">
+            <span class="conv-name">
+              {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
+            </span>
+            <span class="conv-time">{{ formaterDateConv(conv.dateCreation) }}</span>
+          </div>
+          <div class="conv-preview" [class.unread]="conv.nonLus > 0">
+            {{ conv.lastMessage || 'Aucun message' }}
+          </div>
+        </div>
+
+        <div *ngIf="conv.nonLus > 0" class="unread-dot"></div>
+      </div>
+
+      <div *ngIf="messagerieService.conversations().length === 0 && !messagerieService.loading()"
+           class="empty-convs">
+        <i class="ti ti-messages"></i>
+        <p>Aucune conversation</p>
+        <button class="btn-start" (click)="ouvrirModalNouvelleConv()">
+          <i class="ti ti-plus"></i> Démarrer
         </button>
       </div>
 
-      <ng-container *ngIf="conversationActive() as conv">
+    </div>
+  </div>
 
-        <!-- En-tête chat -->
-        <div class="chat-header border-bottom p-3
-                    d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-3">
-            <div class="conv-avatar sm">
-              {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
-            </div>
-            <div>
-              <div class="fw-semibold">
-                {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
-              </div>
-              <div class="text-muted" style="font-size:.78rem">
-                {{ conv.destinataireRole }}
-                <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
-                <span class="badge ms-2"
-                      [class.bg-success]="conv.statut === 'active'"
-                      [class.bg-secondary]="conv.statut === 'fermee'"
-                      [class.bg-danger]="conv.statut === 'bloquee'"
-                      style="font-size:.65rem">
-                  {{ conv.statut }}
-                </span>
-              </div>
-            </div>
+  <!-- ===== ZONE CHAT ===== -->
+  <div class="chat-area">
+
+    <!-- Aucune conversation sélectionnée -->
+    <div *ngIf="!conversationActive()" class="no-conv">
+      <i class="ti ti-messages" style="font-size:48px;color:var(--color-text-secondary)"></i>
+      <p>Sélectionnez une conversation</p>
+      <button class="btn-start" (click)="ouvrirModalNouvelleConv()">
+        <i class="ti ti-plus"></i> Nouvelle conversation
+      </button>
+    </div>
+
+    <ng-container *ngIf="conversationActive() as conv">
+
+      <!-- En-tête -->
+      <div class="chat-top">
+        <div class="avatar" [ngClass]="getAvatarColor(conv.destinataireId)">
+          {{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}
+          <span class="online-dot" style="width:9px;height:9px"></span>
+        </div>
+        <div class="chat-user-info">
+          <div class="chat-user-name">
+            {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
           </div>
-
-          <button class="btn btn-outline-danger btn-sm"
+          <div class="chat-status">
+            {{ conv.destinataireRole }}
+            <span *ngIf="conv.destinataireDept"> · {{ conv.destinataireDept }}</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="action-btn" title="Appel audio">
+            <i class="ti ti-phone"></i>
+          </button>
+          <button class="action-btn" title="Appel vidéo">
+            <i class="ti ti-video"></i>
+          </button>
+          <button class="action-btn btn-danger-soft"
+                  title="Supprimer la conversation"
                   (click)="supprimerConversation(conv)"
-                  [disabled]="suppressionEnCours()"
-                  title="Supprimer la conversation">
-            <span *ngIf="suppressionEnCours()"
-                  class="spinner-border spinner-border-sm"></span>
-            <i *ngIf="!suppressionEnCours()" class="fas fa-trash-alt"></i>
+                  [disabled]="suppressionEnCours()">
+            <span *ngIf="suppressionEnCours()" class="spinner-border spinner-border-sm"></span>
+            <i *ngIf="!suppressionEnCours()" class="ti ti-trash"></i>
           </button>
         </div>
+      </div>
 
-        <!-- Messages -->
-        <div class="chat-messages" #messagesContainer>
+      <!-- Messages -->
+      <div class="messages-area" #messagesContainer>
 
-          <div *ngIf="messagerieService.loading()"
-               class="text-center py-3 text-muted">
-            <div class="spinner-border spinner-border-sm text-primary"></div>
+        <div *ngIf="messagerieService.loading()" class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+        </div>
+
+        <div *ngIf="!conv.messages || conv.messages.length === 0"
+             class="no-messages">
+          <i class="ti ti-message-off"></i>
+          <p>Aucun message. Dites bonjour 👋</p>
+        </div>
+
+        <ng-container *ngFor="let msg of conv.messages; let i = index">
+
+          <!-- Séparateur de date si premier message ou nouveau jour -->
+          <div *ngIf="isNewDay(conv.messages, i)" class="day-sep">
+            {{ formaterJour(msg.dateEnvoi) }}
           </div>
 
-          <div *ngIf="!conv.messages || conv.messages.length === 0"
-               class="text-center py-5 text-muted">
-            <i class="fas fa-comment-slash fa-2x mb-2 d-block opacity-25"></i>
-            <p style="font-size:.85rem">Aucun message. Dites bonjour 👋</p>
-          </div>
-
-          <!-- ✅ expediteurId passé en string -->
-          <div *ngFor="let msg of conv.messages"
-               class="message-row"
-               [class.sent]="estMonMessage(msg.expediteurId)"
-               [class.received]="!estMonMessage(msg.expediteurId)">
+          <div class="msg-row" [class.sent]="estMonMessage(msg.expediteurId)"
+               [class.recv]="!estMonMessage(msg.expediteurId)">
 
             <div *ngIf="!estMonMessage(msg.expediteurId)"
-                 class="conv-avatar xs me-2">
+                 class="avatar msg-av"
+                 [ngClass]="getAvatarColor(msg.expediteurId)">
               {{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}
             </div>
 
-            <div class="message-bubble">
-              <div class="message-text">{{ msg.contenu }}</div>
-              <div class="message-time">
+            <div class="bubble-wrap">
+              <div class="bubble">{{ msg.contenu }}</div>
+              <div class="msg-time-hint"
+                   [class.sent-time]="estMonMessage(msg.expediteurId)">
                 {{ formaterDate(msg.dateEnvoi) }}
                 <i *ngIf="estMonMessage(msg.expediteurId)"
-                   class="fas fa-check ms-1"
-                   [class.text-primary]="msg.lu"
-                   [class.text-muted]="!msg.lu">
+                   class="ti"
+                   [class.ti-checks]="msg.lu"
+                   [class.ti-check]="!msg.lu"
+                   [style.color]="msg.lu ? '#0866FF' : 'var(--color-text-secondary)'">
                 </i>
               </div>
             </div>
           </div>
 
-        </div>
+        </ng-container>
 
-        <!-- Erreur envoi -->
-        <div *ngIf="erreurEnvoi()"
-             class="px-3 py-1 text-danger"
-             style="font-size:.8rem">
-          <i class="fas fa-exclamation-circle me-1"></i>
-          {{ erreurEnvoi() }}
-        </div>
+      </div>
 
-        <!-- Zone de saisie -->
-        <div class="chat-input border-top p-3 d-flex gap-2">
-          <input type="text"
-                 class="form-control"
-                 placeholder="Tapez votre message..."
-                 [(ngModel)]="nouveauMessage"
-                 (keyup.enter)="envoyer()"
-                 [disabled]="chargementEnvoi() || conv.statut !== 'active'" />
-          <button class="btn btn-primary px-3"
-                  (click)="envoyer()"
-                  [disabled]="!nouveauMessage.trim() || chargementEnvoi() || conv.statut !== 'active'">
-            <span *ngIf="chargementEnvoi()"
-                  class="spinner-border spinner-border-sm"></span>
-            <i *ngIf="!chargementEnvoi()" class="fas fa-paper-plane"></i>
+      <!-- Erreur envoi -->
+      <div *ngIf="erreurEnvoi()" class="send-error">
+        <i class="ti ti-alert-circle"></i> {{ erreurEnvoi() }}
+      </div>
+
+      <!-- Zone de saisie -->
+      <div class="input-area" *ngIf="conv.statut === 'active'; else convFermee">
+        <div class="input-actions">
+          <button class="inp-btn" title="Joindre un fichier">
+            <i class="ti ti-plus"></i>
+          </button>
+          <button class="inp-btn" title="Image">
+            <i class="ti ti-photo"></i>
+          </button>
+          <button class="inp-btn" title="Emoji">
+            <i class="ti ti-mood-smile"></i>
           </button>
         </div>
+        <textarea class="msg-input"
+                  rows="1"
+                  placeholder="Aa"
+                  [(ngModel)]="nouveauMessage"
+                  (keydown.enter)="onEnter($event)"
+                  [disabled]="chargementEnvoi()">
+        </textarea>
+        <button class="send-btn"
+                (click)="envoyer()"
+                [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
+          <span *ngIf="chargementEnvoi()" class="spinner-border spinner-border-sm"></span>
+          <i *ngIf="!chargementEnvoi()" class="ti ti-send"></i>
+        </button>
+      </div>
 
-        <div *ngIf="conv.statut !== 'active'"
-             class="alert alert-warning m-2 py-2"
-             style="font-size:.82rem">
-          <i class="fas fa-lock me-2"></i>
-          Cette conversation est
-          <strong>{{ conv.statut }}</strong> — vous ne pouvez plus envoyer de messages.
+      <ng-template #convFermee>
+        <div class="conv-fermee-banner">
+          <i class="ti ti-lock"></i>
+          Cette conversation est <strong>{{ conv.statut }}</strong>
         </div>
+      </ng-template>
 
-      </ng-container>
-    </div>
+    </ng-container>
   </div>
 </div>
 
-<!-- ============================================================
-     MODAL NOUVELLE CONVERSATION
-     ============================================================ -->
-<div *ngIf="modalNouvelleConvOuvert()"
-     class="modal-overlay"
+<!-- ===== MODAL NOUVELLE CONVERSATION ===== -->
+<div *ngIf="modalNouvelleConvOuvert()" class="modal-overlay"
      (click)="fermerModalNouvelleConv()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
 
-  <div class="modal-card"
-       style="max-width:480px"
-       (click)="$event.stopPropagation()">
-
-    <div class="d-flex align-items-center justify-content-between mb-4">
-      <h5 class="fw-bold mb-0">
-        <i class="fas fa-plus-circle text-primary me-2"></i>
-        Nouvelle conversation
-      </h5>
-      <button class="btn-close-modal" (click)="fermerModalNouvelleConv()">
-        <i class="fas fa-times"></i>
+    <div class="modal-header">
+      <h5><i class="ti ti-plus-circle"></i> Nouvelle conversation</h5>
+      <button class="icon-btn" (click)="fermerModalNouvelleConv()">
+        <i class="ti ti-x"></i>
       </button>
     </div>
 
-    <div *ngIf="erreurNouvelleConv()"
-         class="alert alert-danger py-2 mb-3"
-         style="font-size:.85rem">
-      <i class="fas fa-exclamation-circle me-2"></i>
-      {{ erreurNouvelleConv() }}
+    <div *ngIf="erreurNouvelleConv()" class="alert-danger-soft">
+      <i class="ti ti-alert-circle"></i> {{ erreurNouvelleConv() }}
     </div>
 
-    <div class="mb-3">
-      <label class="form-label fw-semibold" style="font-size:.88rem">
-        Destinataire <span class="text-danger">*</span>
-      </label>
-      <div class="input-group">
-        <span class="input-group-text">
-          <i class="fas fa-search text-muted"></i>
-        </span>
-        <input type="text"
-               class="form-control"
-               placeholder="Nom ou prénom..."
-               [ngModel]="utilisateurRecherche()"
-               (ngModelChange)="utilisateurRecherche.set($event)" />
-      </div>
+    <div class="search-box" style="margin:0 0 12px">
+      <i class="ti ti-search"></i>
+      <input type="text"
+             placeholder="Rechercher un collaborateur..."
+             [ngModel]="utilisateurRecherche()"
+             (ngModelChange)="utilisateurRecherche.set($event)" />
     </div>
 
-    <div *ngIf="chargementUtilisateurs()"
-         class="text-center py-4 text-muted">
+    <div *ngIf="chargementUtilisateurs()" class="text-center py-4">
       <div class="spinner-border spinner-border-sm text-primary"></div>
-      <span class="ms-2" style="font-size:.85rem">Chargement...</span>
     </div>
 
-    <div *ngIf="!chargementUtilisateurs()"
-         class="utilisateurs-liste mb-4"
-         style="max-height:260px; overflow-y:auto; border:1px solid #e9ecef; border-radius:8px">
+    <div *ngIf="!chargementUtilisateurs()" class="users-list">
 
       <div *ngIf="utilisateursFiltres().length === 0"
-           class="text-center py-4 text-muted"
-           style="font-size:.85rem">
-        <i class="fas fa-user-slash mb-2 d-block"></i>
-        Aucun utilisateur trouvé
+           class="empty-users">
+        <i class="ti ti-user-off"></i> Aucun utilisateur trouvé
       </div>
 
       <div *ngFor="let u of utilisateursFiltres()"
-           class="utilisateur-item d-flex align-items-center gap-3 p-3"
+           class="user-item"
            [class.selected]="utilisateurSelectionne()?.id === u.id"
-           (click)="selectionnerUtilisateur(u)"
-           style="cursor:pointer; border-bottom:1px solid #f0f0f0; transition:background .15s">
+           (click)="selectionnerUtilisateur(u)">
 
-        <div class="avatar-sm flex-shrink-0"
-             [style.background]="utilisateurSelectionne()?.id === u.id ? '#4e73df' : '#e9ecef'"
-             [style.color]="utilisateurSelectionne()?.id === u.id ? '#fff' : '#6c757d'">
-          {{ (u.prenom.charAt(0) + u.nom.charAt(0)) | uppercase }}
+        <div class="avatar" [ngClass]="getAvatarColor(u.id)">
+          {{ initiales(u.nom, u.prenom) }}
         </div>
-
-        <div style="flex:1; min-width:0">
-          <div class="fw-semibold" style="font-size:.88rem">
-            {{ u.prenom }} {{ u.nom }}
-          </div>
-          <div class="text-muted" style="font-size:.78rem">
+        <div style="flex:1;min-width:0">
+          <div class="conv-name">{{ u.prenom }} {{ u.nom }}</div>
+          <div class="conv-time" style="font-size:12px">
             {{ u.poste ?? '' }}
             <span *ngIf="u.departementNom"> · {{ u.departementNom }}</span>
           </div>
         </div>
-
         <i *ngIf="utilisateurSelectionne()?.id === u.id"
-           class="fas fa-check-circle text-primary"></i>
+           class="ti ti-circle-check" style="color:#0866FF;font-size:18px"></i>
       </div>
 
     </div>
 
-    <div *ngIf="utilisateurSelectionne() as u"
-         class="alert alert-primary py-2 mb-3"
-         style="font-size:.85rem">
-      <i class="fas fa-user me-2"></i>
-      Conversation avec <strong>{{ u.prenom }} {{ u.nom }}</strong>
-    </div>
-
-    <div class="d-flex gap-2 justify-content-end">
-      <button class="btn btn-outline-secondary"
-              (click)="fermerModalNouvelleConv()"
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="fermerModalNouvelleConv()"
               [disabled]="chargementCreation()">
         Annuler
       </button>
-      <button class="btn btn-primary"
+      <button class="btn-primary-msg"
               (click)="creerConversation()"
               [disabled]="!utilisateurSelectionne() || chargementCreation()">
         <span *ngIf="chargementCreation()"
-              class="spinner-border spinner-border-sm me-2"></span>
-        <i *ngIf="!chargementCreation()"
-           class="fas fa-comments me-2"></i>
+              class="spinner-border spinner-border-sm me-1"></span>
+        <i *ngIf="!chargementCreation()" class="ti ti-send"></i>
         {{ chargementCreation() ? 'Création...' : 'Démarrer' }}
       </button>
     </div>
