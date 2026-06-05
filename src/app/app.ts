@@ -4,7 +4,8 @@ import { RouterOutlet } from '@angular/router';
 import { MessagerieFabComponent } from './messagerie-fab.component';
 import { AuthService } from './services/auth.service';
 import { MessagerieService } from './services/messagerie.service';
-
+import { NotificationsComponent } from './notifications/notifications';
+// puis dans imports: [NotificationsComponent]
 @Component({
   selector: 'app-root',
   standalone: true,

@@ -1,0 +1,116 @@
+<!-- ============================================================
+     notifications.html
+     Cloche + panneau déroulant — style HOMINTEC (vert #12471d)
+     ============================================================ -->
+
+<div class="notif-wrapper">
+
+  <!-- ── Bouton cloche ── -->
+  <button class="notif-bell-btn" (click)="togglePanneau()" [class.active]="panneauOuvert()" title="Notifications">
+    <i class="fas fa-bell"></i>
+
+    <!-- Badge compteur non lus -->
+    <span *ngIf="notifService.nonLues() > 0" class="notif-badge">
+      {{ notifService.nonLues() > 99 ? '99+' : notifService.nonLues() }}
+    </span>
+
+    <!-- Pulse animé si non lues -->
+    <span *ngIf="notifService.nonLues() > 0" class="notif-pulse"></span>
+  </button>
+
+  <!-- ── Panneau déroulant ── -->
+  <div class="notif-panel" [class.open]="panneauOuvert()">
+
+    <!-- En-tête -->
+    <div class="notif-panel-header">
+      <div class="notif-panel-title">
+        <i class="fas fa-bell me-2"></i>
+        Notifications
+        <span *ngIf="notifService.nonLues() > 0" class="notif-header-count">
+          {{ notifService.nonLues() }} nouvelle{{ notifService.nonLues() > 1 ? 's' : '' }}
+        </span>
+      </div>
+      <button *ngIf="notifService.nonLues() > 0"
+              class="notif-mark-all-btn"
+              (click)="marquerToutesLues()"
+              title="Tout marquer comme lu">
+        <i class="fas fa-check-double me-1"></i> Tout lire
+      </button>
+    </div>
+
+    <!-- Onglets -->
+    <div class="notif-tabs">
+      <button class="notif-tab" [class.active]="ongletActif() === 'toutes'"
+              (click)="changerOnglet('toutes')">
+        Toutes
+        <span class="notif-tab-count">{{ notifService.notifications().length }}</span>
+      </button>
+      <button class="notif-tab" [class.active]="ongletActif() === 'non-lues'"
+              (click)="changerOnglet('non-lues')">
+        Non lues
+        <span class="notif-tab-count accent">{{ notifService.nonLues() }}</span>
+      </button>
+    </div>
+
+    <!-- Chargement -->
+    <div *ngIf="notifService.loading()" class="notif-loading">
+      <div class="spinner-border spinner-border-sm text-secondary me-2"></div>
+      Chargement...
+    </div>
+
+    <!-- Erreur -->
+    <div *ngIf="notifService.erreur()" class="notif-erreur">
+      <i class="fas fa-exclamation-triangle me-2"></i>{{ notifService.erreur() }}
+    </div>
+
+    <!-- Liste vide -->
+    <div *ngIf="!notifService.loading() && notificationsFiltrees().length === 0"
+         class="notif-empty">
+      <i class="fas fa-bell-slash fa-2x mb-2 d-block text-muted"></i>
+      <div style="font-size:0.85rem; color:#888">
+        {{ ongletActif() === 'non-lues' ? 'Aucune notification non lue' : 'Aucune notification' }}
+      </div>
+    </div>
+
+    <!-- Liste des notifications -->
+    <div class="notif-list" *ngIf="!notifService.loading() && notificationsFiltrees().length > 0">
+      <div
+        *ngFor="let notif of notificationsFiltrees()"
+        class="notif-item"
+        [class.non-lue]="notif.statut === 'NON_LU'"
+        (click)="lire(notif)">
+
+        <!-- Icône -->
+        <div class="notif-item-icon">
+          <i [class]="icone(notif) + ' ' + couleurIcone(notif)"></i>
+        </div>
+
+        <!-- Contenu -->
+        <div class="notif-item-body">
+          <div class="notif-item-contenu">{{ notif.contenu }}</div>
+          <div class="notif-item-date">
+            <i class="fas fa-clock me-1" style="font-size:0.65rem"></i>
+            {{ notifService.formaterDate(notif.datenotif) }}
+          </div>
+        </div>
+
+        <!-- Point non lu + bouton supprimer -->
+        <div class="notif-item-actions">
+          <span *ngIf="notif.statut === 'NON_LU'" class="notif-dot"></span>
+          <button class="notif-delete-btn"
+                  (click)="supprimer($event, notif.id)"
+                  title="Supprimer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pied du panneau -->
+    <div class="notif-panel-footer" *ngIf="notificationsFiltrees().length > 0">
+      {{ notifService.notifications().length }} notification{{ notifService.notifications().length > 1 ? 's' : '' }} au total
+    </div>
+
+  </div>
+</div>

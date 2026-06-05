@@ -101,46 +101,28 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${API_URL}/auth/login`, { email, motDePasse })
       .pipe(
-        switchMap((res: LoginResponse) => {
-          console.log('Login response:', res);
+       // Dans login(), remplacer tout le bloc switchMap par :
+switchMap((res: LoginResponse) => {
+  const user: User = {
+    id:            res.id,
+    nom:           res.nom,
+    prenom:        res.prenom,
+    email:         res.email,
+    Poste:         res.Poste ?? res.poste ?? '',
+    departementId: res.departementId ?? '',
+    telephone:     res.telephone,
+    statut_compte: res.statut_compte ?? 'actif',
+    premiereCo:    res.premiereCo ?? false,
+    role:          res.role,
+  };
 
-          const user: User = {
-            id:            res.id,           // ✅ string UUID
-            nom:           res.nom,
-            prenom:        res.prenom,
-            email:         res.email,
-            Poste:         res.Poste ?? res.poste ?? '',
-            departementId: res.departementId ?? '',
-            telephone:     res.telephone,
-            statut_compte: res.statut_compte ?? 'actif',
-            premiereCo:    res.premiereCo ?? false,
-            role:          res.role,
-          };
+  localStorage.setItem('homintec_token', res.token);
+  localStorage.setItem('homintec_user', JSON.stringify(user));
+  this._currentUser.set(user);
+  this.chargerNotifications().subscribe();
 
-          localStorage.setItem('homintec_token', res.token);
-          localStorage.setItem('homintec_user', JSON.stringify(user));
-          this._currentUser.set(user);
-          this.chargerNotifications().subscribe();
-
-          // Charger le nom du département si departementId existe
-          if (user.departementId && user.departementId !== '') {
-            return this.http
-              .get<any>(`${API_URL}/departements/${user.departementId}`)
-              .pipe(
-                tap((dept) => {
-                  const userWithDept: User = { ...user, departementNom: dept.nom };
-                  localStorage.setItem('homintec_user', JSON.stringify(userWithDept));
-                  this._currentUser.set(userWithDept);
-                }),
-                catchError((err) => {
-                  console.warn('Impossible de charger le département:', err);
-                  return of(user);
-                })
-              );
-          }
-
-          return of(res);
-        }),
+  return of(res); // ← plus d'appel à /departements
+}),
         catchError((err) => throwError(() => err))
       );
   }

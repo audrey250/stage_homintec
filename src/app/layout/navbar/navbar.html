@@ -1,12 +1,15 @@
 <nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow-sm">
 
-  <!-- Bouton toggle sidebar (visible sur tous les appareils) -->
+  <!-- Bouton toggle sidebar -->
   <button class="btn btn-sidebar-toggle me-2 me-md-3" (click)="toggle()" title="Toggle Sidebar">
     <i class="fas fa-fw fa-bars"></i>
   </button>
 
   <!-- Éléments à droite -->
   <div class="ms-auto d-flex align-items-center gap-2 gap-sm-3">
+
+    <!-- ✅ Cloche notifications -->
+    <app-notifications></app-notifications>
 
     <!-- Divider -->
     <div class="topbar-divider d-none d-sm-block"></div>
@@ -21,10 +24,9 @@
         aria-haspopup="true"
         (click)="toggleDropdown($event)"
       >
-
-        <!-- Nom + badge rôle (visible en desktop) -->
+        <!-- Nom + badge rôle -->
         <div class="user-info d-none d-lg-flex flex-column align-items-end">
-          <div class="user-name fw-semibold" m-5>
+          <div class="user-name fw-semibold">
             {{ authService.currentUser()?.prenom }}
             {{ authService.currentUser()?.nom }}
           </div>
@@ -48,8 +50,8 @@
       <!-- Dropdown Menu -->
       <div class="dropdown-menu dropdown-menu-end user-dropdown"
            [class.show]="dropdownOpen"
-         (click)="$event.stopPropagation()">
-        
+           (click)="$event.stopPropagation()">
+
         <!-- Header du dropdown -->
         <div class="dropdown-header border-bottom pb-3">
           <div class="d-flex align-items-center gap-3">
@@ -57,8 +59,12 @@
               {{ authService.currentUser()?.prenom?.charAt(0) }}{{ authService.currentUser()?.nom?.charAt(0) }}
             </div>
             <div class="dropdown-user-meta">
-              <div class="fw-bold dropdown-user-name">{{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}</div>
-              <div class="text-muted small dropdown-user-email">{{ authService.currentUser()?.email }}</div>
+              <div class="fw-bold dropdown-user-name">
+                {{ authService.currentUser()?.prenom }} {{ authService.currentUser()?.nom }}
+              </div>
+              <div class="text-muted small dropdown-user-email">
+                {{ authService.currentUser()?.email }}
+              </div>
               <div class="mt-2">
                 <span class="badge"
                   [ngClass]="{
@@ -88,8 +94,10 @@
           <i class="fas fa-sign-out-alt fa-fw me-2"></i>
           Déconnexion
         </a>
-      </div>
 
-    </div>
-  </div>
+      </div>
+    </div><!-- fin nav-item dropdown -->
+
+  </div><!-- fin ms-auto -->
+
 </nav>

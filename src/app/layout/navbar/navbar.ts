@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SidebarService } from '../../services/sidebar.service';
-
+import { NotificationsComponent } from '../../notifications/notifications';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink,NotificationsComponent],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })

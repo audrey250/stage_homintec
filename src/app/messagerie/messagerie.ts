@@ -3,7 +3,7 @@
 // ============================================================
 
 import {
-  Component, signal, OnInit,
+  Component, signal, OnInit, OnDestroy,
   ElementRef, ViewChild, AfterViewChecked
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,10 +14,9 @@ import {
   Conversation,
   NouveauMessage,
   UtilisateurSimple,
-  Message          // ✅ ajouter ceci
+  Message
 } from '../services/messagerie.service';
 
- 
 @Component({
   selector: 'app-messagerie',
   standalone: true,
@@ -25,18 +24,18 @@ import {
   templateUrl: './messagerie.html',
   styleUrls: ['./messagerie.css']
 })
-export class MessagerieComponent implements OnInit, AfterViewChecked {
+export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
-  conversationActive   = signal<Conversation | null>(null);
-  nouveauMessage       = '';
-  erreurEnvoi          = signal('');
-  chargementEnvoi      = signal(false);
-  
-  messageSelectionne = signal<Message | null>(null);
-messageEdition = signal<Message | null>(null);
-texteEdition = '';
+  conversationActive  = signal<Conversation | null>(null);
+  nouveauMessage      = '';
+  erreurEnvoi         = signal('');
+  chargementEnvoi     = signal(false);
+
+  messageSelectionne  = signal<Message | null>(null);
+  messageEdition      = signal<Message | null>(null);
+  texteEdition        = '';
 
   // ---- Modal nouvelle conversation ----
   modalNouvelleConvOuvert = signal(false);
@@ -49,7 +48,8 @@ texteEdition = '';
   // ---- Suppression ----
   suppressionEnCours = signal(false);
 
-  private doitScroller = false;
+  private doitScroller    = false;
+  private convActiveId: string | null = null;
 
   constructor(
     public authService:       AuthService,
@@ -57,18 +57,24 @@ texteEdition = '';
   ) {}
 
   ngOnInit(): void {
-    // ✅ userId est string (UUID)
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
+    // 1) Charger les conversations via REST
     this.messagerieService.chargerConversations(userId).subscribe({
-      next: (convs) => {
-        if (convs.length === 1) {
-          this.ouvrirConversation(convs[0]);
-        }
+      next: convs => {
+        if (convs.length === 1) this.ouvrirConversation(convs[0]);
       },
-      error: (err) => console.error('Erreur chargement conversations', err)
+      error: err => console.error('Erreur chargement conversations', err)
     });
+
+    // 2) ✅ Connecter le WebSocket pour les messages temps réel
+    this.messagerieService.connecterWebSocket(userId);
+  }
+
+  ngOnDestroy(): void {
+    // Déconnecter proprement à la destruction du composant
+    this.messagerieService.deconnecterWebSocket();
   }
 
   ngAfterViewChecked(): void {
@@ -79,13 +85,13 @@ texteEdition = '';
   }
 
   // ============================================================
-  // OUVRIR UNE CONVERSATION EXISTANTE
+  // OUVRIR UNE CONVERSATION
   // ============================================================
   ouvrirConversation(conv: Conversation): void {
     this.conversationActive.set(conv);
+    this.convActiveId = conv.id;
     this.erreurEnvoi.set('');
 
-    // ✅ conv.id est string (UUID)
     this.messagerieService.chargerMessages(conv.id).subscribe({
       next: () => {
         const updated = this.messagerieService
@@ -93,35 +99,37 @@ texteEdition = '';
           .find(c => c.id === conv.id);
 
         if (updated) this.conversationActive.set(updated);
-
         this.messagerieService.marquerLus(conv.id).subscribe();
-
         this.doitScroller = true;
       },
-      error: (err) => console.error('Erreur chargement messages', err)
+      error: err => console.error('Erreur chargement messages', err)
     });
   }
 
   // ============================================================
-  // ENVOYER UN MESSAGE DANS LA CONVERSATION ACTIVE
+  // ENVOYER UN MESSAGE
+  // Stratégie : REST pour la persistance + WebSocket pour
+  // notifier le destinataire en temps réel
   // ============================================================
   envoyer(): void {
     const conv = this.conversationActive();
     const user = this.authService.currentUser();
-
     if (!conv || !user || !this.nouveauMessage.trim()) return;
 
     this.chargementEnvoi.set(true);
     this.erreurEnvoi.set('');
 
-    // ✅ conversationId est string (UUID)
     const payload: NouveauMessage = {
       conversationId: conv.id,
       contenu:        this.nouveauMessage.trim()
     };
 
+    // ── Envoyer via REST (persistance en base) ──
     this.messagerieService.envoyer(payload).subscribe({
       next: () => {
+        // ── Notifier le destinataire via WebSocket ──
+        this.messagerieService.envoyerViaSocket(payload, conv.destinataireId);
+
         this.nouveauMessage = '';
         this.chargementEnvoi.set(false);
 
@@ -130,76 +138,53 @@ texteEdition = '';
           .find(c => c.id === conv.id);
 
         if (updated) this.conversationActive.set(updated);
-
         this.doitScroller = true;
       },
-      error: (err) => {
+      error: err => {
         this.chargementEnvoi.set(false);
         this.erreurEnvoi.set('Échec de l\'envoi. Réessayez.');
         console.error('Erreur envoi message', err);
       }
     });
-
   }
+
+  // ============================================================
+  // MODIFIER / SUPPRIMER UN MESSAGE
+  // ============================================================
   selectionnerMessage(msg: Message): void {
-  if (this.messageSelectionne()?.id === msg.id) {
-    this.messageSelectionne.set(null);
-  } else {
-    this.messageSelectionne.set(msg);
+    this.messageSelectionne.set(
+      this.messageSelectionne()?.id === msg.id ? null : msg
+    );
   }
-}
-  //modifier un message
+
   modifierMessage(msg: Message): void {
+    const nouveauTexte = prompt('Modifier le message :', msg.contenu);
+    if (!nouveauTexte || nouveauTexte.trim() === msg.contenu) return;
 
-  const nouveauTexte = prompt(
-    'Modifier le message :',
-    msg.contenu
-  );
-
-  if (!nouveauTexte || nouveauTexte.trim() === msg.contenu) {
-    return;
+    this.messagerieService.modifierMessage(msg.id, nouveauTexte.trim()).subscribe({
+      next: () => {
+        msg.contenu = nouveauTexte.trim();
+        this.messageSelectionne.set(null);
+      },
+      error: err => console.error(err)
+    });
   }
 
-  this.messagerieService
-      .modifierMessage(msg.id, nouveauTexte.trim())
-      .subscribe({
-        next: () => {
-          msg.contenu = nouveauTexte.trim();
-          this.messageSelectionne.set(null);
-        },
-        error: err => console.error(err)
-      });
-}
+  supprimerMessage(msg: Message): void {
+    if (!confirm('Supprimer ce message ?')) return;
 
-  //supprimer un mesage
- supprimerMessage(msg: Message): void {
-
-  if (!confirm('Supprimer ce message ?')) {
-    return;
+    this.messagerieService.supprimerMessage(msg.id).subscribe({
+      next: () => {
+        const conv = this.conversationActive();
+        if (!conv) return;
+        conv.messages = conv.messages.filter(m => m.id !== msg.id);
+        this.conversationActive.set({ ...conv });
+        this.messageSelectionne.set(null);
+      },
+      error: err => console.error(err)
+    });
   }
 
-  this.messagerieService
-      .supprimerMessage(msg.id)
-      .subscribe({
-        next: () => {
-
-          const conv = this.conversationActive();
-
-          if (!conv) return;
-
-          conv.messages = conv.messages.filter(
-            m => m.id !== msg.id
-          );
-
-          this.conversationActive.set({
-            ...conv
-          });
-
-          this.messageSelectionne.set(null);
-        },
-        error: err => console.error(err)
-      });
-}
   // ============================================================
   // MODAL NOUVELLE CONVERSATION
   // ============================================================
@@ -211,7 +196,7 @@ texteEdition = '';
     this.chargementUtilisateurs.set(true);
 
     this.messagerieService.chargerUtilisateurs().subscribe({
-      next: () => this.chargementUtilisateurs.set(false),
+      next: ()  => this.chargementUtilisateurs.set(false),
       error: () => {
         this.chargementUtilisateurs.set(false);
         this.erreurNouvelleConv.set('Impossible de charger les utilisateurs.');
@@ -237,7 +222,6 @@ texteEdition = '';
       return;
     }
 
-    // ✅ Comparaison string === string
     const existante = this.messagerieService
       .conversations()
       .find(c => c.destinataireId === destinataire.id);
@@ -254,12 +238,12 @@ texteEdition = '';
     this.messagerieService
       .creerConversation({ destinataireId: destinataire.id })
       .subscribe({
-        next: (conv) => {
+        next: conv => {
           this.chargementCreation.set(false);
           this.fermerModalNouvelleConv();
           this.ouvrirConversation(conv);
         },
-        error: (err) => {
+        error: err => {
           this.chargementCreation.set(false);
           this.erreurNouvelleConv.set(
             err.error?.message || 'Impossible de créer la conversation.'
@@ -269,7 +253,7 @@ texteEdition = '';
   }
 
   // ============================================================
-  // SUPPRIMER LA CONVERSATION ACTIVE
+  // SUPPRIMER UNE CONVERSATION
   // ============================================================
   supprimerConversation(conv: Conversation): void {
     if (!confirm(`Supprimer la conversation avec ${conv.destinatairePrenom} ${conv.destinataireNom} ?`))
@@ -277,34 +261,30 @@ texteEdition = '';
 
     this.suppressionEnCours.set(true);
 
-    this.messagerieService
-      .supprimerConversation(conv.id)
-      .subscribe({
-        next: () => {
-          this.suppressionEnCours.set(false);
-          if (this.conversationActive()?.id === conv.id) {
-            this.conversationActive.set(null);
-          }
-        },
-        error: (err) => {
-          this.suppressionEnCours.set(false);
-          console.error('Erreur suppression conversation', err);
+    this.messagerieService.supprimerConversation(conv.id).subscribe({
+      next: () => {
+        this.suppressionEnCours.set(false);
+        if (this.conversationActive()?.id === conv.id) {
+          this.conversationActive.set(null);
         }
-      });
+      },
+      error: err => {
+        this.suppressionEnCours.set(false);
+        console.error('Erreur suppression conversation', err);
+      }
+    });
   }
 
   // ============================================================
   // HELPERS
   // ============================================================
-
   utilisateursFiltres(): UtilisateurSimple[] {
     const recherche = this.utilisateurRecherche().toLowerCase().trim();
     const moi = this.authService.currentUser()?.id;
     return this.messagerieService.utilisateurs().filter(u => {
-      if (u.id === moi) return false; // ✅ string === string
+      if (u.id === moi) return false;
       if (!recherche) return true;
-      const nomComplet = `${u.prenom} ${u.nom}`.toLowerCase();
-      return nomComplet.includes(recherche);
+      return `${u.prenom} ${u.nom}`.toLowerCase().includes(recherche);
     });
   }
 
@@ -326,7 +306,7 @@ texteEdition = '';
   formaterDateConv(date: string): string {
     if (!date) return '';
     try {
-      const d = new Date(date);
+      const d   = new Date(date);
       const auj = new Date();
       if (d.toDateString() === auj.toDateString()) {
         return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -339,39 +319,34 @@ texteEdition = '';
     return `${prenom?.charAt(0) ?? ''}${nom?.charAt(0) ?? ''}`.toUpperCase();
   }
 
-  // ✅ expediteurId est maintenant string (UUID)
   estMonMessage(expediteurId: string): boolean {
     return expediteurId === this.authService.currentUser()?.id;
   }
 
+  getAvatarColor(id: string): string {
+    const colors = ['av-blue', 'av-green', 'av-coral', 'av-purple', 'av-amber', 'av-teal'];
+    return colors[id ? id.charCodeAt(0) % colors.length : 0];
+  }
 
-  // Couleur d'avatar déterministe selon l'ID
-getAvatarColor(id: string): string {
-  const colors = ['av-blue','av-green','av-coral','av-purple','av-amber','av-teal'];
-  const index  = id ? id.charCodeAt(0) % colors.length : 0;
-  return colors[index];
-}
+  isNewDay(messages: Message[], index: number): boolean {
+    if (index === 0) return true;
+    const curr = new Date(messages[index].dateEnvoi).toDateString();
+    const prev = new Date(messages[index - 1].dateEnvoi).toDateString();
+    return curr !== prev;
+  }
 
-// Séparateur de jour entre les messages
-isNewDay(messages: Message[], index: number): boolean {
-  if (index === 0) return true;
-  const curr = new Date(messages[index].dateEnvoi).toDateString();
-  const prev = new Date(messages[index - 1].dateEnvoi).toDateString();
-  return curr !== prev;
-}
+  formaterJour(date: string): string {
+    const d   = new Date(date);
+    const auj = new Date();
+    if (d.toDateString() === auj.toDateString()) return "Aujourd'hui";
+    const hier = new Date();
+    hier.setDate(auj.getDate() - 1);
+    if (d.toDateString() === hier.toDateString()) return 'Hier';
+    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' });
+  }
 
-formaterJour(date: string): string {
-  const d   = new Date(date);
-  const auj = new Date();
-  if (d.toDateString() === auj.toDateString()) return "Aujourd'hui";
-  const hier = new Date(); hier.setDate(hier.getDate() - 1);
-  if (d.toDateString() === hier.toDateString()) return 'Hier';
-  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' });
-}
-
-// Empêche la soumission au Enter sans Shift
-onEnter(event: Event): void {
-  const e = event as KeyboardEvent;
-  if (!e.shiftKey) { e.preventDefault(); this.envoyer(); }
-}
+  onEnter(event: Event): void {
+    const e = event as KeyboardEvent;
+    if (!e.shiftKey) { e.preventDefault(); this.envoyer(); }
+  }
 }
