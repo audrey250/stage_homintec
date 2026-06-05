@@ -88,7 +88,7 @@ export class DemandeService {
   joursConsommes = computed(() => {
     return this._demandes()
       .filter(d =>
-        (d.typeDemande === 'CONGE' || d.typeDemande === 'CONGE_ANNUEL') &&
+        (d.typeDemande === 'CONGE' || d.typeDemande === 'CONGE') &&
         d.statut === 'APPROUVEE_RH'
       )
       .reduce((total, d) => total + this.calculerJours(d.dateDebut, d.dateFin), 0);
@@ -395,10 +395,7 @@ export class DemandeService {
   libelleType(type: string): string {
     const map: Record<string, string> = {
       CONGE: 'Congé', PERMISSION: 'Permission',
-      CONGE_ANNUEL: 'Congé annuel', CONGE_MALADIE: 'Congé maladie',
-      CONGE_MATERNITE: 'Congé maternité', AUTRE: 'Autre',
-      conge_annuel: 'Congé annuel', conge_maladie: 'Congé maladie',
-      conge_maternite: 'Congé maternité', permission: 'Permission', autre: 'Autre'
+     
     };
     return map[type] ?? type;
   }
