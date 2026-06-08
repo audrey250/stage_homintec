@@ -17,11 +17,14 @@ const API_URL = environment.apiUrl;
 
 // ── Miroir exact du NotificationWebSocketDTO Spring Boot ──
 export interface Notification {
-  id:         string;   // UUID
-  contenu:    string;
-  datenotif:  string;   // LocalDateTime sérialisé en string
-  statut:     'LU' | 'NON_LU';
+  id:             string;   // UUID
+  contenu:        string;
+  datenotif:      string;   // LocalDateTime sérialisé en string
+  statut:         'LU' | 'NON_LU';
   utilisateurId?: string;
+  navigationUrl?: string;   // URL de navigation au clic
+  entityType?:    string;   // Type d'entité (CONGE, UTILISATEUR, etc.)
+  entityId?:      string;   // ID de l'entité concernée
 }
 
 @Injectable({ providedIn: 'root' })
@@ -64,7 +67,7 @@ export class NotificationService {
 
         // Abonnement aux notifications personnelles de l'utilisateur
         this.stompClient!.subscribe(
-          `/queue/notifications/${utilisateurId}`,
+          `/queue/notifications-${utilisateurId}`,
           (msg: IMessage) => {
             try {
               const notif: Notification = JSON.parse(msg.body);

@@ -101,6 +101,8 @@
                 <tr>
                   <th>Employé</th>
                   <th>Type</th>
+                  <th>Date demande</th>
+                  <th>Motif</th>
                   <th>Période</th>
                   <th>Étape actuelle</th>
                   <th class="text-center">Actions</th>
@@ -128,6 +130,16 @@
                        }">
                     </i>
                     {{ demandeService.libelleType(d.typeDemande) }}
+                  </td>
+
+                  <!-- Date demande -->
+                  <td style="font-size:0.82rem; white-space:nowrap">
+                    {{ d.dateDemande }}
+                  </td>
+
+                  <!-- Motif -->
+                  <td class="motif-cell" style="font-size:0.82rem; max-width:240px; white-space:normal; word-break:break-word;">
+                    {{ d.motif || '—' }}
                   </td>
 
                   <!-- Dates -->
@@ -252,6 +264,8 @@
                 <tr>
                   <th>Employé</th>
                   <th>Type</th>
+                  <th>Date demande</th>
+                  <th>Motif</th>
                   <th>Période</th>
                   <th>Statut final</th>
                   <th>Commentaire</th>
@@ -272,6 +286,14 @@
 
                   <td style="font-size:0.83rem">
                     {{ demandeService.libelleType(d.typeDemande) }}
+                  </td>
+
+                  <td style="font-size:0.82rem; white-space:nowrap">
+                    {{ d.dateDemande }}
+                  </td>
+
+                  <td class="motif-cell" style="font-size:0.82rem; max-width:240px; white-space:normal; word-break:break-word;">
+                    {{ d.motif || '—' }}
                   </td>
 
                   <td style="font-size:0.82rem">

@@ -201,6 +201,7 @@
                    [class.sent]="estMonMessage(msg.expediteurId)"
                    [class.recv]="!estMonMessage(msg.expediteurId)"
                    [class.selected]="messageSelectionne()?.id === msg.id"
+                   [class.sending]="estEnCoursEnvoi(msg)"
                    (click)="estMonMessage(msg.expediteurId) ? selectionnerMessage(msg) : null">
 
                 <p class="wa-bubble-text">{{ msg.contenu }}</p>
@@ -208,6 +209,7 @@
                   {{ formaterDate(msg.dateEnvoi) }}
                   <span *ngIf="estMonMessage(msg.expediteurId)" class="wa-ticks">
                     <i class="fas fa-check-double" [class.seen]="msg.lu"></i>
+                    <i *ngIf="estEnCoursEnvoi(msg)" class="fas fa-hourglass-end" style="opacity:0.7; margin-left:4px; font-size:0.85em;"></i>
                   </span>
                 </span>
               </div>

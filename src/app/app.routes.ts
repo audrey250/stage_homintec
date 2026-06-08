@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
-import { firstLoginGuard } from './guards/first-login.guard';
+import { firstLoginGuard, loginRequiredGuard } from './guards/first-login.guard';
 
 
 export const routes: Routes = [
@@ -22,7 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'changer-mot-de-passe',
-    canActivate: [firstLoginGuard],
+    canActivate: [loginRequiredGuard],
     loadComponent: () =>
       import('./auth/changer-mot-de-passe/changer-mot-de-passe')
       .then(m => m.ChangerMotDePasseComponent)

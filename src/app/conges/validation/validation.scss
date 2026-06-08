@@ -79,30 +79,41 @@
 
 /* ── Validation table card ── */
 .validation-card {
-  border-radius: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+}
+.validation-card .table-responsive {
   overflow: hidden;
 }
+.validation-table {
+  border-collapse: collapse;
+  width: 100%;
+}
 .validation-table thead th {
-  background: #f8f9fc;
-  color: #5a5c69;
-  font-size: 0.78rem;
+  background: #ffffff;
+  color: #101828;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-bottom: 2px solid #e3e6f0;
-  padding: 12px 16px;
+  letter-spacing: 0.02em;
+  border: 1px solid #d0d5dd;
+  padding: 12px;
   white-space: nowrap;
 }
 .validation-table tbody td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 12px;
+  border: 1px solid #d0d5dd;
   vertical-align: middle;
-}
-.validation-table tbody tr:last-child td {
-  border-bottom: none;
+  color: #101828;
 }
 .validation-table tbody tr:hover {
-  background: #f8f9ff;
+  background: #f8f9fc;
+}
+
+.motif-cell {
+  max-width: 230px;
 }
 
 /* ── Avatar ── */
@@ -118,6 +129,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   flex-shrink: 0;
+  margin-right: 0.75rem;
 }
 
 /* ── Étape badges (workflow visuel) ── */
@@ -162,6 +174,20 @@
   justify-content: center;
   border-radius: 8px;
   font-size: 0.8rem;
+  margin-right: 8px;
+}
+
+/* Ensure spacing for action groups inside validation tables */
+.validation-table .d-flex > .btn,
+.validation-table .btn-action,
+.validation-card .btn {
+  margin-right: 8px;
+}
+
+.validation-table .d-flex > .btn:last-child,
+.validation-table .btn-action:last-child,
+.validation-card .btn:last-child {
+  margin-right: 0;
 }
 
 /* ── Statut badges (historique) ── */

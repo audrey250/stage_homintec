@@ -6,6 +6,7 @@ import {
   Component, OnInit, OnDestroy, signal, computed, HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService, Notification } from '../services/notification.service';
 
@@ -31,7 +32,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   constructor(
     public authService:  AuthService,
-    public notifService: NotificationService
+    public notifService: NotificationService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -71,11 +73,43 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.ongletActif.set(onglet);
   }
 
-  // Marquer une notification comme lue ET ouvrir si lien
+  // Marquer une notification comme lue ET naviguer si URL disponible
   lire(notif: Notification): void {
+    // Marquer comme lue
     if (notif.statut === 'NON_LU') {
       this.notifService.marquerCommeLue(notif.id).subscribe();
     }
+
+    // Fermer le panneau
+    this.panneauOuvert.set(false);
+
+    // Naviguer vers la page appropriée
+    if (notif.navigationUrl) {
+      // URL directe fournie par le backend
+      this.router.navigateByUrl(notif.navigationUrl);
+    } else if (notif.entityType && notif.entityId) {
+      // Construire la route selon le type d'entité
+      this.naviguerVersEntite(notif.entityType, notif.entityId);
+    }
+  }
+
+  // Naviguer vers la page appropriée selon le type d'entité
+  private naviguerVersEntite(entityType: string, entityId: string): void {
+    const routes: { [key: string]: string } = {
+      'CONGE': '/conges/mes-demandes',
+      'CONGÉ': '/conges/mes-demandes',
+      'VALIDATION_CONGE': '/conges/validation',
+      'UTILISATEUR': '/utilisateurs',
+      'DEPARTEMENT': '/departements',
+      'ROLE': '/roles',
+      'SERVICE': '/services',
+      'MESSAGE': '/messagerie',
+      'PROFIL': '/profil'
+    };
+
+    const route = routes[entityType.toUpperCase()] || '/dashboard';
+    const queryParams = entityId ? { demande: entityId } : {};
+    this.router.navigate([route], { queryParams });
   }
 
   marquerToutesLues(): void {

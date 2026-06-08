@@ -6,6 +6,7 @@ import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import {
   DemandeService,
@@ -99,6 +100,8 @@ export class MesDemandesComponent implements OnInit {
     return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   });
 
+  selectedDemandeId = signal<string | null>(null);
+
   demandesFiltrees = computed(() => {
     const filtre = this.filtreStatut();
     const toutes = this.congeService.demandes();
@@ -123,11 +126,29 @@ export class MesDemandesComponent implements OnInit {
 
   constructor(
     public authService:  AuthService,
-    public congeService: DemandeService
+    public congeService: DemandeService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.congeService.chargerMesDemandes();
+    this.route.queryParamMap.subscribe(params => {
+      if (params.get('nouvelle') === 'true') {
+        this.ouvrirModal();
+      }
+
+      const demandeId = params.get('demande');
+      if (demandeId) {
+        this.selectedDemandeId.set(demandeId);
+        setTimeout(() => this.defilerVersDemande(demandeId), 50);
+      }
+    });
+  }
+
+  private defilerVersDemande(id: string): void {
+    const element = document.getElementById(`demande-${id}`);
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   private normaliserStatut(statut: string): string {

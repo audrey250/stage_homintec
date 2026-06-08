@@ -131,6 +131,7 @@
   font-size: 0.82rem;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(18, 71, 29, 0.2);
+  margin-right: 0.75rem;
 }
 
 /* Cartes : animation au survol */
@@ -344,6 +345,7 @@
     width: 28px;
     height: 28px;
     font-size: 0.7rem;
+    margin-right: 0.75rem;
   }
 
   .card-header {

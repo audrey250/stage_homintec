@@ -13,6 +13,7 @@
   font-size: 0.78rem;
   font-weight: 700;
   flex-shrink: 0;
+  margin-right: 0.75rem;
 }
 
 /* ============================================================
@@ -87,46 +88,51 @@
 /* ============================================================
    TABLE
    ============================================================ */
-.table-responsive {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.demandes-card .table-responsive {
+ .demandes-card .table-responsive {
   margin: 8px 0 0;
-  border: 1px solid #e8edf5;
-  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .demandes-card .card-body {
   padding: 0 14px 14px !important;
 }
 
-.demandes-table thead th {
-  background: #f8fafc;
-  color: #667085;
-  font-size: 0.76rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+.demandes-card table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.demandes-card table thead {
+  background: #f8f9fc;
+}
+
+.demandes-card table thead th {
+  border: none;
+  color: #12471D;
   font-weight: 700;
-  border-bottom: 1px solid #e4e7ec;
-  padding: 12px 14px;
+  padding: 1rem 1.2rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
 }
 
-.demandes-table tbody td {
-  border-top: 1px solid #eef2f7;
-  padding: 14px;
-  font-size: 0.84rem;
-  color: #1d2939;
+.demandes-card table tbody td {
+  padding: 1rem 1.2rem;
+  border: none;
+  border-bottom: 1px solid #e0e4e8;
   vertical-align: middle;
+  color: #2d3748;
 }
 
-.demandes-table tbody tr {
+.demandes-card table tbody tr:hover {
+  background: #f8f9fc;
+  cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.demandes-table tbody tr:hover {
-  background: #fcfdff;
+.demandes-card table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .type-cell,
@@ -165,6 +171,7 @@
   padding: 6px 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: all 0.2s ease;
+  margin-right: 8px;
 }
 
 .btn-action:hover {
@@ -172,6 +179,19 @@
   border-color: #cbd5e1;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   transform: translateY(-2px);
+}
+
+/* Spacing for action button groups (table rows / card actions) */
+.action-btn-group > *,
+.role-action-group > *,
+.btn-action-group > * {
+  margin-right: 8px;
+}
+
+.action-btn-group > *:last-child,
+.role-action-group > *:last-child,
+.btn-action-group > *:last-child {
+  margin-right: 0;
 }
 
 /* ============================================================

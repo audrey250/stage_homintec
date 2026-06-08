@@ -18,3 +18,15 @@ export const firstLoginGuard: CanActivateFn = () => {
 
   return true;
 };
+
+export const loginRequiredGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isLoggedIn()) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  return true;
+};

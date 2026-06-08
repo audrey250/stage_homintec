@@ -247,6 +247,33 @@
   background: #f8fafd;
 }
 
+/* ── Item clickable : effet spécial quand c'est navigable ── */
+.notif-item.clickable {
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.notif-item.clickable:hover {
+  background: rgba(18, 71, 29, 0.08);
+  box-shadow: inset 0 0 8px rgba(18, 71, 29, 0.05);
+}
+
+/* Item non lu clickable */
+.notif-item.non-lue.clickable:hover {
+  background: rgba(18, 71, 29, 0.12);
+}
+
+/* ── Flèche de navigation ── */
+.notif-link-arrow {
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 0.6;
+}
+
+.notif-item.clickable:hover .notif-link-arrow {
+  transform: translateX(2px);
+  opacity: 1;
+}
+
 /* Item non lu : fond légèrement coloré */
 .notif-item.non-lue {
   background: rgba(18, 71, 29, 0.03);

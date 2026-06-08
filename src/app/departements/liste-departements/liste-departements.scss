@@ -11,39 +11,46 @@ $muted:          #667085;
 $radius:         10px;
 
 // ---- Table avec bordures ----
-table {
-  border-collapse: collapse;
-  
-  thead th {
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: $text;
-    border-top: 0;
-    border: 1px solid $border;
-    padding: 12px;
-    background: #ffffff;
-    font-weight: 600;
-  }
-
-  tbody td {
-    font-size: 0.9rem;
-    border: 1px solid $border;
-    padding: 12px;
-    color: $text !important;
-  }
-
-  tbody tr {
-    &:hover {
-      background-color: #f8f9fc;
-    }
-  }
+/* Table — harmonisée avec dashboard / mes-demandes */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.table-responsive {
-  border-radius: $radius;
-  border: 1px solid $border;
-  background: #ffffff;
+table {
+  margin-bottom: 0;
+}
+
+table thead {
+  background: #f8f9fc;
+}
+
+table thead th {
+  border: none;
+  color: #12471D;
+  font-weight: 700;
+  padding: 1rem 1.2rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+table tbody td {
+  padding: 1rem 1.2rem;
+  border: none;
+  border-bottom: 1px solid #e0e4e8;
+  vertical-align: middle;
+  color: #2d3748;
+}
+
+table tbody tr:hover {
+  background: #f8f9fc;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 // ---- Boutons d'action ----

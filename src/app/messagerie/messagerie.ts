@@ -44,6 +44,11 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
       .find(c => c.id === convId)?.messages ?? [];
   });
 
+  // Vérifier si un message est en cours d'envoi (ID temporaire)
+  estEnCoursEnvoi(msg: Message): boolean {
+    return msg.id.startsWith('temp-');
+  }
+
   modalNouvelleConvOuvert = signal(false);
   chargementUtilisateurs  = signal(false);
   erreurNouvelleConv      = signal('');
@@ -59,19 +64,21 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     public messagerieService: MessagerieService
   ) {}
 
-  ngOnInit(): void {
-    const userId = this.authService.currentUser()?.id;
-    if (!userId) return;
+   ngOnInit(): void {
+  const userId = this.authService.currentUser()?.id;
+  if (!userId) return;
 
-    this.messagerieService.chargerConversations(userId).subscribe({
-      next: convs => {
-        if (convs.length === 1) this.ouvrirConversation(convs[0]);
-      },
-      error: err => console.error('Erreur chargement conversations', err)
-    });
+  this.messagerieService.chargerConversations(userId).subscribe({
+    next: convs => {
+      // ✅ S'abonner à toutes les conversations existantes dès le chargement
+      convs.forEach(c => this.messagerieService.abonnerConversation(c.id));
+      if (convs.length === 1) this.ouvrirConversation(convs[0]);
+    },
+    error: err => console.error('Erreur chargement conversations', err)
+  });
 
-    this.messagerieService.connecterWebSocket(userId);
-  }
+  this.messagerieService.connecterWebSocket(userId.toString());
+}
 
   ngOnDestroy(): void {
     this.messagerieService.deconnecterWebSocket();
@@ -87,23 +94,27 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
   // ============================================================
   // OUVRIR UNE CONVERSATION
   // ============================================================
-  ouvrirConversation(conv: Conversation): void {
-    this.conversationActive.set(conv);
-    this.erreurEnvoi.set('');
-    this.annulerEdition();
+ 
 
-    this.messagerieService.chargerMessages(conv.id).subscribe({
-      next: () => {
-        // Resynchroniser conversationActive avec la version à jour du signal
-        const updated = this.messagerieService.conversations()
-          .find(c => c.id === conv.id);
-        if (updated) this.conversationActive.set(updated);
-        this.messagerieService.marquerLus(conv.id).subscribe();
-        this.doitScroller = true;
-      },
-      error: err => console.error('Erreur chargement messages', err)
-    });
-  }
+ouvrirConversation(conv: Conversation): void {
+  this.conversationActive.set(conv);
+  this.erreurEnvoi.set('');
+  this.annulerEdition();
+
+  // ✅ S'abonner au topic de cette conversation
+  this.messagerieService.abonnerConversation(conv.id);
+
+  this.messagerieService.chargerMessages(conv.id).subscribe({
+    next: () => {
+      const updated = this.messagerieService.conversations()
+        .find(c => c.id === conv.id);
+      if (updated) this.conversationActive.set(updated);
+      this.messagerieService.marquerLus(conv.id).subscribe();
+      this.doitScroller = true;
+    },
+    error: err => console.error('Erreur chargement messages', err)
+  });
+}
 
   // ============================================================
   // ENVOYER

@@ -564,6 +564,17 @@ app-messagerie .wa-shell,
 .wa-shell .wa-bubble.sent .wa-ticks i      { color: rgba(255,255,255,.65) !important; }
 .wa-shell .wa-bubble.sent .wa-ticks i.seen { color: #bfdbfe !important; }
 
+/* 🆕 Message en cours d'envoi */
+.wa-shell .wa-bubble.sending {
+  opacity: 0.75 !important;
+  animation: pulse-sending 1.5s ease-in-out infinite !important;
+}
+
+@keyframes pulse-sending {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 0.9; }
+}
+
 /* Séparateur de jour */
 .wa-shell .wa-day-separator {
   display: flex !important;

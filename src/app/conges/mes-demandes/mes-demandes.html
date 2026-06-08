@@ -74,7 +74,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let d of demandesFiltrees()">
+          <tr *ngFor="let d of demandesFiltrees()"
+              [id]="'demande-' + d.id"
+              [class.table-primary]="selectedDemandeId() === d.id">
 
             <!-- Employé -->
             <td>

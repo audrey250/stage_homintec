@@ -20,6 +20,7 @@
   font-weight: 700;
   box-shadow: 0 8px 24px rgba(18, 71, 29, 0.25);
   flex-shrink: 0;
+  margin-right: 1rem;
 }
 
 .profile-name {

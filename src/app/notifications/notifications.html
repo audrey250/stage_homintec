@@ -78,7 +78,9 @@
         *ngFor="let notif of notificationsFiltrees()"
         class="notif-item"
         [class.non-lue]="notif.statut === 'NON_LU'"
-        (click)="lire(notif)">
+        [class.clickable]="notif.navigationUrl || notif.entityType"
+        (click)="lire(notif)"
+        [title]="notif.navigationUrl || notif.entityType ? 'Cliquez pour afficher les détails' : 'Marquer comme lu'">
 
         <!-- Icône -->
         <div class="notif-item-icon">
@@ -94,9 +96,12 @@
           </div>
         </div>
 
-        <!-- Point non lu + bouton supprimer -->
+        <!-- Point non lu + bouton supprimer + flèche si cliquable -->
         <div class="notif-item-actions">
           <span *ngIf="notif.statut === 'NON_LU'" class="notif-dot"></span>
+          <i *ngIf="notif.navigationUrl || notif.entityType" 
+             class="fas fa-arrow-right notif-link-arrow" 
+             style="color:#12471d; font-size:0.8rem; margin-right:0.5rem"></i>
           <button class="notif-delete-btn"
                   (click)="supprimer($event, notif.id)"
                   title="Supprimer">

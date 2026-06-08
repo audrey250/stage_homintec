@@ -66,6 +66,7 @@ table tbody tr:hover {
   justify-content: center;
   font-size: 0.78rem;
   font-weight: 600;
+  margin-right: 0.75rem;
 }
 
 .bg-admin { background: #e74c3b; }
