@@ -3,7 +3,7 @@
 // ============================================================
 
 import {
-  Component, signal, OnInit, OnDestroy,
+  Component, signal, computed, OnInit, OnDestroy,
   ElementRef, ViewChild, AfterViewChecked
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -28,28 +28,31 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
-  conversationActive  = signal<Conversation | null>(null);
-  nouveauMessage      = '';
-  erreurEnvoi         = signal('');
-  chargementEnvoi     = signal(false);
+  conversationActive = signal<Conversation | null>(null);
+  nouveauMessage     = '';
+  erreurEnvoi        = signal('');
+  chargementEnvoi    = signal(false);
 
-  messageSelectionne  = signal<Message | null>(null);
-  messageEdition      = signal<Message | null>(null);
-  texteEdition        = '';
+  messageSelectionne = signal<Message | null>(null);
+  messageEdition     = signal<Message | null>(null);
 
-  // ---- Modal nouvelle conversation ----
+  // ✅ Recalculé automatiquement dès que _conversations change dans le service
+  messagesActifs = computed(() => {
+    const convId = this.conversationActive()?.id;
+    if (!convId) return [];
+    return this.messagerieService.conversations()
+      .find(c => c.id === convId)?.messages ?? [];
+  });
+
   modalNouvelleConvOuvert = signal(false);
   chargementUtilisateurs  = signal(false);
   erreurNouvelleConv      = signal('');
   chargementCreation      = signal(false);
   utilisateurRecherche    = signal('');
   utilisateurSelectionne  = signal<UtilisateurSimple | null>(null);
+  suppressionEnCours      = signal(false);
 
-  // ---- Suppression ----
-  suppressionEnCours = signal(false);
-
-  private doitScroller    = false;
-  private convActiveId: string | null = null;
+  private doitScroller = false;
 
   constructor(
     public authService:       AuthService,
@@ -60,7 +63,6 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     const userId = this.authService.currentUser()?.id;
     if (!userId) return;
 
-    // 1) Charger les conversations via REST
     this.messagerieService.chargerConversations(userId).subscribe({
       next: convs => {
         if (convs.length === 1) this.ouvrirConversation(convs[0]);
@@ -68,12 +70,10 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
       error: err => console.error('Erreur chargement conversations', err)
     });
 
-    // 2) ✅ Connecter le WebSocket pour les messages temps réel
     this.messagerieService.connecterWebSocket(userId);
   }
 
   ngOnDestroy(): void {
-    // Déconnecter proprement à la destruction du composant
     this.messagerieService.deconnecterWebSocket();
   }
 
@@ -89,15 +89,14 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
   // ============================================================
   ouvrirConversation(conv: Conversation): void {
     this.conversationActive.set(conv);
-    this.convActiveId = conv.id;
     this.erreurEnvoi.set('');
+    this.annulerEdition();
 
     this.messagerieService.chargerMessages(conv.id).subscribe({
       next: () => {
-        const updated = this.messagerieService
-          .conversations()
+        // Resynchroniser conversationActive avec la version à jour du signal
+        const updated = this.messagerieService.conversations()
           .find(c => c.id === conv.id);
-
         if (updated) this.conversationActive.set(updated);
         this.messagerieService.marquerLus(conv.id).subscribe();
         this.doitScroller = true;
@@ -107,79 +106,128 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   // ============================================================
-  // ENVOYER UN MESSAGE
-  // Stratégie : REST pour la persistance + WebSocket pour
-  // notifier le destinataire en temps réel
+  // ENVOYER
+  // ✅ Le service ajoute le message dans le signal + met à jour lastMessage
+  //    Le composant n'a qu'à déclencher le scroll et notifier le WebSocket
   // ============================================================
   envoyer(): void {
     const conv = this.conversationActive();
     const user = this.authService.currentUser();
     if (!conv || !user || !this.nouveauMessage.trim()) return;
 
+    const contenu = this.nouveauMessage.trim();
     this.chargementEnvoi.set(true);
     this.erreurEnvoi.set('');
+    // ✅ Vider le champ immédiatement pour un retour visuel instantané
+    this.nouveauMessage = '';
 
     const payload: NouveauMessage = {
       conversationId: conv.id,
-      contenu:        this.nouveauMessage.trim()
+      contenu
     };
 
-    // ── Envoyer via REST (persistance en base) ──
     this.messagerieService.envoyer(payload).subscribe({
       next: () => {
-        // ── Notifier le destinataire via WebSocket ──
+        // ✅ Le service a déjà ajouté le message dans _conversations via tap()
+        //    messagesActifs() se recalcule automatiquement → bulle apparaît
         this.messagerieService.envoyerViaSocket(payload, conv.destinataireId);
-
-        this.nouveauMessage = '';
         this.chargementEnvoi.set(false);
-
-        const updated = this.messagerieService
-          .conversations()
-          .find(c => c.id === conv.id);
-
-        if (updated) this.conversationActive.set(updated);
         this.doitScroller = true;
       },
       error: err => {
         this.chargementEnvoi.set(false);
-        this.erreurEnvoi.set('Échec de l\'envoi. Réessayez.');
-        console.error('Erreur envoi message', err);
+        // Remettre le texte si erreur
+        this.nouveauMessage = contenu;
+        this.erreurEnvoi.set("Échec de l'envoi. Réessayez.");
+        console.error(err);
       }
     });
   }
 
   // ============================================================
-  // MODIFIER / SUPPRIMER UN MESSAGE
+  // SÉLECTIONNER (toggle boutons modifier/supprimer)
   // ============================================================
   selectionnerMessage(msg: Message): void {
+    if (this.messageEdition()) return;
     this.messageSelectionne.set(
       this.messageSelectionne()?.id === msg.id ? null : msg
     );
   }
 
-  modifierMessage(msg: Message): void {
-    const nouveauTexte = prompt('Modifier le message :', msg.contenu);
-    if (!nouveauTexte || nouveauTexte.trim() === msg.contenu) return;
+  // ============================================================
+  // ÉDITION INLINE
+  // ============================================================
+  ouvrirEdition(msg: Message): void {
+    this.messageEdition.set(msg);
+    this.messageSelectionne.set(null);
+    this.nouveauMessage = msg.contenu;
+    setTimeout(() => {
+      const input = document.querySelector('.wa-text-input') as HTMLInputElement;
+      if (input) { input.focus(); input.select(); }
+    }, 50);
+  }
 
-    this.messagerieService.modifierMessage(msg.id, nouveauTexte.trim()).subscribe({
+  validerEdition(): void {
+    const msg = this.messageEdition();
+    if (!msg || !this.nouveauMessage.trim()) return;
+    if (this.nouveauMessage.trim() === msg.contenu) {
+      this.annulerEdition();
+      return;
+    }
+
+    const nouveauContenu = this.nouveauMessage.trim();
+    this.chargementEnvoi.set(true);
+
+    this.messagerieService.modifierMessage(msg.id, nouveauContenu).subscribe({
       next: () => {
-        msg.contenu = nouveauTexte.trim();
-        this.messageSelectionne.set(null);
+        this.messagerieService.mettreAJourMessage(msg.id, nouveauContenu);
+
+        // ✅ Si c'est le dernier message, mettre à jour l'aperçu sidebar
+        const msgs = this.messagesActifs();
+        if (msgs.length > 0 && msgs[msgs.length - 1].id === msg.id) {
+          this.messagerieService.mettreAJourApercu(
+            this.conversationActive()!.id,
+            nouveauContenu
+          );
+        }
+
+        this.chargementEnvoi.set(false);
+        this.annulerEdition();
       },
-      error: err => console.error(err)
+      error: err => {
+        this.chargementEnvoi.set(false);
+        this.erreurEnvoi.set('Impossible de modifier le message.');
+        console.error(err);
+      }
     });
   }
 
+  annulerEdition(): void {
+    this.messageEdition.set(null);
+    this.messageSelectionne.set(null);
+    this.nouveauMessage = '';
+  }
+
+  // ============================================================
+  // SUPPRIMER UN MESSAGE
+  // ============================================================
   supprimerMessage(msg: Message): void {
     if (!confirm('Supprimer ce message ?')) return;
 
     this.messagerieService.supprimerMessage(msg.id).subscribe({
       next: () => {
-        const conv = this.conversationActive();
-        if (!conv) return;
-        conv.messages = conv.messages.filter(m => m.id !== msg.id);
-        this.conversationActive.set({ ...conv });
+        this.messagerieService.supprimerMessageLocal(msg.id, msg.conversationId);
         this.messageSelectionne.set(null);
+
+        // ✅ Mettre à jour l'aperçu avec le nouveau dernier message
+        const conv = this.conversationActive();
+        if (conv) {
+          const msgs = this.messagesActifs();
+          const dernierContenu = msgs.length > 0
+            ? msgs[msgs.length - 1].contenu
+            : '';
+          this.messagerieService.mettreAJourApercu(conv.id, dernierContenu);
+        }
       },
       error: err => console.error(err)
     });
@@ -222,8 +270,7 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
       return;
     }
 
-    const existante = this.messagerieService
-      .conversations()
+    const existante = this.messagerieService.conversations()
       .find(c => c.destinataireId === destinataire.id);
 
     if (existante) {
@@ -235,21 +282,17 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.chargementCreation.set(true);
     this.erreurNouvelleConv.set('');
 
-    this.messagerieService
-      .creerConversation({ destinataireId: destinataire.id })
-      .subscribe({
-        next: conv => {
-          this.chargementCreation.set(false);
-          this.fermerModalNouvelleConv();
-          this.ouvrirConversation(conv);
-        },
-        error: err => {
-          this.chargementCreation.set(false);
-          this.erreurNouvelleConv.set(
-            err.error?.message || 'Impossible de créer la conversation.'
-          );
-        }
-      });
+    this.messagerieService.creerConversation({ destinataireId: destinataire.id }).subscribe({
+      next: conv => {
+        this.chargementCreation.set(false);
+        this.fermerModalNouvelleConv();
+        this.ouvrirConversation(conv);
+      },
+      error: err => {
+        this.chargementCreation.set(false);
+        this.erreurNouvelleConv.set(err.error?.message || 'Impossible de créer la conversation.');
+      }
+    });
   }
 
   // ============================================================
@@ -270,9 +313,18 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
       },
       error: err => {
         this.suppressionEnCours.set(false);
-        console.error('Erreur suppression conversation', err);
+        console.error(err);
       }
     });
+  }
+
+  // ============================================================
+  // ✅ HELPER — Nombre total de messages d'une conversation
+  //    Réactif : se recalcule automatiquement quand le signal change
+  // ============================================================
+  totalMessages(conv: Conversation): number {
+    return this.messagerieService.conversations()
+      .find(c => c.id === conv.id)?.messages?.length ?? 0;
   }
 
   // ============================================================
@@ -298,7 +350,8 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
   formaterDate(date: string): string {
     try {
       return new Date(date).toLocaleTimeString('fr-FR', {
-        hour: '2-digit', minute: '2-digit'
+        hour:   '2-digit',
+        minute: '2-digit'
       });
     } catch { return date; }
   }
@@ -323,11 +376,6 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     return expediteurId === this.authService.currentUser()?.id;
   }
 
-  getAvatarColor(id: string): string {
-    const colors = ['av-blue', 'av-green', 'av-coral', 'av-purple', 'av-amber', 'av-teal'];
-    return colors[id ? id.charCodeAt(0) % colors.length : 0];
-  }
-
   isNewDay(messages: Message[], index: number): boolean {
     if (index === 0) return true;
     const curr = new Date(messages[index].dateEnvoi).toDateString();
@@ -342,11 +390,10 @@ export class MessagerieComponent implements OnInit, OnDestroy, AfterViewChecked 
     const hier = new Date();
     hier.setDate(auj.getDate() - 1);
     if (d.toDateString() === hier.toDateString()) return 'Hier';
-    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' });
-  }
-
-  onEnter(event: Event): void {
-    const e = event as KeyboardEvent;
-    if (!e.shiftKey) { e.preventDefault(); this.envoyer(); }
+    return d.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day:     '2-digit',
+      month:   'long'
+    });
   }
 }

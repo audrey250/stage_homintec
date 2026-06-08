@@ -34,7 +34,9 @@
     "styles": [
       "src/styles.scss",
       "src/assets/css/sb-admin-2.min.css",
-      "node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css"
+      "node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css",
+        "src/app/messagerie/messagerie.css"  // ← APRÈS Bootstrap
+
     ],
     "scripts": [
       "src/assets/vendor/jquery/jquery.min.js",

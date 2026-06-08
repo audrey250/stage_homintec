@@ -1,30 +1,32 @@
 /* ============================================================
-   messagerie.css  – Protection totale contre Bootstrap
-   Tous les styles critiques portent !important
+   messagerie.css  –  Thème clair moderne (mise à jour)
+   Protection totale contre Bootstrap — tous les styles critiques portent !important
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --c-green:       #1a7f5a;
-  --c-green-light: #e8f5ef;
-  --c-blue:        #3b82f6;
-  --c-blue-dark:   #2563eb;
+  --c-green-dark:  #156648;
+  --c-green-light: #dcfce7;
+  --c-green-text:  #15803d;
+  --c-blue:        #2563eb;
+  --c-blue-dark:   #1d4ed8;
   --c-blue-light:  #eff6ff;
-  --c-bg:          #eef5ff;
-  --c-chat-bg:     #f6fbff;
+  --c-bg:          #f0f4ff;
+  --c-chat-bg:     #f8faff;
   --c-white:       #ffffff;
-  --c-border:      #e5e8ee;
-  --c-hover:       #f0f2f6;
+  --c-border:      #e2e8f0;
+  --c-hover:       #f1f5f9;
   --c-active:      #dbeafe;
-  --c-txt1:        #1a2332;
-  --c-txt2:        #6b7a8d;
-  --c-txt3:        #adb5c2;
-  --c-danger:      #e53e3e;
-  --c-bubble-out:  #3b82f6;
-  --c-bubble-in:   #ffffff;
+  --c-txt1:        #0f172a;
+  --c-txt2:        #64748b;
+  --c-txt3:        #94a3b8;
+  --c-danger:      #dc2626;
+  --c-shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --c-shadow-md:   0 4px 16px rgba(0,0,0,.08);
   --radius:        12px;
-  --font:          'Inter', sans-serif;
+  --font:          'Inter', system-ui, sans-serif;
 }
 
 /* ══════════════════════════════════
@@ -40,8 +42,8 @@ app-messagerie .wa-shell,
   background: var(--c-bg) !important;
   border-radius: var(--radius) !important;
   overflow: hidden !important;
-  box-shadow: 0 2px 18px rgba(0,0,0,.08) !important;
-  border: 1px solid rgba(59,130,246,.12) !important;
+  box-shadow: var(--c-shadow-md) !important;
+  border: 1px solid var(--c-border) !important;
   flex-direction: row !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -66,21 +68,22 @@ app-messagerie .wa-shell,
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 14px 16px 10px !important;
+  padding: 14px 16px 12px !important;
   border-bottom: 1px solid var(--c-border) !important;
   background: var(--c-white) !important;
 }
 
 .wa-shell .wa-my-avatar {
-  width: 34px !important;
-  height: 34px !important;
+  width: 36px !important;
+  height: 36px !important;
   border-radius: 50% !important;
-  background: var(--c-bg) !important;
+  background: var(--c-green-light) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   font-size: 15px !important;
-  color: var(--c-txt2) !important;
+  color: var(--c-green-text) !important;
+  font-weight: 600 !important;
 }
 
 .wa-shell .wa-sidebar-actions {
@@ -116,7 +119,7 @@ app-messagerie .wa-shell,
   color: var(--c-danger) !important;
 }
 .wa-shell .wa-icon-btn.danger:hover {
-  background: #fff0f0 !important;
+  background: #fef2f2 !important;
 }
 .wa-shell .wa-icon-btn:disabled {
   opacity: .4 !important;
@@ -138,6 +141,12 @@ app-messagerie .wa-shell,
   background: var(--c-bg) !important;
   border-radius: 8px !important;
   padding: 7px 12px !important;
+  border: 1px solid transparent !important;
+  transition: border-color .15s !important;
+}
+.wa-shell .wa-search-inner:focus-within {
+  border-color: rgba(37,99,235,.3) !important;
+  background: var(--c-white) !important;
 }
 .wa-shell .wa-search-icon {
   color: var(--c-txt3) !important;
@@ -191,7 +200,7 @@ app-messagerie .wa-shell,
   background: var(--c-hover) !important;
 }
 .wa-shell .wa-conv-item.active {
-  background: rgba(59,130,246,.08) !important;
+  background: var(--c-blue-light) !important;
   border-left: 3px solid var(--c-blue) !important;
   padding-left: 11px !important;
 }
@@ -207,7 +216,7 @@ app-messagerie .wa-shell,
   margin-bottom: 2px !important;
 }
 .wa-shell .wa-conv-name {
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   color: var(--c-txt1) !important;
   white-space: nowrap !important;
@@ -216,8 +225,12 @@ app-messagerie .wa-shell,
   max-width: 160px !important;
 }
 .wa-shell .wa-conv-time {
-  font-size: 11px !important;
+  font-size: 10.5px !important;
   color: var(--c-txt3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
 }
 .wa-shell .wa-conv-bottom {
   display: flex !important;
@@ -236,10 +249,16 @@ app-messagerie .wa-shell,
   font-weight: 600 !important;
   color: var(--c-txt1) !important;
 }
+
+/* ══════════════════════════════════
+   BADGES
+   - .wa-unread-badge  → non-lus (bleu, conservé pour compatibilité)
+   - .wa-total-badge   → total messages (vert)
+══════════════════════════════════ */
 .wa-shell .wa-unread-badge {
   min-width: 18px !important;
   height: 18px !important;
-  padding: 0 4px !important;
+  padding: 0 5px !important;
   border-radius: 9px !important;
   background: var(--c-blue) !important;
   color: #fff !important;
@@ -248,6 +267,22 @@ app-messagerie .wa-shell,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+/* ✅ Badge total messages — vert, légèrement translucide */
+.wa-shell .wa-total-badge {
+  background: var(--c-green) !important;
+  color: #fff !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  border-radius: 9px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: .85 !important;
 }
 
 /* ══════════════════════════════════
@@ -277,24 +312,27 @@ app-messagerie .wa-shell,
   font-weight: 700 !important;
   font-size: inherit !important;
 }
-.wa-shell .wa-conv-item:nth-child(3n+1) .wa-avatar { background: #1a7f5a !important; }
-.wa-shell .wa-conv-item:nth-child(3n+2) .wa-avatar { background: #3b5bdb !important; }
-.wa-shell .wa-conv-item:nth-child(3n+3) .wa-avatar { background: #7048e8 !important; }
+
+/* Couleurs d'avatars variées */
+.wa-shell .wa-conv-item:nth-child(4n+1) .wa-avatar { background: #1a7f5a !important; }
+.wa-shell .wa-conv-item:nth-child(4n+2) .wa-avatar { background: #2563eb !important; }
+.wa-shell .wa-conv-item:nth-child(4n+3) .wa-avatar { background: #7c3aed !important; }
+.wa-shell .wa-conv-item:nth-child(4n+4) .wa-avatar { background: #ea580c !important; }
 
 /* ══════════════════════════════════
    FAB +
 ══════════════════════════════════ */
 .wa-shell .wa-fab {
   position: absolute !important;
-  bottom: 18px !important;
-  left: 18px !important;
-  width: 42px !important;
-  height: 42px !important;
+  bottom: 16px !important;
+  right: 16px !important;
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 50% !important;
   background: var(--c-green) !important;
   border: none !important;
   color: #fff !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -305,8 +343,8 @@ app-messagerie .wa-shell,
   text-decoration: none !important;
 }
 .wa-shell .wa-fab:hover {
-  background: #156648 !important;
-  transform: scale(1.05) !important;
+  background: var(--c-green-dark) !important;
+  transform: scale(1.06) !important;
 }
 
 /* ══════════════════════════════════
@@ -317,7 +355,7 @@ app-messagerie .wa-shell,
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  background: linear-gradient(180deg, #f6fbff 0%, #eef5ff 100%) !important;
+  background: var(--c-chat-bg) !important;
 }
 
 /* État vide */
@@ -334,20 +372,20 @@ app-messagerie .wa-shell,
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 14px !important;
   text-align: center !important;
   padding: 0 32px !important;
 }
 .wa-shell .wa-logo-icon {
-  width: 64px !important;
-  height: 64px !important;
+  width: 68px !important;
+  height: 68px !important;
   border-radius: 50% !important;
   background: var(--c-green-light) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 26px !important;
-  color: var(--c-green) !important;
+  font-size: 28px !important;
+  color: var(--c-green-text) !important;
 }
 .wa-shell .wa-no-conv-inner h2 {
   font-size: 18px !important;
@@ -356,7 +394,7 @@ app-messagerie .wa-shell,
   margin: 0 !important;
 }
 .wa-shell .wa-no-conv-inner p {
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   color: var(--c-txt2) !important;
   margin: 0 !important;
   line-height: 1.6 !important;
@@ -379,10 +417,10 @@ app-messagerie .wa-shell,
   align-items: center !important;
   justify-content: space-between !important;
   padding: 12px 18px !important;
-  background: linear-gradient(90deg, rgba(59,130,246,.12), rgba(255,255,255,.95)) !important;
-  border-bottom: 1px solid rgba(59,130,246,.14) !important;
+  background: var(--c-white) !important;
+  border-bottom: 1px solid var(--c-border) !important;
   flex-shrink: 0 !important;
-  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04) !important;
 }
 .wa-shell .wa-chat-identity {
   display: flex !important;
@@ -404,7 +442,7 @@ app-messagerie .wa-shell,
   color: var(--c-txt2) !important;
   display: flex !important;
   align-items: center !important;
-  gap: 5px !important;
+  gap: 6px !important;
   flex-wrap: wrap !important;
 }
 .wa-shell .wa-chat-actions {
@@ -413,16 +451,16 @@ app-messagerie .wa-shell,
 }
 
 .wa-shell .wa-status-pill {
-  padding: 1px 8px !important;
+  padding: 2px 8px !important;
   border-radius: 20px !important;
   font-size: 10px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   text-transform: uppercase !important;
-  letter-spacing: .05em !important;
+  letter-spacing: .04em !important;
 }
-.wa-shell .wa-status-pill.active  { background: var(--c-green-light) !important; color: var(--c-green) !important; }
+.wa-shell .wa-status-pill.active  { background: #dcfce7 !important; color: #15803d !important; }
 .wa-shell .wa-status-pill.closed  { background: var(--c-bg) !important; color: var(--c-txt2) !important; }
-.wa-shell .wa-status-pill.blocked { background: #fff0f0 !important; color: var(--c-danger) !important; }
+.wa-shell .wa-status-pill.blocked { background: #fef2f2 !important; color: var(--c-danger) !important; }
 
 /* ══════════════════════════════════
    ZONE DES MESSAGES
@@ -430,24 +468,15 @@ app-messagerie .wa-shell,
 .wa-shell .wa-messages {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 24px 20px 18px !important;
+  padding: 20px 18px 16px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
-  background:
-    radial-gradient(circle at top left, rgba(59,130,246,.08), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(59,130,246,.05), transparent 15%),
-    var(--c-chat-bg) !important;
-  /* Motif WhatsApp subtil */
-  background-image:
-    radial-gradient(circle at top left, rgba(59,130,246,.08), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(59,130,246,.05), transparent 15%),
-    radial-gradient(rgba(255,255,255,.3) 1px, transparent 1px) !important;
-  background-size: auto, auto, 28px 28px !important;
+  gap: 6px !important;
+  background: var(--c-chat-bg) !important;
 }
-.wa-shell .wa-messages::-webkit-scrollbar { width: 6px !important; }
+.wa-shell .wa-messages::-webkit-scrollbar { width: 5px !important; }
 .wa-shell .wa-messages::-webkit-scrollbar-thumb {
-  background: rgba(59,130,246,.25) !important;
+  background: rgba(37,99,235,.18) !important;
   border-radius: 99px !important;
 }
 
@@ -457,8 +486,8 @@ app-messagerie .wa-shell,
   margin-top: 24px !important;
 }
 .wa-shell .wa-no-msg-bubble {
-  background: #ffffff !important;
-  border: 1px solid rgba(59,130,246,.12) !important;
+  background: var(--c-white) !important;
+  border: 1px solid var(--c-border) !important;
   color: var(--c-txt2) !important;
   padding: 10px 18px !important;
   border-radius: 18px !important;
@@ -466,7 +495,7 @@ app-messagerie .wa-shell,
   display: flex !important;
   align-items: center !important;
   gap: 9px !important;
-  box-shadow: 0 3px 18px rgba(59,130,246,.06) !important;
+  box-shadow: var(--c-shadow) !important;
 }
 
 /* ══════════════════════════════════
@@ -485,26 +514,39 @@ app-messagerie .wa-shell,
   justify-content: flex-start !important;
 }
 
+/* Wrapper bulle + actions */
+.wa-shell .wa-bubble-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  max-width: 58% !important;
+}
+.wa-shell .wa-bubble-wrapper.sent {
+  align-items: flex-end !important;
+}
+.wa-shell .wa-bubble-wrapper.recv {
+  align-items: flex-start !important;
+}
+
 .wa-shell .wa-bubble {
-  max-width: 55% !important;
-  padding: 8px 12px 5px !important;
+  max-width: 100% !important;
+  padding: 9px 13px 6px !important;
   font-size: 13.5px !important;
   line-height: 1.5 !important;
   word-break: break-word !important;
   border-radius: 18px !important;
 }
 .wa-shell .wa-bubble.sent {
-  background: #155724 !important;
+  background: var(--c-blue) !important;
   color: #fff !important;
   border-radius: 18px 18px 4px 18px !important;
-  box-shadow: 0 8px 26px rgba(21,87,36,.2) !important;
+  box-shadow: 0 2px 12px rgba(37,99,235,.2) !important;
 }
 .wa-shell .wa-bubble.recv {
-  background: #ffffff !important;
+  background: var(--c-white) !important;
   color: var(--c-txt1) !important;
   border-radius: 18px 18px 18px 4px !important;
-  border: 1px solid rgba(16,24,40,.08) !important;
-  box-shadow: 0 6px 22px rgba(15,23,42,.08) !important;
+  border: 1px solid var(--c-border) !important;
+  box-shadow: var(--c-shadow) !important;
 }
 .wa-shell .wa-bubble-text {
   margin: 0 0 3px !important;
@@ -520,7 +562,7 @@ app-messagerie .wa-shell,
 .wa-shell .wa-bubble.recv .wa-bubble-meta  { color: var(--c-txt3) !important; }
 .wa-shell .wa-ticks i                      { font-size: 11px !important; }
 .wa-shell .wa-bubble.sent .wa-ticks i      { color: rgba(255,255,255,.65) !important; }
-.wa-shell .wa-bubble.sent .wa-ticks i.seen { color: #fff !important; }
+.wa-shell .wa-bubble.sent .wa-ticks i.seen { color: #bfdbfe !important; }
 
 /* Séparateur de jour */
 .wa-shell .wa-day-separator {
@@ -529,7 +571,7 @@ app-messagerie .wa-shell,
   gap: 10px !important;
   margin: 12px 0 !important;
   color: var(--c-txt3) !important;
-  font-size: 11.5px !important;
+  font-size: 11px !important;
 }
 .wa-shell .wa-day-separator::before,
 .wa-shell .wa-day-separator::after {
@@ -539,30 +581,73 @@ app-messagerie .wa-shell,
   background: var(--c-border) !important;
 }
 
-/* Actions sur message */
+/* Actions sur message (modifier/supprimer) */
 .wa-shell .wa-msg-actions {
-  display: flex !important;
-  gap: 6px !important;
+  display: none !important;
+  gap: 5px !important;
   margin-top: 4px !important;
+}
+.wa-shell .wa-msg-actions.visible {
+  display: flex !important;
   justify-content: flex-end !important;
 }
 .wa-shell .wa-action-btn {
-  border: none !important;
+  border: 1px solid var(--c-border) !important;
   border-radius: 6px !important;
   padding: 3px 9px !important;
   cursor: pointer !important;
   font-size: 11px !important;
   font-family: var(--font) !important;
-  background: rgba(0,0,0,.07) !important;
+  background: var(--c-white) !important;
   color: var(--c-txt2) !important;
   transition: background .12s !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
-.wa-shell .wa-action-btn:hover { background: rgba(0,0,0,.13) !important; }
+.wa-shell .wa-action-btn:hover { background: var(--c-hover) !important; }
 .wa-shell .wa-action-btn.danger {
   background: var(--c-danger) !important;
   color: #fff !important;
+  border-color: var(--c-danger) !important;
 }
-.wa-shell .wa-action-btn.danger:hover { background: #c53030 !important; }
+.wa-shell .wa-action-btn.danger:hover { background: #b91c1c !important; }
+
+/* ══════════════════════════════════
+   INDICATEUR D'ÉDITION
+══════════════════════════════════ */
+.wa-shell .wa-edit-indicator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 14px !important;
+  background: #fffbeb !important;
+  border-top: 1px solid #fde68a !important;
+  font-size: 12px !important;
+  color: #92400e !important;
+  flex-shrink: 0 !important;
+}
+.wa-shell .wa-edit-indicator span {
+  flex: 1 !important;
+}
+.wa-shell .wa-edit-cancel {
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: #92400e !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Zone de saisie — rangée input */
+.wa-shell .wa-input-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
 
 /* ══════════════════════════════════
    ERREUR / BANNIÈRE FERMÉE
@@ -591,21 +676,26 @@ app-messagerie .wa-shell,
 ══════════════════════════════════ */
 .wa-shell .wa-input-bar {
   display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  background: var(--c-white) !important;
+  border-top: 1px solid var(--c-border) !important;
+  flex-shrink: 0 !important;
+}
+.wa-shell .wa-input-row {
+  display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  padding: 12px 14px !important;
-  background: rgba(255,255,255,.95) !important;
-  border-top: 1px solid rgba(59,130,246,.15) !important;
-  flex-shrink: 0 !important;
-  backdrop-filter: blur(8px) !important;
+  padding: 10px 14px !important;
 }
 .wa-shell .wa-text-input {
   flex: 1 !important;
-  background: #f7fbff !important;
-  border: 1px solid rgba(59,130,246,.14) !important;
+  background: var(--c-bg) !important;
+  border: 1px solid var(--c-border) !important;
   outline: none !important;
   border-radius: 22px !important;
-  padding: 11px 16px !important;
+  padding: 10px 16px !important;
   color: var(--c-txt1) !important;
   font-family: var(--font) !important;
   font-size: 13.5px !important;
@@ -614,10 +704,15 @@ app-messagerie .wa-shell,
 }
 .wa-shell .wa-text-input::placeholder { color: var(--c-txt3) !important; }
 .wa-shell .wa-text-input:focus {
-  box-shadow: 0 0 0 2px rgba(59,130,246,.15) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12) !important;
   border-color: var(--c-blue) !important;
+  background: var(--c-white) !important;
 }
 .wa-shell .wa-text-input:disabled { opacity: .6 !important; }
+.wa-shell .wa-text-input.editing {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245,158,11,.12) !important;
+}
 
 .wa-shell .wa-attach-btn {
   width: 34px !important;
@@ -637,8 +732,8 @@ app-messagerie .wa-shell,
 .wa-shell .wa-attach-btn:hover { background: var(--c-border) !important; }
 
 .wa-shell .wa-send-btn {
-  width: 42px !important;
-  height: 42px !important;
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 50% !important;
   border: none !important;
   background: var(--c-green) !important;
@@ -649,12 +744,12 @@ app-messagerie .wa-shell,
   justify-content: center !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
-  box-shadow: 0 3px 14px rgba(26,127,90,.3) !important;
+  box-shadow: 0 2px 10px rgba(26,127,90,.3) !important;
   transition: background .15s, transform .1s !important;
 }
 .wa-shell .wa-send-btn:hover {
-  background: #156648 !important;
-  transform: scale(1.05) !important;
+  background: var(--c-green-dark) !important;
+  transform: scale(1.06) !important;
 }
 .wa-shell .wa-send-btn:disabled {
   opacity: .45 !important;
@@ -686,13 +781,13 @@ app-messagerie .wa-shell,
   display: inline-block !important;
   width: 13px !important;
   height: 13px !important;
-  border: 2px solid rgba(255,255,255,.3) !important;
+  border: 2px solid rgba(255,255,255,.35) !important;
   border-top-color: #fff !important;
   border-radius: 50% !important;
   animation: wa-spin .7s linear infinite !important;
 }
 .wa-shell .wa-error-banner {
-  background: #fff5f5 !important;
+  background: #fef2f2 !important;
   color: var(--c-danger) !important;
   font-size: 12px !important;
   padding: 7px 14px !important;
@@ -736,7 +831,7 @@ app-messagerie .wa-shell,
   box-shadow: none !important;
 }
 .wa-shell .wa-btn-primary:hover,
-.wa-modal .wa-btn-primary:hover  { background: #156648 !important; color: #fff !important; }
+.wa-modal .wa-btn-primary:hover  { background: var(--c-green-dark) !important; color: #fff !important; }
 .wa-shell .wa-btn-primary:disabled,
 .wa-modal .wa-btn-primary:disabled { opacity: .5 !important; cursor: not-allowed !important; }
 
@@ -768,13 +863,13 @@ app-messagerie .wa-shell,
 .wa-modal-overlay {
   position: fixed !important;
   inset: 0 !important;
-  background: rgba(0,0,0,.35) !important;
+  background: rgba(15,23,42,.3) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   z-index: 9999 !important;
   padding: 16px !important;
-  backdrop-filter: blur(3px) !important;
+  backdrop-filter: blur(4px) !important;
 }
 .wa-modal {
   background: var(--c-white) !important;
@@ -784,9 +879,10 @@ app-messagerie .wa-shell,
   max-height: 82vh !important;
   display: flex !important;
   flex-direction: column !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,.14) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.12) !important;
   overflow: hidden !important;
   padding: 0 !important;
+  border: 1px solid var(--c-border) !important;
 }
 .wa-modal .wa-modal-header {
   display: flex !important;
@@ -808,7 +904,7 @@ app-messagerie .wa-shell,
 .wa-modal .wa-modal-error {
   margin: 10px 14px 0 !important;
   padding: 9px 12px !important;
-  background: #fff5f5 !important;
+  background: #fef2f2 !important;
   border: 1px solid #fecaca !important;
   border-radius: 8px !important;
   color: var(--c-danger) !important;
@@ -833,7 +929,7 @@ app-messagerie .wa-shell,
 .wa-modal .wa-modal-search input {
   width: 100% !important;
   background: var(--c-bg) !important;
-  border: none !important;
+  border: 1px solid var(--c-border) !important;
   outline: none !important;
   border-radius: 8px !important;
   padding: 8px 12px 8px 34px !important;
@@ -841,6 +937,12 @@ app-messagerie .wa-shell,
   font-family: var(--font) !important;
   font-size: 13px !important;
   box-shadow: none !important;
+  transition: border-color .15s, box-shadow .15s !important;
+}
+.wa-modal .wa-modal-search input:focus {
+  border-color: var(--c-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1) !important;
+  background: var(--c-white) !important;
 }
 .wa-modal .wa-modal-search input::placeholder { color: var(--c-txt3) !important; }
 .wa-modal .wa-users-list {
@@ -893,7 +995,7 @@ app-messagerie .wa-shell,
   background: var(--c-green-light) !important;
   border-left: 3px solid var(--c-green) !important;
   border-radius: 0 7px 7px 0 !important;
-  color: var(--c-green) !important;
+  color: var(--c-green-text) !important;
   font-size: 12.5px !important;
   display: flex !important;
   align-items: center !important;
@@ -938,7 +1040,7 @@ app-messagerie .wa-shell,
   display: inline-block !important;
   width: 13px !important;
   height: 13px !important;
-  border: 2px solid rgba(255,255,255,.3) !important;
+  border: 2px solid rgba(255,255,255,.35) !important;
   border-top-color: #fff !important;
   border-radius: 50% !important;
   animation: wa-spin .7s linear infinite !important;
@@ -958,7 +1060,8 @@ app-messagerie .wa-shell,
     border-right: none !important;
     border-bottom: 1px solid var(--c-border) !important;
   }
-  .wa-shell .wa-bubble {
+  .wa-shell .wa-bubble,
+  .wa-shell .wa-bubble-wrapper {
     max-width: 78% !important;
   }
 }

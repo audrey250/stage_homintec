@@ -1,6 +1,5 @@
 // ============================================================
 // src/app/services/messagerie.service.ts
-// WebSocket STOMP temps réel — aligné sur MessageWebSocketController
 // ============================================================
 
 import { Injectable, signal } from '@angular/core';
@@ -12,8 +11,8 @@ import { AuthService } from './auth.service';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const API_URL  = environment.apiUrl;
-const WS_URL   = API_URL.replace('/api', '') + '/ws'; // http://192.168.1.115:8080/ws
+const API_URL = environment.apiUrl;
+const WS_URL  = API_URL.replace('/api', '') + '/ws';
 
 export type StatutConversation = 'active' | 'bloquee' | 'supprimee' | 'envoyee' | 'fermee';
 
@@ -74,7 +73,6 @@ export class MessagerieService {
   private _utilisateurs = signal<UtilisateurSimple[]>([]);
   utilisateurs          = this._utilisateurs.asReadonly();
 
-  // ── Client STOMP ──
   private stompClient: Client | null = null;
   private monUserId: string | null   = null;
 
@@ -84,8 +82,7 @@ export class MessagerieService {
   ) {}
 
   // ============================================================
-  // WEBSOCKET — Connexion + abonnement temps réel
-  // Le serveur pousse vers /queue/messages-{monId}
+  // WEBSOCKET
   // ============================================================
   connecterWebSocket(userId: string): void {
     if (this.stompClient?.active) return;
@@ -97,15 +94,12 @@ export class MessagerieService {
 
       onConnect: () => {
         console.log('✅ WebSocket messagerie connecté');
-
-        // ── Écouter les messages destinés à MOI ──
-        // Spring envoie vers /queue/messages-{destinataireId}
         this.stompClient!.subscribe(
           `/queue/messages-${userId}`,
           (frame: IMessage) => {
             try {
               const msg: Message = JSON.parse(frame.body);
-              this.ajouterMessageTempsReel(msg);
+              this._ajouterMessageTempsReel(msg);
             } catch (e) {
               console.error('Erreur parsing message WebSocket', e);
             }
@@ -113,12 +107,11 @@ export class MessagerieService {
         );
       },
 
-      onStompError: (frame) => {
-        console.error('❌ Erreur STOMP messagerie', frame);
+      onStompError:  (frame) => {
+        console.error('❌ Erreur STOMP', frame);
         this._erreur.set('Connexion temps réel perdue.');
       },
-
-      onDisconnect: () => console.log('🔌 WebSocket messagerie déconnecté')
+      onDisconnect: () => console.log('🔌 WebSocket déconnecté')
     });
 
     this.stompClient.activate();
@@ -129,57 +122,47 @@ export class MessagerieService {
     this.stompClient = null;
   }
 
-  // ── Ajouter un message reçu en temps réel dans le bon signal ──
-  private ajouterMessageTempsReel(msg: Message): void {
+  // Message reçu en temps réel via WebSocket (depuis le destinataire)
+  private _ajouterMessageTempsReel(msg: Message): void {
     this._conversations.update(convs =>
       convs.map(c => {
         if (c.id !== msg.conversationId) return c;
 
-        // Éviter les doublons (si le REST a déjà ajouté le message)
+        // Éviter les doublons (le REST a peut-être déjà ajouté ce message)
         const dejaPresent = c.messages?.some(m => m.id === msg.id);
         if (dejaPresent) return c;
 
         return {
           ...c,
-          messages:    [...(c.messages ?? []), msg],
-          lastMessage: msg.contenu,
+          messages:     [...(c.messages ?? []), msg],
+          lastMessage:  msg.contenu,
           dateCreation: msg.dateEnvoi,
-          // Incrémenter nonLus seulement si ce n'est pas ma propre conv active
           nonLus: msg.expediteurId !== this.monUserId
-            ? c.nonLus + 1
+            ? (c.nonLus ?? 0) + 1
             : c.nonLus
         };
       })
     );
   }
 
-  // ============================================================
-  // ENVOYER via WebSocket (temps réel) + fallback REST
-  // Le client envoie vers /app/message
-  // ============================================================
   envoyerViaSocket(msg: NouveauMessage, destinataireId: string): void {
     if (!this.stompClient?.active) return;
-
-    const expediteurId = this.authService.currentUser()?.id;
-    const user         = this.authService.currentUser();
-
-    // Payload attendu par MessageWebSocketDTO
+    const user = this.authService.currentUser();
     this.stompClient.publish({
       destination: '/app/message',
       body: JSON.stringify({
         conversationId:   msg.conversationId,
         contenu:          msg.contenu,
-        expediteurId:     expediteurId,
+        expediteurId:     user?.id     ?? '',
         expediteurNom:    user?.nom    ?? '',
         expediteurPrenom: user?.prenom ?? '',
-        destinataireId:   destinataireId
+        destinataireId
       })
     });
   }
 
   // ============================================================
-  // REST — Charger conversations
-  // GET /api/conversations/utilisateur/:userId
+  // REST — Conversations
   // ============================================================
   chargerConversations(userId: string): Observable<Conversation[]> {
     this._loading.set(true);
@@ -199,15 +182,10 @@ export class MessagerieService {
       );
   }
 
-  // ============================================================
-  // REST — Créer une conversation
-  // POST /api/conversations
-  // ============================================================
   creerConversation(payload: NouvelleConversation): Observable<Conversation> {
     const expediteurId = this.authService.currentUser()?.id;
-    if (!expediteurId) {
-      return throwError(() => new Error('Utilisateur non authentifié.'));
-    }
+    if (!expediteurId) return throwError(() => new Error('Utilisateur non authentifié.'));
+
     return this.http
       .post<Conversation>(`${API_URL}/conversations`, {
         expediteurId,
@@ -217,17 +195,26 @@ export class MessagerieService {
         tap(nouvelle => {
           this._conversations.update(convs => {
             const existe = convs.find(c => c.destinataireId === nouvelle.destinataireId);
-            if (existe) return convs;
-            return [nouvelle, ...convs];
+            return existe ? convs : [nouvelle, ...convs];
           });
         }),
         catchError(err => throwError(() => err))
       );
   }
 
+  supprimerConversation(id: string): Observable<void> {
+    return this.http
+      .delete<void>(`${API_URL}/conversations/${id}`)
+      .pipe(
+        tap(() => {
+          this._conversations.update(convs => convs.filter(c => c.id !== id));
+        }),
+        catchError(err => throwError(() => err))
+      );
+  }
+
   // ============================================================
-  // REST — Charger messages d'une conversation
-  // GET /api/messages/conversation/:id
+  // REST — Messages
   // ============================================================
   chargerMessages(id: string): Observable<Message[]> {
     this._loading.set(true);
@@ -237,9 +224,7 @@ export class MessagerieService {
         tap(messages => {
           this._loading.set(false);
           this._conversations.update(convs =>
-            convs.map(c =>
-              c.id === id ? { ...c, messages, nonLus: 0 } : c
-            )
+            convs.map(c => c.id === id ? { ...c, messages, nonLus: 0 } : c)
           );
         }),
         catchError(err => {
@@ -249,28 +234,28 @@ export class MessagerieService {
       );
   }
 
-  // ============================================================
-  // REST — Envoyer un message
-  // POST /api/messages
-  // ============================================================
+  // ✅ envoyer() : ajoute le message dans le signal ET met à jour lastMessage
   envoyer(msg: NouveauMessage): Observable<Message> {
     const expediteurId = this.authService.currentUser()?.id;
     return this.http
       .post<Message>(`${API_URL}/messages`, {
         conversationId: msg.conversationId,
         contenu:        msg.contenu,
-        expediteurId:   expediteurId
+        expediteurId
       })
       .pipe(
         tap(nouveau => {
           this._conversations.update(convs =>
             convs.map(c => {
               if (c.id !== msg.conversationId) return c;
+
+              // Anti-doublon : si le message est déjà là (WebSocket rapide), on ne l'ajoute pas
               const dejaPresent = c.messages?.some(m => m.id === nouveau.id);
               return {
                 ...c,
                 messages:     dejaPresent ? c.messages : [...(c.messages ?? []), nouveau],
-                lastMessage:  msg.contenu,
+                // ✅ Mise à jour aperçu sidebar
+                lastMessage:  nouveau.contenu,
                 dateCreation: nouveau.dateEnvoi
               };
             })
@@ -280,10 +265,6 @@ export class MessagerieService {
       );
   }
 
-  // ============================================================
-  // REST — Marquer comme lus
-  // PATCH /api/messages/conversation/:id/lu?userId=...
-  // ============================================================
   marquerLus(id: string): Observable<void> {
     const userId = this.authService.currentUser()?.id;
     return this.http
@@ -298,24 +279,57 @@ export class MessagerieService {
       );
   }
 
-  // ============================================================
-  // REST — Supprimer une conversation
-  // DELETE /api/conversations/:id
-  // ============================================================
-  supprimerConversation(id: string): Observable<void> {
-    return this.http
-      .delete<void>(`${API_URL}/conversations/${id}`)
-      .pipe(
-        tap(() => {
-          this._conversations.update(convs => convs.filter(c => c.id !== id));
-        }),
-        catchError(err => throwError(() => err))
-      );
+  modifierMessage(id: string, contenu: string): Observable<Message> {
+    return this.http.put<Message>(`${API_URL}/messages/${id}`, { contenu });
+  }
+
+  supprimerMessage(id: string): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/messages/${id}`);
   }
 
   // ============================================================
-  // REST — Charger utilisateurs
-  // GET /api/utilisateurs
+  // Mutations locales du signal (sans appel HTTP)
+  // ============================================================
+
+  // ✅ Mettre à jour le contenu d'un message après édition
+  mettreAJourMessage(id: string, contenu: string): void {
+    this._conversations.update(convs =>
+      convs.map(c => ({
+        ...c,
+        messages: (c.messages ?? []).map(m =>
+          m.id === id ? { ...m, contenu } : m
+        )
+      }))
+    );
+  }
+
+  // ✅ Supprimer un message du signal après suppression HTTP
+  supprimerMessageLocal(id: string, conversationId: string): void {
+    this._conversations.update(convs =>
+      convs.map(c =>
+        c.id === conversationId
+          ? { ...c, messages: (c.messages ?? []).filter(m => m.id !== id) }
+          : c
+      )
+    );
+  }
+
+  // ✅ Mettre à jour l'aperçu sidebar (lastMessage + optionnellement nonLus)
+  mettreAJourApercu(conversationId: string, contenu: string, incrementerNonLus = false): void {
+    this._conversations.update(convs =>
+      convs.map(c => {
+        if (c.id !== conversationId) return c;
+        return {
+          ...c,
+          lastMessage: contenu,
+          nonLus: incrementerNonLus ? (c.nonLus ?? 0) + 1 : c.nonLus
+        };
+      })
+    );
+  }
+
+  // ============================================================
+  // REST — Utilisateurs
   // ============================================================
   chargerUtilisateurs(): Observable<UtilisateurSimple[]> {
     return this.http
@@ -327,20 +341,9 @@ export class MessagerieService {
   }
 
   // ============================================================
-  // REST — Modifier / Supprimer un message
-  // ============================================================
-  modifierMessage(id: string, contenu: string): Observable<any> {
-    return this.http.put(`${API_URL}/messages/${id}`, { contenu });
-  }
-
-  supprimerMessage(id: string): Observable<any> {
-    return this.http.delete(`${API_URL}/messages/${id}`);
-  }
-
-  // ============================================================
-  // HELPER — Total non lus (badge sidebar)
+  // HELPER — Total non lus (badge header/sidebar)
   // ============================================================
   totalNonLus(): number {
-    return this._conversations().reduce((t, c) => t + c.nonLus, 0);
+    return this._conversations().reduce((t, c) => t + (c.nonLus ?? 0), 0);
   }
 }

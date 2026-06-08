@@ -9,15 +9,11 @@
   ════════════════════════════════════════════ -->
   <aside class="wa-sidebar">
 
-    <!-- Header sidebar -->
     <div class="wa-sidebar-header">
       <div class="wa-my-avatar">
         <i class="fas fa-user"></i>
       </div>
       <div class="wa-sidebar-actions">
-        <button class="wa-icon-btn" title="Statut">
-          <i class="fas fa-circle-dot"></i>
-        </button>
         <button class="wa-icon-btn" title="Nouvelle conversation"
                 (click)="ouvrirModalNouvelleConv()">
           <i class="fas fa-pen-to-square"></i>
@@ -28,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Barre de recherche -->
     <div class="wa-search-bar">
       <div class="wa-search-inner">
         <i class="fas fa-magnifying-glass wa-search-icon"></i>
@@ -38,19 +33,16 @@
       </div>
     </div>
 
-    <!-- Spinner chargement initial -->
     <div *ngIf="messagerieService.loading() && messagerieService.conversations().length === 0"
          class="wa-loading">
       <div class="wa-spinner"></div>
     </div>
 
-    <!-- Erreur -->
     <div *ngIf="messagerieService.erreur()" class="wa-error-banner">
       <i class="fas fa-triangle-exclamation"></i>
       {{ messagerieService.erreur() }}
     </div>
 
-    <!-- Liste conversations -->
     <div class="wa-conv-list">
 
       <div *ngIf="messagerieService.conversations().length === 0 && !messagerieService.loading()"
@@ -67,26 +59,29 @@
            [class.active]="conversationActive()?.id === conv.id"
            (click)="ouvrirConversation(conv)">
 
-        <!-- Avatar -->
         <div class="wa-avatar">
           <span>{{ initiales(conv.destinataireNom, conv.destinatairePrenom) }}</span>
         </div>
 
-        <!-- Infos -->
         <div class="wa-conv-body">
           <div class="wa-conv-top">
             <span class="wa-conv-name">
               {{ conv.destinatairePrenom }} {{ conv.destinataireNom }}
             </span>
-            <span class="wa-conv-time">{{ formaterDateConv(conv.dateCreation) }}</span>
+            <!-- ✅ Affiche le nombre total de messages à la place de la date -->
+            <span class="wa-conv-time">
+              <i class="fas fa-message" style="font-size:9px; opacity:.6; margin-right:2px;"></i>
+              {{ totalMessages(conv) }} msg
+            </span>
           </div>
           <div class="wa-conv-bottom">
-            <span class="wa-conv-preview"
-                  [class.unread]="conv.nonLus > 0">
+            <!-- ✅ Aperçu du dernier message -->
+            <span class="wa-conv-preview" [class.unread]="conv.nonLus > 0">
               {{ conv.lastMessage || 'Aucun message' }}
             </span>
-            <span *ngIf="conv.nonLus > 0" class="wa-unread-badge">
-              {{ conv.nonLus }}
+            <!-- ✅ Badge avec le total de messages envoyés (pas seulement non-lus) -->
+            <span *ngIf="totalMessages(conv) > 0" class="wa-unread-badge wa-total-badge">
+              {{ totalMessages(conv) }}
             </span>
           </div>
         </div>
@@ -94,7 +89,6 @@
       </div>
     </div>
 
-    <!-- Bouton + flottant -->
     <button class="wa-fab" (click)="ouvrirModalNouvelleConv()" title="Nouvelle conversation">
       <i class="fas fa-plus"></i>
     </button>
@@ -106,7 +100,6 @@
   ════════════════════════════════════════════ -->
   <main class="wa-chat">
 
-    <!-- État vide -->
     <div *ngIf="!conversationActive()" class="wa-no-conv">
       <div class="wa-no-conv-inner">
         <div class="wa-logo-icon">
@@ -129,7 +122,7 @@
 
     <ng-container *ngIf="conversationActive() as conv">
 
-      <!-- ── Topbar chat ── -->
+      <!-- Header chat -->
       <div class="wa-chat-header">
         <div class="wa-chat-identity">
           <div class="wa-avatar">
@@ -153,13 +146,10 @@
         </div>
 
         <div class="wa-chat-actions">
-          <button class="wa-icon-btn" title="Rechercher">
-            <i class="fas fa-magnifying-glass"></i>
-          </button>
           <button class="wa-icon-btn danger"
                   (click)="supprimerConversation(conv)"
                   [disabled]="suppressionEnCours()"
-                  title="Supprimer">
+                  title="Supprimer la conversation">
             <span *ngIf="suppressionEnCours()" class="wa-spinner-sm"></span>
             <i *ngIf="!suppressionEnCours()" class="fas fa-trash"></i>
           </button>
@@ -169,14 +159,14 @@
         </div>
       </div>
 
-      <!-- ── Messages ── -->
+      <!-- Zone messages -->
       <div class="wa-messages" #messagesContainer>
 
         <div *ngIf="messagerieService.loading()" class="wa-loading">
           <div class="wa-spinner"></div>
         </div>
 
-        <div *ngIf="!conv.messages || conv.messages.length === 0"
+        <div *ngIf="messagesActifs().length === 0 && !messagerieService.loading()"
              class="wa-no-messages">
           <div class="wa-no-msg-bubble">
             <i class="fas fa-hand-wave"></i>
@@ -184,30 +174,64 @@
           </div>
         </div>
 
-        <div *ngFor="let msg of conv.messages"
-             class="wa-msg-row"
-             [class.sent]="estMonMessage(msg.expediteurId)"
-             [class.recv]="!estMonMessage(msg.expediteurId)">
+        <ng-container *ngFor="let msg of messagesActifs(); let i = index">
 
-          <div *ngIf="!estMonMessage(msg.expediteurId)"
-               class="wa-avatar xs">
-            <span>{{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}</span>
+          <!-- Séparateur de jour -->
+          <div *ngIf="isNewDay(messagesActifs(), i)" class="wa-day-separator">
+            <span>{{ formaterJour(msg.dateEnvoi) }}</span>
           </div>
 
-          <div class="wa-bubble"
+          <!-- Ligne message -->
+          <div class="wa-msg-row"
                [class.sent]="estMonMessage(msg.expediteurId)"
                [class.recv]="!estMonMessage(msg.expediteurId)">
-            <p class="wa-bubble-text">{{ msg.contenu }}</p>
-            <span class="wa-bubble-meta">
-              {{ formaterDate(msg.dateEnvoi) }}
-              <span *ngIf="estMonMessage(msg.expediteurId)" class="wa-ticks">
-                <i class="fas fa-check-double"
-                   [class.seen]="msg.lu"></i>
-              </span>
-            </span>
+
+            <!-- Avatar messages reçus -->
+            <div *ngIf="!estMonMessage(msg.expediteurId)" class="wa-avatar xs">
+              <span>{{ initiales(msg.expediteurNom, msg.expediteurPrenom) }}</span>
+            </div>
+
+            <!-- Wrapper bulle + actions -->
+            <div class="wa-bubble-wrapper"
+                 [class.sent]="estMonMessage(msg.expediteurId)"
+                 [class.recv]="!estMonMessage(msg.expediteurId)">
+
+              <!-- Bulle -->
+              <div class="wa-bubble"
+                   [class.sent]="estMonMessage(msg.expediteurId)"
+                   [class.recv]="!estMonMessage(msg.expediteurId)"
+                   [class.selected]="messageSelectionne()?.id === msg.id"
+                   (click)="estMonMessage(msg.expediteurId) ? selectionnerMessage(msg) : null">
+
+                <p class="wa-bubble-text">{{ msg.contenu }}</p>
+                <span class="wa-bubble-meta">
+                  {{ formaterDate(msg.dateEnvoi) }}
+                  <span *ngIf="estMonMessage(msg.expediteurId)" class="wa-ticks">
+                    <i class="fas fa-check-double" [class.seen]="msg.lu"></i>
+                  </span>
+                </span>
+              </div>
+
+              <!-- Boutons modifier/supprimer — MES messages seulement -->
+              <div *ngIf="estMonMessage(msg.expediteurId)"
+                   class="wa-msg-actions"
+                   [class.visible]="messageSelectionne()?.id === msg.id">
+                <button class="wa-action-btn edit"
+                        (click)="ouvrirEdition(msg)"
+                        title="Modifier">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button class="wa-action-btn danger"
+                        (click)="supprimerMessage(msg)"
+                        title="Supprimer">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+
+            </div>
           </div>
 
-        </div>
+        </ng-container>
 
       </div>
 
@@ -223,29 +247,40 @@
         Cette conversation est <strong>{{ conv.statut }}</strong> — envoi désactivé.
       </div>
 
- 
-      <!-- ── Zone de saisie ── -->
+      <!-- Zone de saisie -->
       <div class="wa-input-bar" *ngIf="conv.statut === 'active'">
 
-        <!-- Bouton pièce jointe rond bleu -->
-        <button class="wa-attach-btn" title="Pièce jointe">
-          <i class="fas fa-arrow-up"></i>
-        </button>
+        <!-- Bandeau édition -->
+        <div *ngIf="messageEdition()" class="wa-edit-indicator">
+          <i class="fas fa-pen" style="color:#f59e0b"></i>
+          <span>Modification en cours</span>
+          <button class="wa-edit-cancel" (click)="annulerEdition()" title="Annuler">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
 
-        <!-- Champ texte -->
-        <input type="text"
-               class="wa-text-input"
-               placeholder="Tapez un message..."
-               [(ngModel)]="nouveauMessage"
-               (keyup.enter)="envoyer()"
-               [disabled]="chargementEnvoi()" />
+        <div class="wa-input-row">
+          <button class="wa-attach-btn" title="Pièce jointe">
+            <i class="fas fa-paperclip"></i>
+          </button>
 
+          <input type="text"
+                 class="wa-text-input"
+                 [class.editing]="messageEdition()"
+                 [placeholder]="messageEdition() ? 'Modifier le message...' : 'Tapez un message...'"
+                 [(ngModel)]="nouveauMessage"
+                 (keyup.enter)="messageEdition() ? validerEdition() : envoyer()"
+                 (keyup.escape)="annulerEdition()"
+                 [disabled]="chargementEnvoi()" />
 
-        <!-- Bouton envoi rond bleu -->
-        <button class="wa-send-btn"  (click)="envoyer()" [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
-          <span *ngIf="chargementEnvoi()" class="wa-spinner-sm"></span>
-          <i *ngIf="!chargementEnvoi()" class="fas fa-paper-plane"></i>
-        </button>
+          <button class="wa-send-btn"
+                  (click)="messageEdition() ? validerEdition() : envoyer()"
+                  [disabled]="!nouveauMessage.trim() || chargementEnvoi()">
+            <span *ngIf="chargementEnvoi()" class="wa-spinner-sm"></span>
+            <i *ngIf="!chargementEnvoi() && !messageEdition()" class="fas fa-paper-plane"></i>
+            <i *ngIf="!chargementEnvoi() && messageEdition()" class="fas fa-check"></i>
+          </button>
+        </div>
 
       </div>
 
@@ -263,10 +298,8 @@
      class="wa-modal-overlay"
      (click)="fermerModalNouvelleConv()">
 
-  <div class="wa-modal"
-       (click)="$event.stopPropagation()">
+  <div class="wa-modal" (click)="$event.stopPropagation()">
 
-    <!-- Header modal -->
     <div class="wa-modal-header">
       <h5><i class="fas fa-user-plus"></i> Nouvelle conversation</h5>
       <button class="wa-icon-btn" (click)="fermerModalNouvelleConv()">
@@ -274,13 +307,11 @@
       </button>
     </div>
 
-    <!-- Erreur -->
     <div *ngIf="erreurNouvelleConv()" class="wa-modal-error">
       <i class="fas fa-triangle-exclamation"></i>
       {{ erreurNouvelleConv() }}
     </div>
 
-    <!-- Recherche utilisateur -->
     <div class="wa-modal-search">
       <i class="fas fa-magnifying-glass"></i>
       <input type="text"
@@ -289,12 +320,10 @@
              (ngModelChange)="utilisateurRecherche.set($event)" />
     </div>
 
-    <!-- Spinner -->
     <div *ngIf="chargementUtilisateurs()" class="wa-loading">
       <div class="wa-spinner"></div>
     </div>
 
-    <!-- Liste utilisateurs -->
     <div *ngIf="!chargementUtilisateurs()" class="wa-users-list">
 
       <div *ngIf="utilisateursFiltres().length === 0" class="wa-empty-users">
@@ -325,13 +354,11 @@
 
     </div>
 
-    <!-- Sélection confirmée -->
     <div *ngIf="utilisateurSelectionne() as u" class="wa-selected-hint">
       <i class="fas fa-circle-check"></i>
       <strong>{{ u.prenom }} {{ u.nom }}</strong> sélectionné(e)
     </div>
 
-    <!-- Footer modal -->
     <div class="wa-modal-footer">
       <button class="wa-btn-ghost"
               (click)="fermerModalNouvelleConv()"
@@ -341,7 +368,7 @@
       <button class="wa-btn-primary"
               (click)="creerConversation()"
               [disabled]="!utilisateurSelectionne() || chargementCreation()">
-        <span *ngIf="chargementCreation()" class="wa-spinner-sm white"></span>
+        <span *ngIf="chargementCreation()" class="wa-spinner-sm"></span>
         <i *ngIf="!chargementCreation()" class="fas fa-comments"></i>
         {{ chargementCreation() ? 'Création...' : 'Démarrer' }}
       </button>
