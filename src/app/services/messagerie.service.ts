@@ -70,8 +70,11 @@ export class MessagerieService {
 
   private stompClient: Client | null = null;
   private monUserId: string | null   = null;
-  private topicsAbonnes: Set<string> = new Set(); // sujets actuellement abonnés
-  private pendingTopics: Set<string> = new Set(); // sujets à abonner dès connexion
+  private topicsAbonnes: Set<string> = new Set();
+  private pendingTopics: Set<string> = new Set();
+
+  // ✅ Set des IDs de messages déjà ajoutés via HTTP — pour ignorer l'écho WebSocket
+  private _messagesEnvoyes: Set<string> = new Set();
 
   constructor(
     private http:        HttpClient,
@@ -90,10 +93,10 @@ export class MessagerieService {
       reconnectDelay:   5000,
       onConnect: () => {
         console.log('✅ WebSocket messagerie connecté');
-        this.topicsAbonnes.clear(); // les abonnements sont reconstruits après reconnexion
+        this.topicsAbonnes.clear();
         this.pendingTopics.forEach(topic => this.subscribeTopic(topic));
       },
-      onStompError:  (frame) => {
+      onStompError: (frame) => {
         console.error('❌ Erreur STOMP', frame);
         this._erreur.set('Connexion temps réel perdue.');
       },
@@ -116,26 +119,41 @@ export class MessagerieService {
   // ============================================================
   abonnerConversation(conversationId: string): void {
     const topic = `/topic/conversation/${conversationId}`;
-
     if (this.pendingTopics.has(topic)) return;
     this.pendingTopics.add(topic);
 
     if (this.stompClient?.connected) {
       this.subscribeTopic(topic);
     } else {
-      console.log(`⏳ Abonnement différé à ${topic} (WebSocket non encore connecté)`);
+      console.log(`⏳ Abonnement différé à ${topic}`);
     }
   }
 
   private subscribeTopic(topic: string): void {
     if (this.topicsAbonnes.has(topic) || !this.stompClient?.connected) return;
-console.log(
-  'active =', this.stompClient?.active,
-  'connected =', this.stompClient?.connected
-);
+
     this.stompClient.subscribe(topic, (frame: IMessage) => {
       try {
         const msg: Message = JSON.parse(frame.body);
+
+        // ✅ ANTI-DOUBLON : ignorer l'écho WebSocket si c'est un message
+        //    que MOI j'ai envoyé et dont le serveur a déjà confirmé l'ID via HTTP
+        if (this._messagesEnvoyes.has(msg.id)) {
+          this._messagesEnvoyes.delete(msg.id); // nettoyage
+          console.log('🔕 Écho WebSocket ignoré pour message déjà présent:', msg.id);
+          return;
+        }
+
+        // ✅ Ignorer aussi si l'expéditeur c'est moi ET que le message est déjà
+        //    présent dans la liste (double sécurité)
+        if (msg.expediteurId === this.monUserId) {
+          const conv = this._conversations().find(c => c.id === msg.conversationId);
+          if (conv?.messages?.some(m => m.id === msg.id)) {
+            console.log('🔕 Doublon expéditeur ignoré:', msg.id);
+            return;
+          }
+        }
+
         console.log('✅ Message temps réel reçu:', msg);
         this._ajouterMessageTempsReel(msg);
       } catch (e) {
@@ -148,36 +166,15 @@ console.log(
   }
 
   // ============================================================
-  // WEBSOCKET — MESSAGE REÇU EN TEMPS RÉEL
+  // WEBSOCKET — MESSAGE REÇU EN TEMPS RÉEL (destinataire uniquement)
   // ============================================================
   private _ajouterMessageTempsReel(msg: Message): void {
     this._conversations.update(convs =>
       convs.map(c => {
         if (c.id !== msg.conversationId) return c;
 
-        // Si le message existe déjà par ID, ne rien faire
+        // Déjà présent par ID exact → ignorer
         if (c.messages?.some(m => m.id === msg.id)) return c;
-
-        // Remplacer un message temporaire identique si le WebSocket arrive avant la réponse HTTP
-        const tempIndex = c.messages?.findIndex(m =>
-          m.id.startsWith('temp-') && this._isProbableDuplicate(m, msg)
-        ) ?? -1;
-
-        if (tempIndex !== -1 && c.messages) {
-          const updatedMessages = [...c.messages];
-          updatedMessages[tempIndex] = msg;
-          return {
-            ...c,
-            messages:    updatedMessages,
-            lastMessage: msg.contenu,
-            nonLus: msg.expediteurId !== this.monUserId
-              ? (c.nonLus ?? 0) + 1
-              : c.nonLus
-          };
-        }
-
-        // Éviter les doublons potentiels même si l'ID diffère
-        if (c.messages?.some(m => this._isProbableDuplicate(m, msg))) return c;
 
         return {
           ...c,
@@ -191,28 +188,9 @@ console.log(
     );
   }
 
-  private _isProbableDuplicate(a: Message, b: Message): boolean {
-    if (a.id && b.id && a.id === b.id) return true;
-    if (a.expediteurId !== b.expediteurId) return false;
-    if (a.conversationId !== b.conversationId) return false;
-    if (a.contenu !== b.contenu) return false;
-
-    const aTime = a.dateEnvoi ? new Date(a.dateEnvoi).getTime() : null;
-    const bTime = b.dateEnvoi ? new Date(b.dateEnvoi).getTime() : null;
-
-    if (a.id.startsWith('temp-') || b.id.startsWith('temp-')) {
-      return true;
-    }
-
-    if (aTime !== null && bTime !== null) {
-      return Math.abs(aTime - bTime) < 3000;
-    }
-
-    return false;
-  }
-
   // ============================================================
   // WEBSOCKET — ENVOYER VIA SOCKET
+  // Notifie le backend pour qu'il broadcaste aux AUTRES abonnés
   // ============================================================
   envoyerViaSocket(msg: NouveauMessage, destinataireId: string): void {
     if (!this.stompClient?.active) return;
@@ -307,8 +285,10 @@ console.log(
     const expediteurId = this.authService.currentUser()?.id;
     const user         = this.authService.currentUser();
 
+    // ✅ Message optimiste affiché immédiatement
+    const tempId = 'temp-' + Date.now();
     const messageOptimiste: Message = {
-      id:               'temp-' + Date.now(),
+      id:               tempId,
       expediteurId:     expediteurId ?? '',
       expediteurNom:    user?.nom    ?? '',
       expediteurPrenom: user?.prenom ?? '',
@@ -337,28 +317,22 @@ console.log(
       })
       .pipe(
         tap(nouveau => {
+          // ✅ Enregistrer l'ID réel pour bloquer l'écho WebSocket
+          this._messagesEnvoyes.add(nouveau.id);
+
+          // Nettoyer automatiquement après 5 secondes (sécurité)
+          setTimeout(() => this._messagesEnvoyes.delete(nouveau.id), 5000);
+
+          // Remplacer le message optimiste par le vrai message HTTP
           this._conversations.update(convs =>
             convs.map(c => {
               if (c.id !== msg.conversationId) return c;
 
-              let messages = (c.messages ?? []).map(m =>
-                m.id === messageOptimiste.id ? nouveau : m
+              const messages = (c.messages ?? []).map(m =>
+                m.id === tempId ? nouveau : m
               );
 
-              messages = messages.filter(m => m.id !== messageOptimiste.id);
-
-              const alreadyExists = messages.some(m =>
-                m.id === nouveau.id || this._isProbableDuplicate(m, nouveau)
-              );
-
-              if (!alreadyExists) {
-                messages = [...messages, nouveau];
-              }
-
-              return {
-                ...c,
-                messages
-              };
+              return { ...c, messages, lastMessage: nouveau.contenu };
             })
           );
         }),
@@ -369,7 +343,7 @@ console.log(
               if (c.id !== msg.conversationId) return c;
               return {
                 ...c,
-                messages: (c.messages ?? []).filter(m => m.id !== messageOptimiste.id)
+                messages: (c.messages ?? []).filter(m => m.id !== tempId)
               };
             })
           );

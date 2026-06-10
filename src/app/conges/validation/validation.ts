@@ -277,45 +277,52 @@ export class ValidationComponent implements OnInit {
     this.verifData.update(v => ({ ...v, [field]: value }));
   }
 
-  // ---- Valider les vérifications et générer le PDF ----
-  validerEtGenererPDF(): void {
-    const demande = this.demandeVerif();
-    if (!demande) return;
+ validerEtGenererPDF(): void {
+  const demande = this.demandeVerif();
+  if (!demande) return;
 
-    this.verifLoading.set(true);
-    this.verifErreur.set('');
-
-    const payload = {
-      demandeId:    demande.id,
-      validePar:    `${this.authService.currentUser()?.prenom ?? ''} ${this.authService.currentUser()?.nom ?? ''}`.trim(),
-      verifications: this.verifData()
-    };
-
-    // POST les vérifications → Spring Boot génère le PDF
-    this.http.post(
-      `${API_URL}/demandes/${demande.id}/verifications-rh`,
-      payload,
-      { responseType: 'blob' }
-    ).subscribe({
-      next: (blob: Blob) => {
-        this.verifLoading.set(false);
-        // Téléchargement automatique du PDF
-        const url = window.URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href     = url;
-        a.download = `validation-rh-${demande.id}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        this.fermerVerificationsRH();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.verifLoading.set(false);
-        this.verifErreur.set(
-          err.error?.message || `Erreur lors de la génération du PDF (${err.status}).`
-        );
-      }
-    });
+  // Vérification : la demande doit être APPROUVEE_RH
+  if (String(demande.statut) !== 'APPROUVEE_RH') {
+    this.verifErreur.set('Le PDF n\'est disponible qu\'après approbation complète (RH).');
+    return;
   }
+
+  this.verifLoading.set(true);
+  this.verifErreur.set('');
+
+  // ✅ On utilise la méthode existante du DemandeService
+  this.demandeService.telechargerPdf(demande.id).subscribe({
+    next: (blob: Blob) => {
+      this.verifLoading.set(false);
+      const url = window.URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = `validation-rh-${demande.id}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      this.fermerVerificationsRH();
+    },
+    error: (err: HttpErrorResponse) => {
+      this.verifLoading.set(false);
+
+      // ✅ err.error est un Blob → lecture correcte
+      if (err.error instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const json = JSON.parse(reader.result as string);
+            this.verifErreur.set(json.message || `Erreur ${err.status}`);
+          } catch {
+            this.verifErreur.set(`Erreur génération PDF (${err.status}).`);
+          }
+        };
+        reader.readAsText(err.error);
+      } else {
+        this.verifErreur.set(`Erreur (${err.status}).`);
+      }
+    }
+  });
+}
 
   // ---- Rejeter depuis le modal vérifications ----
   rejeterDepuisVerif(): void {
